@@ -1,0 +1,167 @@
+#!/usr/bin/python3
+#
+# ~/dev/py/fusegen/fuseGen
+
+import errno, os, sys, shutil, time
+from argparse   import ArgumentParser
+from fusegen   import *
+
+def makedir_p(path, mode):
+    # XXX SLOPPY: doesn't handle case where mode is wrong
+    # XXX MISLEADING: the name suggests it creates missing subdirs
+    try:
+        os.mkdir(path, mode)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise e
+        pass
+
+def makeCLib(args):
+    force           = args.force
+    githubbing      = args.githubbing
+    githubPkgName   = args.githubPkgName
+    lcName          = args.lcName
+    myDate          = args.myDate
+    myVersion       = args.myVersion
+    pathToPkg       = args.pathToPkg    # target package directory
+    pathToSrc       = args.pathToSrc
+    pgmNames        = args.pgmNames
+    pkgName         = args.pkgName
+    testing         = args.testing
+    ucName          = args.ucName
+    verbose         = args.verbose
+  
+    # if -force and pathToPkg exists, delete it ---------------------
+    if force and os.path.exists(pathToPkg):
+        shutil.rmtree(pathToPkg)
+
+    # create directories --------------------------------------------
+    os.mkdir(pathToPkg, 0o755)
+
+    makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests',]
+    otherSubDirs    = ['automAte.cache', 'ghpDoc', 'm4', ]
+    subDirs         = makeFileSubDirs + otherSubDirs
+    for dir in subDirs:
+        pathToSubDir = os.path.join(pathToPkg, dir)
+        makedir_p(pathToSubDir, 0o755)
+
+    # write CHANGES -------------------------------------------------
+    chgFile = os.path.join(pathToPkg, 'CHANGES')
+    with open(chgFile, 'w', 0o644) as f:
+        f.write("~/dev/c/%s/CHANGES\n\n" % githubPkgName)
+        f.write("v%s\n" % myVersion)
+        f.write("    %s\n" % myDate)
+        f.write("        *\n")
+
+    # write configure.ac --------------------------------------------
+    todoFile = os.path.join(pathToPkg, 'configure.ac')
+    with open(todoFile, 'w', 0o644) as f:
+        f.write("~/dev/c/%s/TODO\n\n" % githubPkgName)
+        f.write("%s\n" % myDate)
+        f.write("    *\n")
+
+    # write TODO ----------------------------------------------------
+    todoFile = os.path.join(pathToPkg, 'TODO')
+    with open(todoFile, 'w', 0o644) as f:
+        f.write("~/dev/c/%s/TODO\n\n" % githubPkgName)
+        f.write("%s\n" % myDate)
+        f.write("    *\n")
+
+
+def main():
+    """
+    Expect a command like
+        fuseGen [options] 
+
+    """
+
+    # program defaults ----------------------------------------------
+    myDate   = "%04d-%02d-%02d" % time.gmtime()[:3]
+
+    # parse the command line ----------------------------------------
+    
+    DESC = 'generate directory and skeletal files for an Autotools-based C library'
+    parser = ArgumentParser(description=DESC)
+
+    parser.add_argument('-D', '--myDate', default=myDate,
+        help='date in YYYY-MM-DD format')
+
+    parser.add_argument('-f', '--force', action='store_true',
+        help='if utility already exists, overwrite it')
+
+    parser.add_argument('-G', '--githubbing', action='store_true',
+        help='create shadow under sharedev and github project')
+
+    parser.add_argument('-j', '--justShow', action='store_true',
+        help='show options and exit')
+
+    parser.add_argument('-P', '--pkgName', 
+        help='utility package name')
+    
+    parser.add_argument('-T', '--testing', action='store_true',
+        help='this is a test run')
+
+    parser.add_argument('-v', '--verbose', action='store_true',
+        help='be chatty')
+
+    parser.add_argument('-V', '--myVersion', default = '0.0.0',
+        help="version in X.Y.Z format")
+
+    parser.add_argument('pgmNames', nargs='*',
+        help='at least one valid program name')
+
+    args = parser.parse_args()
+
+    # sanity checks -------------------------------------------------
+    checkDate(args.myDate)
+    checkPkgName(args.pkgName)
+    checkPgmNames(args.pgmNames)
+    checkVersion(args.myVersion)
+    
+    # fixups --------------------------------------------------------
+    args.lcName = args.pkgName.lower()
+    args.ucName = args.pkgName.upper()
+
+    args.githubPkgName = args.lcName + '_c'
+
+    args.pathToSrc = os.path.join('/home/jdd/go/src/github.com/jddixon',
+            args.pkgName + '_go')
+    if args.testing:
+        args.pathToPkg = os.path.join('tmp', args.githubPkgName)
+    else:
+        args.pathToPkg = os.path.join('/home/jdd/dev/c', args.githubPkgName)
+
+    # complete setup ------------------------------------------------
+    appName = 'fuseGen %s' % __version__
+
+    # maybe show options and such -----------------------------------
+    if args.verbose or args.justShow:
+        print ("%s %s" % (appName, __version_date__))
+
+    if args.verbose or args.justShow:
+        print('force                = ' + str(args.force))
+        print('githubbing           = ' + str(args.githubbing))
+        print('myDate               = ' + str(args.myDate))
+        print('myVersion            = ' + str(args.myVersion))
+        print('pathToPkg            = ' + str(args.pathToPkg))
+        print('pathToSrc            = ' + str(args.pathToSrc))
+        print('pkgName              = ' + str(args.pkgName))
+        print('  lcName             = ' + str(args.lcName))
+        print('  ucName             = ' + str(args.ucName))
+        print('  githubPkgName      = ' + str(args.githubPkgName))
+        print('testing              = ' + str(args.testing))
+        print('verbose              = ' + str(args.verbose))
+        print("\npgmNames:")
+        for program in args.pgmNames:
+            print("    %s" % program)
+
+    if args.justShow:
+        sys.exit(0)
+
+    # do what's required --------------------------------------------
+    makeCLib(args)
+
+        
+if __name__ == '__main__':
+    main()
+

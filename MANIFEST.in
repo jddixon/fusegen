@@ -1,0 +1,6 @@
+include netDistrib.conf
+include CHANGES README* TODO MANIFEST.in
+include fuseGen
+include test*.py
+recursive-include *.py
+global-exclude junk* .*swp
