@@ -3,12 +3,25 @@
 import os, re, sys
 
 __all__ = [ '__version__', '__version_date__',
+            'OP_NAMES',
+            # functions
             'checkDate', 'checkPkgName', 'checkPgmNames', 'checkVersion',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.0.0'
-__version_date__ = '2015-01-17'
+__version__      = '0.1.0'
+__version_date__ = '2015-01-20'
+
+# well, some are less constant than others
+OP_NAMES = [
+    'getattr',  'readlink', 'getdir',       'mknod',        'mkdir',
+    'unlink',   'rmdir',    'symlink',      'rename',       'link',
+    'chmod',    'chown',    'truncate',     'utime',        'open',
+    'read',     'write',    'statfs',       'flush',        'release',
+    'fsync',    'setxattr', 'getxattr',     'listxattr',    'removexattr',
+    'opendir',  'readdir',  'releasedir',   'fsyncdir',     'init',
+    'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
+    ]
 
 # -- functions ------------------------------------------------------
 PKG_DATE_RE = re.compile(r'^[\d]{4}-\d\d-\d\d$')

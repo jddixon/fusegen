@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.1.0
+    2015-01-20
+        * cleaned up command line options a bit
+        * added OP_NAMES table, fuse op attributes, setOpAttrs()    SLOC  207
 v0.0.0
     2015-01-17
         * first version                                             SLOC  237

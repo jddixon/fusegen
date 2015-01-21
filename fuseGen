@@ -3,8 +3,58 @@
 # ~/dev/py/fusegen/fuseGen
 
 import errno, os, sys, shutil, time
-from argparse   import ArgumentParser
+from argparse  import ArgumentParser
 from fusegen   import *
+
+# attributes of fuse operations
+
+RETURNS_NETSTAT = 0x001     # check
+DEPRECATED      = 0x002     # 'D'
+SIMPLE_ERROR    = 0x004     # 'e'
+COMPLEX_ERROR   = 0x008     # 'ee'
+FULL_PATH       = 0x010     # 'f'
+DOUBLE_FULL_PATH= 0x020     # 'ff'
+SIMPLE_LOGGING  = 0x040     # 'L'
+COMPLEX_LOGGING = 0x080     # 'LL'
+IFDEF_XATTR     = 0x100     # 'X'
+
+def setOpAttrs():
+    """
+    Return a map from fuse op names to attributes
+    """
+    opAttrs = {}
+    for name in OP_NAMES:
+        attrs = 0
+        if name == 'getdir':
+            attrs |= DEPRECATED
+
+        if name != 'init' and name != 'destroy':
+            attrs |= RETURNS_NETSTAT
+
+        if name == 'link':
+            attrs |= DOUBLE_FULL_PATH
+        elif name not in ['read', 'write', 'flush', 'release', 'fsync',
+                      'readdir', 'releasedir','fsyncdir', 'init',
+                      'destroy', 'ftruncate', 'fgetattr']:
+            attrs |= FULL_PATH
+
+        if name in ['mknod', 'open', 'readdir', 'create',]:
+            attrs |= COMPLEX_ERROR
+        elif name in ['releasedir', 'fsyncdir', 'init', 'destroy',]:
+            pass
+        else:
+            attrs |= SIMPLE_ERROR
+
+        if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
+            attrs |= IFDEF_XATTR
+
+        if name in ['readlink', 'mknod', 'read', 'write',
+                    'getxattr', 'listxattr', 'readdir',]:
+            attrs |= COMPLEX_LOGGING
+        else:
+            attrs |= SIMPLE_LOGGING
+
+    return opAttrs
 
 def makedir_p(path, mode):
     # XXX SLOPPY: doesn't handle case where mode is wrong
@@ -16,16 +66,12 @@ def makedir_p(path, mode):
             raise e
         pass
 
-def makeCLib(args):
+def makeFusePkg(args):
     force           = args.force
-    githubbing      = args.githubbing
-    githubPkgName   = args.githubPkgName
     lcName          = args.lcName
     myDate          = args.myDate
     myVersion       = args.myVersion
     pathToPkg       = args.pathToPkg    # target package directory
-    pathToSrc       = args.pathToSrc
-    pgmNames        = args.pgmNames
     pkgName         = args.pkgName
     testing         = args.testing
     ucName          = args.ucName
@@ -48,7 +94,7 @@ def makeCLib(args):
     # write CHANGES -------------------------------------------------
     chgFile = os.path.join(pathToPkg, 'CHANGES')
     with open(chgFile, 'w', 0o644) as f:
-        f.write("~/dev/c/%s/CHANGES\n\n" % githubPkgName)
+        f.write("~/dev/c/%s/CHANGES\n\n" % pkgName)
         f.write("v%s\n" % myVersion)
         f.write("    %s\n" % myDate)
         f.write("        *\n")
@@ -56,16 +102,21 @@ def makeCLib(args):
     # write configure.ac --------------------------------------------
     todoFile = os.path.join(pathToPkg, 'configure.ac')
     with open(todoFile, 'w', 0o644) as f:
-        f.write("~/dev/c/%s/TODO\n\n" % githubPkgName)
+        f.write("~/dev/c/%s/TODO\n\n" % pkgName)
         f.write("%s\n" % myDate)
         f.write("    *\n")
 
     # write TODO ----------------------------------------------------
     todoFile = os.path.join(pathToPkg, 'TODO')
     with open(todoFile, 'w', 0o644) as f:
-        f.write("~/dev/c/%s/TODO\n\n" % githubPkgName)
+        f.write("~/dev/c/%s/TODO\n\n" % pkgName)
         f.write("%s\n" % myDate)
         f.write("    *\n")
+
+    # XXX MUCH STUFF MISSING #
+    
+    opAttrs = setOpAttrs()
+    # mkSrcDir(args, opAttrs)
 
 
 def main():
@@ -89,9 +140,6 @@ def main():
     parser.add_argument('-f', '--force', action='store_true',
         help='if utility already exists, overwrite it')
 
-    parser.add_argument('-G', '--githubbing', action='store_true',
-        help='create shadow under sharedev and github project')
-
     parser.add_argument('-j', '--justShow', action='store_true',
         help='show options and exit')
 
@@ -107,29 +155,21 @@ def main():
     parser.add_argument('-V', '--myVersion', default = '0.0.0',
         help="version in X.Y.Z format")
 
-    parser.add_argument('pgmNames', nargs='*',
-        help='at least one valid program name')
-
     args = parser.parse_args()
 
     # sanity checks -------------------------------------------------
     checkDate(args.myDate)
     checkPkgName(args.pkgName)
-    checkPgmNames(args.pgmNames)
     checkVersion(args.myVersion)
     
     # fixups --------------------------------------------------------
     args.lcName = args.pkgName.lower()
     args.ucName = args.pkgName.upper()
 
-    args.githubPkgName = args.lcName + '_c'
-
-    args.pathToSrc = os.path.join('/home/jdd/go/src/github.com/jddixon',
-            args.pkgName + '_go')
     if args.testing:
-        args.pathToPkg = os.path.join('tmp', args.githubPkgName)
+        args.pathToPkg = os.path.join('tmp', args.pkgName)
     else:
-        args.pathToPkg = os.path.join('/home/jdd/dev/c', args.githubPkgName)
+        args.pathToPkg = os.path.join('/home/jdd/dev/c', args.pkgName)
 
     # complete setup ------------------------------------------------
     appName = 'fuseGen %s' % __version__
@@ -140,26 +180,20 @@ def main():
 
     if args.verbose or args.justShow:
         print('force                = ' + str(args.force))
-        print('githubbing           = ' + str(args.githubbing))
         print('myDate               = ' + str(args.myDate))
         print('myVersion            = ' + str(args.myVersion))
         print('pathToPkg            = ' + str(args.pathToPkg))
-        print('pathToSrc            = ' + str(args.pathToSrc))
         print('pkgName              = ' + str(args.pkgName))
         print('  lcName             = ' + str(args.lcName))
         print('  ucName             = ' + str(args.ucName))
-        print('  githubPkgName      = ' + str(args.githubPkgName))
         print('testing              = ' + str(args.testing))
         print('verbose              = ' + str(args.verbose))
-        print("\npgmNames:")
-        for program in args.pgmNames:
-            print("    %s" % program)
 
     if args.justShow:
         sys.exit(0)
 
     # do what's required --------------------------------------------
-    makeCLib(args)
+    makeFusePkg(args)
 
         
 if __name__ == '__main__':
