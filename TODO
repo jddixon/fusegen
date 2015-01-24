@@ -1,6 +1,15 @@
 ~/dev/py/fusegen/TODO
 
+2015-01-24
+    * move most of makeParamLists into library (fusegen/__init__.py)    * DONE
+    * add function getNameToFunc map which returns a map from a string 
+        like 'getattr' to a FuseFunc object
+    * replace makeParamLists with testParamLists
+    * in testParamLists verify that the list of FuseFunc returned 
+        from calls to FuseFunc.parseProto can be used to reconstruct
+        the text in the file FIRST_LINES
+
 2015-01-17
-    * README needs editing 
-    * follow ~/dev/gh-pages/README.orphaning
-    * then follow ../sharedev/README
+    * README needs editing 				                                * DONE
+    * follow ~/dev/gh-pages/README.orphaning				            * DONE
+    * then follow ../sharedev/README				                    * DONE

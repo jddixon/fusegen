@@ -129,7 +129,15 @@ def makeFusePkg(args):
         pathToInc = os.path.join(srcDir, "%s.inc" % name)
         with open(pathToInc, 'w') as f:
             f.write("/** %s/src/%s.inc */\n\n" % (pkgName, name))
+            if attrs & IFDEF_XATTR:
+                f.write("#ifdev HAVE_SYS_XATTR_H\n")
 
+
+            # XXX STUB XXX
+
+
+            if attrs & IFDEF_XATTR:
+                f.write("#endif\n")
 def main():
     """
     Expect a command like
@@ -142,7 +150,7 @@ def main():
 
     # parse the command line ----------------------------------------
     
-    DESC = 'generate directory and skeletal files for an Autotools-based C library'
+    DESC = 'generate a minimal FUSE (file system in user space) package''
     parser = ArgumentParser(description=DESC)
 
     parser.add_argument('-D', '--myDate', default=myDate,

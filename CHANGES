@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.2.0
+    2015-01-24
+        * move FIRST_LINES and FuseFunc to __init__.py              SLOC  282
 v0.1.0
     2015-01-20
         * cleaned up command line options a bit

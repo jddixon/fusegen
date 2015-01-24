@@ -3,16 +3,21 @@
 import os, re, sys
 
 __all__ = [ '__version__', '__version_date__',
-            'OP_NAMES',
+            'FIRST_LINES', 'OP_NAMES',
             # functions
             'checkDate', 'checkPkgName', 'checkPgmNames', 'checkVersion',
+            # classes
+            'FuseFunc',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.1.0'
-__version_date__ = '2015-01-20'
+__version__      = '0.2.0'
+__version_date__ = '2015-01-24'
 
-# well, some are less constant than others
+# path to text file of quasi-prototypes
+FIRST_LINES = 'fragments/prototypes'
+
+# a table of FUSE function names
 OP_NAMES = [
     'getattr',  'readlink', 'getdir',       'mknod',        'mkdir',
     'unlink',   'rmdir',    'symlink',      'rename',       'link',
@@ -70,3 +75,78 @@ def checkVersion(s):
         if m == None:
             print(("'%s' is not a valid X.Y.Z version" % s))
             sys.exit(1)
+
+class FuseFunc(object):
+    def __init__(self, fName, fType, params):
+        self._name = fName      # string, trimmed
+        self._type = fType      # string, left-trimmed,
+        self._params = params   # a list of 2-tuples
+
+    @property
+    def name(self):
+        return self._name
+    @property
+    def fType(self):
+        return self._fType
+    @property
+    def params(self):
+        return self._params
+
+    @classmethod
+    def parseProto(clz, line, prefix=''):
+        
+        line   = line.strip()
+        params = []     # of 2-tuples
+       
+        parts = line.split(' ', 1)
+        pCount = len(parts)
+        if pCount != 2:
+            print("error parsing prototype: splits into %d parts!" % pCount)
+            sys.exit(1)
+        fType = parts[0].strip()
+        fType += ' '
+        rest  = parts[1].lstrip()
+        if rest[0] == '*':
+            rest = rest[1:]
+            fType += '*'
+
+        lNdx = rest.index('(')
+        rNdx = rest.index(')')
+        if lNdx == -1 or rNdx == -1:
+            print("can't locate parens is '%s'; aborting" % rest)
+            sys.exit(1)
+        baseName = rest[:lNdx]
+        if prefix == '' or baseName == 'main':
+            fName = baseName
+        else:
+            fName = prefix + '_' + baseName
+
+        argList = rest[lNdx+1:rNdx]
+
+        # DEBUG
+        print("type '%s', fName '%s', args '%s'" % (fType, fName, argList))
+        # END 
+      
+        parts = argList.split(',')
+        for part in parts:
+            # DEBUG
+            #print("  part: '%s'" % part)
+            # END
+            if part == '':
+                continue
+            chunks = part.rsplit(' ', 1)
+            chunkCount = len(chunks)
+            if chunkCount != 2:
+                print("can't split '%s': aborting" % part)
+                sys.exit(1)
+            argType = chunks[0].strip()
+            argType += ' '
+            argName = chunks[1]
+            if argName[0] == '*':
+                argName = argName[1:]
+                argType += '*'
+            # DEBUG
+            print("    argType: '%s', argName '%s'" % (argType, argName))
+            # END
+            params.append( (argType, argName) )     # that's a 2-tuple
+        return baseName, FuseFunc(fName, fType, params)
