@@ -1,13 +1,25 @@
 ~/dev/py/fusegen/TODO
 
-2015-01-24
-    * move most of makeParamLists into library (fusegen/__init__.py)    * DONE
-    * add function getNameToFunc map which returns a map from a string 
-        like 'getattr' to a FuseFunc object
-    * replace makeParamLists with testParamLists
-    * in testParamLists verify that the list of FuseFunc returned 
+2015-01-27
+    * ./diffEm getattr  # status test ??
+
+2015-01-26
+    * readlink call needs decremented size
+    * getattr needs only logEntry line :-)
+        - need map from arg name to format (eg statbuf => 0x%08x)
+    * need map from fuse op name to name of o/s call
+    * FIX: running make in std_fs/src
+
+2015-01-25 (edited from -24)
+    * add function getFuncMap which returns a map from a string         * DONE
+        like 'getattr' to a FuseFunc object                             * DONE
+    * replace makeParamLists with testFuseFunc                          * DONE
+    * in testFuseFunc verify that the list of FuseFunc returned  
         from calls to FuseFunc.parseProto can be used to reconstruct
         the text in the file FIRST_LINES
+
+2015-01-24
+    * move most of makeParamLists into library (fusegen/__init__.py)    * DONE
 
 2015-01-17
     * README needs editing 				                                * DONE

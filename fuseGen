@@ -8,15 +8,17 @@ from fusegen   import *
 
 # attributes of fuse operations
 
-RETURNS_NETSTAT = 0x001     # check
+RETURNS_STATUS  = 0x001     # check
 DEPRECATED      = 0x002     # 'D'
 SIMPLE_ERROR    = 0x004     # 'e'
 COMPLEX_ERROR   = 0x008     # 'ee'
 FULL_PATH       = 0x010     # 'f'
 DOUBLE_FULL_PATH= 0x020     # 'ff'
-SIMPLE_LOGGING  = 0x040     # 'L'
+LOGGING_ENTRY  = 0x040     # 'L'
 COMPLEX_LOGGING = 0x080     # 'LL'
 IFDEF_XATTR     = 0x100     # 'X'
+LOGGING_STAT    = 0x200    
+LOGGING_STATVFS = 0x400    
 
 def setOpAttrs():
     """
@@ -29,7 +31,7 @@ def setOpAttrs():
             attrs |= DEPRECATED
 
         if name != 'init' and name != 'destroy':
-            attrs |= RETURNS_NETSTAT
+            attrs |= RETURNS_STATUS
 
         if name == 'link':
             attrs |= DOUBLE_FULL_PATH
@@ -52,7 +54,13 @@ def setOpAttrs():
                     'getxattr', 'listxattr', 'readdir',]:
             attrs |= COMPLEX_LOGGING
         else:
-            attrs |= SIMPLE_LOGGING
+            attrs |= LOGGING_ENTRY
+
+        if name in ['getattr', 'fgetattr',]:
+            attrs |= LOGGING_STAT
+        elif name == 'statfs':
+            attrs |= LOGGING_STATVFS
+
         opAttrs[name] = attrs
 
     return opAttrs
@@ -74,6 +82,7 @@ def makeFusePkg(args):
     myVersion       = args.myVersion
     pathToPkg       = args.pathToPkg    # target package directory
     pkgName         = args.pkgName
+    prefix          = pkgName + '_'     # XXX FORCES UNDERSCORE
     testing         = args.testing
     ucName          = args.ucName
     verbose         = args.verbose
@@ -122,20 +131,70 @@ def makeFusePkg(args):
     srcDir = os.path.join(pathToPkg, 'src')
     makedir_p(srcDir, 0o755)
 
+    m = FuseFunc.getFuncMap(prefix)
+    
+    # WORKING HERE
+    
+    # XXX does not catch 'main'
     for name in OP_NAMES:
         attrs = opAttrs[name]
         if attrs & DEPRECATED:
             continue
+        ff = m[name]    # FuseFunc for this name
         pathToInc = os.path.join(srcDir, "%s.inc" % name)
         with open(pathToInc, 'w') as f:
-            f.write("/** %s/src/%s.inc */\n\n" % (pkgName, name))
+            f.write("/** %s.inc */\n\n" % (name))
             if attrs & IFDEF_XATTR:
                 f.write("#ifdev HAVE_SYS_XATTR_H\n")
 
+            # -- first line, LBRACE -----------------------
+            f.write("%s\n{\n" % ff.firstLine())
+           
+            # -- variable declarations --------------------
+            if attrs & RETURNS_STATUS:
+                f.write("    int status = 0;\n")   # XXX status
+            if attrs & FULL_PATH:
+                f.write("    char fpath[PATH_MAX];\n")
 
-            # XXX STUB XXX
 
+            f.write("\n")
 
+            # -- log on entry -----------------------------
+            # if attrs & LOGGING_ENTRY:
+                #f.write("    logEntry("\n%s(
+                # XXX WORKING HERE using LOG_ENTRY_PAT_MAP
+
+            # -- set up absolute paths --------------------
+            if attrs & FULL_PATH:
+                f.write("    %sfullpath(fpath, path);\n" % prefix)
+
+            f.write("\n")
+
+            # -- call FUSE --------------------------------
+
+            sysCall = OP_CALL_MAP[name][0]
+
+            # XXX THIS IS NOW WRONG
+
+            if attrs & FULL_PATH:
+                f.write("    status = %s(fpath%s);\n" % (
+                    sysCall, ff.otherArgs()))
+
+            if attrs & SIMPLE_ERROR:
+                f.write("    if (status < 0)\n")
+                f.write("        status = %serror(\"%s %s\");\n\n" % (
+                    prefix, prefix + name, sysCall))
+
+            # -- logging stat -----------------------------
+            if attrs & LOGGING_STAT:
+                f.write("    logStat(%s);\n\n" % ff.params[1][1])
+            elif attrs & LOGGING_STATVFS:
+                f.write("    logStatVFS(%s);\n\n" % ff.params[1][1])
+
+            # -- return -----------------------------------
+            if attrs & RETURNS_STATUS:
+                f.write("    return status;\n")
+            f.write("}\n")
             if attrs & IFDEF_XATTR:
                 f.write("#endif\n")
 def main():
@@ -150,7 +209,7 @@ def main():
 
     # parse the command line ----------------------------------------
     
-    DESC = 'generate a minimal FUSE (file system in user space) package''
+    DESC = 'generate a minimal FUSE (file system in user space) package'
     parser = ArgumentParser(description=DESC)
 
     parser.add_argument('-D', '--myDate', default=myDate,
