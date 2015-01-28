@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.3.1'
-__version_date__ = '2015-01-26'
+__version__      = '0.3.2'
+__version_date__ = '2015-01-28'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -77,21 +77,26 @@ OP_CALL_MAP = {
 }
 LOG_ENTRY_PAT_MAP = {
         'datasync'  : '%d',
+        'dev'       : '%lld',
         'fi'        : '0x%08x',
         'filler'    : '0x%08x',
         'fpath'     : '\\"%s\\"',
         'gid'       : '%d',
-        'mode'      : '0%03o',          # XXX check me!
+        'mode'      : '0%3o',          # XXX check me!
         'link'      : '\\"%s\\"',
         'name'      : '\\"%s\\"',
         'newpath'   : '\\"%s\\"',
+        'newsize'   : '%d',
         'offset'    : '%lld',
         'path'      : '\\"%s\\"',
         'rootdir'   : '\\"%s\\"',
         'size'      : '%d',
         'statbuf'   : '0x%08x',
+        'statv'     : '0x%08x',
         'ubuf'      : '0x%08x',
+        'uid'       : '%d',
         'userdata'  : '0x%08x',
+        'value'     : '\\"%s\\"',
         }
 PAT_MAP = { 
         'buf'       : '0x%08x',         #  XXX ?

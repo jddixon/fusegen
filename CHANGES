@@ -1,8 +1,11 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.2
+    2015-01-28
+        * logEntry generation code, syscall                         SLOC  479
 v0.3.1
     2015-01-27
-        * added OP_CALL_MAP and code for generating inclusion files SKIC  451
+        * added OP_CALL_MAP and code for generating inclusion files SLOC  451
 v0.3.0
     2015-01-25
         * implemented getFuncMap, testFuseFunc                      SLOC  352

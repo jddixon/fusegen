@@ -2,6 +2,7 @@
 
 2015-01-27
     * ./diffEm getattr  # status test ??
+    * currently setting LOGGING_ENTRY for all ops -- check this is right
 
 2015-01-26
     * readlink call needs decremented size
