@@ -3,7 +3,7 @@
 import os, re, sys
 
 __all__ = [ '__version__', '__version_date__',
-            'LOG_ENTRY_PAT_MAP', 'OP_NAMES', 'PATH_TO_FIRST_LINES', 
+            'LOG_ENTRY_PAT_MAP', 'OP_NAMES', 'PATH_TO_FIRST_LINES',
             'SET_STATUS', 'SET_FD', 'OP_SPECIAL', 'FH_PARAM', 'FLAGS_PARAM',
             'OP_CALL_MAP',
             # functions
@@ -37,7 +37,7 @@ OP_SPECIAL  = 0x04      # messy handling
 FH_PARAM    = 0x08      # param is fi->fh instead of fpath
 FLAGS_PARAM = 0x10      # param is fi->flags instead of fi
 
-# Map FUSE op to syscall name and attributes.  This is for use in 
+# Map FUSE op to syscall name and attributes.  This is for use in
 # generating syscalls.
 OP_CALL_MAP = {
     'getattr'    : ('lstat',         SET_STATUS),
@@ -53,18 +53,18 @@ OP_CALL_MAP = {
     'chown'      : ('chown',         SET_STATUS),
     'truncate'   : ('truncate',      SET_STATUS),
     'utime'      : ('utime',         SET_STATUS),
-    'open'       : ('open',          SET_FD | FLAGS_PARAM), 
-    'read'       : ('pread',         SET_STATUS | FH_PARAM), 
-    'write'      : ('pwrite',        SET_STATUS | FH_PARAM), 
+    'open'       : ('open',          SET_FD | FLAGS_PARAM),
+    'read'       : ('pread',         SET_STATUS | FH_PARAM),
+    'write'      : ('pwrite',        SET_STATUS | FH_PARAM),
     'statfs'     : ('statvfs',       SET_STATUS),
     'flush'      : ('',              SET_STATUS),     # a no-op ??
-    'release'    : ('close',         SET_STATUS | FH_PARAM), 
+    'release'    : ('close',         SET_STATUS | FH_PARAM),
     'fsync'      : ('fsync',         SET_STATUS | OP_SPECIAL), # may be fdatasync
     'setxattr'   : ('lsetxattr',     SET_STATUS),
     'getxattr'   : ('lgetxattr',     SET_STATUS),
     'listxattr'  : ('llistxattr',    SET_STATUS),
     'removexattr': ('lremovexattr',  SET_STATUS),
-    'opendir'    : ('lopendir',      SET_STATUS),
+    'opendir'    : ('opendir',       SET_STATUS),
     'readdir'    : ('lreaddir',      OP_SPECIAL),  # loops
     'releasedir' : ('closedir',      OP_SPECIAL),  # must cast fi->fh
     'fsyncdir'   : ('',              SET_STATUS),  # a no-op ??
@@ -72,25 +72,29 @@ OP_CALL_MAP = {
     'destroy'    : ('',              SET_STATUS),
     'access'     : ('access',        SET_STATUS),
     'create'     : ('creat',         SET_FD),       # call returns fd
-    'ftruncate'  : ('ftruncate',     SET_STATUS | FH_PARAM),  
+    'ftruncate'  : ('ftruncate',     SET_STATUS | FH_PARAM),
     'fgetattr'   : ('fstat',         SET_STATUS | FH_PARAM),
 }
 LOG_ENTRY_PAT_MAP = {
+        'buf'       : '0x%08x',
         'datasync'  : '%d',
         'dev'       : '%lld',
         'fi'        : '0x%08x',
         'filler'    : '0x%08x',
+        'flags'     : '0x%08x',
         'fpath'     : '\\"%s\\"',
         'gid'       : '%d',
-        'mode'      : '0%3o',          # XXX check me!
+        'mode'      : '0%3o',           # XXX check me!
         'link'      : '\\"%s\\"',
+        'list'      : '0x%08x',
+        'mask'      : '0%o',
         'name'      : '\\"%s\\"',
         'newpath'   : '\\"%s\\"',
-        'newsize'   : '%d',
+        'newsize'   : '%lld',
         'offset'    : '%lld',
         'path'      : '\\"%s\\"',
         'rootdir'   : '\\"%s\\"',
-        'size'      : '%d',
+        'size'      : '%d',             # or should this be lld ?
         'statbuf'   : '0x%08x',
         'statv'     : '0x%08x',
         'ubuf'      : '0x%08x',
@@ -98,7 +102,7 @@ LOG_ENTRY_PAT_MAP = {
         'userdata'  : '0x%08x',
         'value'     : '\\"%s\\"',
         }
-PAT_MAP = { 
+PAT_MAP = {
         'buf'       : '0x%08x',         #  XXX ?
         'fi'        : '0x%08x',
         'statbuf'   : '0x%08x',
@@ -188,7 +192,7 @@ class FuseFunc(object):
 
     def otherArgs(self):
         """ return comma-separated list of arguments other than the first """
-        
+
         pCount = len(self.params)
         s = ''
         for ndx, param in enumerate(self.params):
@@ -198,7 +202,7 @@ class FuseFunc(object):
 
     @classmethod
     def parseProto(clz, line, prefix=''):
-        
+
         line   = line.strip()
         params = []     # of 2-tuples
         p2tMap = {}
@@ -230,8 +234,8 @@ class FuseFunc(object):
 
         # DEBUG
         #print("type '%s', fName '%s', args '%s'" % (fType, fName, argList))
-        # END 
-      
+        # END
+
         parts = argList.split(',')
         for part in parts:
             # DEBUG
@@ -255,12 +259,12 @@ class FuseFunc(object):
             # END
             params.append( (argType, argName) )     # that's a 2-tuple
             p2tMap[argName] = argType
-        
+
         return baseName, FuseFunc(fName, fType, params, p2tMap)
-    
+
     @classmethod
     def getFuncMap(clz, prefix=''):
-        
+
         lines = []
         with open(PATH_TO_FIRST_LINES, 'r') as f:
             line = f.readline()
@@ -271,10 +275,10 @@ class FuseFunc(object):
                 #print(line)
                 #
                 line = f.readline()
-        
+
         funcMap = {}    # this maps prefixed names to FuseFunc objects
         for line in lines:
             name, ff = FuseFunc.parseProto(line, prefix)
             funcMap[name] = ff
-    
+
         return funcMap

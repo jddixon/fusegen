@@ -144,7 +144,7 @@ def makeFusePkg(args):
         ss = []
         ss.append("/** %s.inc */\n" % (name))
         if attrs & IFDEF_XATTR:
-            ss.append("#ifdev HAVE_SYS_XATTR_H")
+            ss.append("#ifdef HAVE_SYS_XATTR_H")
 
         # -- first line, LBRACE -----------------------
         ss.append("%s\n{" % ff.firstLine())

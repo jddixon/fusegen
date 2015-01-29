@@ -1,5 +1,7 @@
 ~/dev/py/fusegen/TODO
 
+2015-01-28
+    * need IFDEFs on all xattr ops, currently getting 2 out of 4 ?
 2015-01-27
     * ./diffEm getattr  # status test ??
     * currently setting LOGGING_ENTRY for all ops -- check this is right
