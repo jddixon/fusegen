@@ -1,6 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
 v0.3.2
+    2015-01-29
+        * *.inc file generation improvements                        SLOC  483
     2015-01-28
         * logEntry generation code, syscall                         SLOC  479
 v0.3.1

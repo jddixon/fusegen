@@ -1,0 +1,2 @@
+echo 'standard vs generated'
+diff ~/dev/c/std_fs/src/$1.inc ~/dev/c/xxxfs/src/$1.inc

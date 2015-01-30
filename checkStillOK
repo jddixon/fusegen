@@ -1,0 +1,10 @@
+./diffEm mkdir
+./diffEm unlink
+./diffEm rmdir
+./diffEm chown
+./diffEm utime
+./diffEm statfs
+./diffEm setxattr
+./diffEm removexattr
+./diffEm destroy
+./diffEm access
