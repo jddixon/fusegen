@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.3.2'
-__version_date__ = '2015-01-28'
+__version__      = '0.3.3'
+__version_date__ = '2015-01-31'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -84,7 +84,7 @@ LOG_ENTRY_PAT_MAP = {
         'flags'     : '0x%08x',
         'fpath'     : '\\"%s\\"',
         'gid'       : '%d',
-        'mode'      : '0%3o',           # XXX check me!
+        'mode'      : '0%03o',
         'link'      : '\\"%s\\"',
         'list'      : '0x%08x',
         'mask'      : '0%o',

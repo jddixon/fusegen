@@ -1,6 +1,8 @@
+./diffEm getattr
 ./diffEm mkdir
 ./diffEm unlink
 ./diffEm rmdir
+./diffEm symlink
 ./diffEm chown
 ./diffEm utime
 ./diffEm statfs

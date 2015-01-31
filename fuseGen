@@ -8,17 +8,18 @@ from fusegen   import *
 
 # attributes of fuse operations
 
-RETURNS_STATUS  = 0x001     # check
-DEPRECATED      = 0x002     # 'D'
-SIMPLE_ERROR    = 0x004     # 'e'
-COMPLEX_ERROR   = 0x008     # 'ee'
-FULL_PATH       = 0x010     # 'f'
-DOUBLE_FULL_PATH= 0x020     # 'ff'
-LOGGING_ENTRY  = 0x040     # 'L'
-COMPLEX_LOGGING = 0x080     # 'LL'
-IFDEF_XATTR     = 0x100     # 'X'
-LOGGING_STAT    = 0x200    
-LOGGING_STATVFS = 0x400    
+RETURNS_STATUS  = 0x0001     # check
+DEPRECATED      = 0x0002     # 'D'
+SIMPLE_ERROR    = 0x0004     # 'e'
+COMPLEX_ERROR   = 0x0008     # 'ee'
+FULL_PATH       = 0x0010     # 'f'
+DOUBLE_FULL_PATH= 0x0020     # 'ff'
+LOGGING_ENTRY   = 0x0040     # 'L'
+COMPLEX_LOGGING = 0x0080     # 'LL'
+IFDEF_XATTR     = 0x0100     # 'X'
+LOGGING_STAT    = 0x0200    
+LOGGING_STATVFS = 0x0400    
+HAS_LINK_FILE   = 0x0800 
 
 def setOpAttrs():
     """
@@ -27,6 +28,9 @@ def setOpAttrs():
     opAttrs = {}
     for name in OP_NAMES:
         attrs = 0
+        if name in ['symlink',]:
+            attrs |= HAS_LINK_FILE
+
         if name == 'getdir':
             attrs |= DEPRECATED
 
@@ -35,9 +39,10 @@ def setOpAttrs():
 
         if name == 'link':
             attrs |= DOUBLE_FULL_PATH
-        elif name not in ['read', 'write', 'flush', 'release', 'fsync',
-                      'readdir', 'releasedir','fsyncdir', 'init',
-                      'destroy', 'ftruncate', 'fgetattr']:
+        elif name not in ['symlink',
+                        'read', 'write', 'flush', 'release', 'fsync',
+                        'readdir', 'releasedir','fsyncdir', 'init',
+                        'destroy', 'ftruncate', 'fgetattr']:
             attrs |= FULL_PATH
 
         if name in ['mknod', 'open', 'readdir', 'create',]:
@@ -154,6 +159,8 @@ def makeFusePkg(args):
             ss.append("    int status = 0;")   # XXX status
         if attrs & FULL_PATH:
             ss.append("    char fpath[PATH_MAX];")
+        if attrs & HAS_LINK_FILE:
+            ss.append("    char flink[PATH_MAX];")
 
 
         ss.append("")
@@ -184,22 +191,25 @@ def makeFusePkg(args):
             logEP.append(');')
             ss.append(''.join(logEP))
 
-        # -- set up absolute paths --------------------
+        # -- set up absolute paths ------------------------
         if attrs & FULL_PATH:
             ss.append("    %sfullpath(fpath, path);" % prefix)
-
+        if attrs & HAS_LINK_FILE:
+            ss.append("    %sfullpath(flink, link);" % prefix)
         ss.append("")
 
-        # -- call FUSE --------------------------------
+        # -- call FUSE ------------------------------------
 
         sysCall = OP_CALL_MAP[name][0]
 
-        # XXX THIS IS NOW WRONG
-
-        if attrs & FULL_PATH:
+        if attrs & HAS_LINK_FILE:
+            ss.append("    status = %s(path, flink);" % sysCall)
+        elif attrs & FULL_PATH:
             ss.append("    status = %s(fpath%s);" % (
                 sysCall, ff.otherArgs()))
+        # XXX OTHER CASES MISSING
 
+        # -- check for error status -----------------------
         if attrs & SIMPLE_ERROR:
             ss.append("    if (status < 0)")
             ss.append("        status = %serror(\"%s %s\");\n" % (
