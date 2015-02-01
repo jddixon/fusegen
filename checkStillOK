@@ -3,6 +3,8 @@
 ./diffEm unlink
 ./diffEm rmdir
 ./diffEm symlink
+./diffEm rename
+./diffEm link
 ./diffEm chown
 ./diffEm utime
 ./diffEm statfs

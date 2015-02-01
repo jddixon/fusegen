@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.4
+    2015-02-01
+        * generate rename, link                                     SLOC  527
 v0.3.3
     2015-01-31
         * generate getattr, symlink                                 SLOC  493

@@ -17,9 +17,9 @@ DOUBLE_FULL_PATH= 0x0020     # 'ff'
 LOGGING_ENTRY   = 0x0040     # 'L'
 COMPLEX_LOGGING = 0x0080     # 'LL'
 IFDEF_XATTR     = 0x0100     # 'X'
-LOGGING_STAT    = 0x0200    
-LOGGING_STATVFS = 0x0400    
-HAS_LINK_FILE   = 0x0800 
+LOGGING_STAT    = 0x0200
+LOGGING_STATVFS = 0x0400
+HAS_LINK_FILE   = 0x0800
 
 def setOpAttrs():
     """
@@ -37,9 +37,10 @@ def setOpAttrs():
         if name != 'init' and name != 'destroy':
             attrs |= RETURNS_STATUS
 
-        if name == 'link':
+        if name in ['rename','link',]:
             attrs |= DOUBLE_FULL_PATH
-        elif name not in ['symlink',
+        
+        if name not in ['symlink',
                         'read', 'write', 'flush', 'release', 'fsync',
                         'readdir', 'releasedir','fsyncdir', 'init',
                         'destroy', 'ftruncate', 'fgetattr']:
@@ -58,7 +59,7 @@ def setOpAttrs():
         if name in ['readlink', 'mknod', 'read', 'write',
                     'getxattr', 'listxattr', 'readdir',]:
             attrs |= COMPLEX_LOGGING
-        
+
         # XXX THIS USED TO BE 'else'
         attrs |= LOGGING_ENTRY
 
@@ -92,7 +93,7 @@ def makeFusePkg(args):
     testing         = args.testing
     ucName          = args.ucName
     verbose         = args.verbose
-  
+
     # if -force and pathToPkg exists, delete it ---------------------
     if force and os.path.exists(pathToPkg):
         shutil.rmtree(pathToPkg)
@@ -138,7 +139,7 @@ def makeFusePkg(args):
     makedir_p(srcDir, 0o755)
 
     m = FuseFunc.getFuncMap(prefix)
-    
+
     # XXX does not catch 'main'
     for name in OP_NAMES:
         attrs = opAttrs[name]
@@ -153,12 +154,15 @@ def makeFusePkg(args):
 
         # -- first line, LBRACE -----------------------
         ss.append("%s\n{" % ff.firstLine())
-       
+
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
             ss.append("    int status = 0;")   # XXX status
-        if attrs & FULL_PATH:
+        if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
             ss.append("    char fpath[PATH_MAX];")
+        if attrs & DOUBLE_FULL_PATH:
+            ss.append("    char fnewpath[PATH_MAX];")
+
         if attrs & HAS_LINK_FILE:
             ss.append("    char flink[PATH_MAX];")
 
@@ -168,32 +172,41 @@ def makeFusePkg(args):
         # -- log on entry -----------------------------
         if attrs & LOGGING_ENTRY:
 
-            logE = ['    logEntry(\"\\n%s%s(' % (prefix, name) ]
-            for ndx, param in enumerate(ff.params):
-                if ndx > 0:
-                    logE.append(', ')
-                pName = param[1]
-                if pName in LOG_ENTRY_PAT_MAP:
-                    pat  = LOG_ENTRY_PAT_MAP[pName]
-                else:
-                    pat = 'UNKNOWN PAT FOR \'%s\'' % pName
-                logE.append( '%s=%s' % (pName, pat))
-            logE.append(")\\n\",")
-            ss.append( ''.join(logE))
+            if attrs & DOUBLE_FULL_PATH:
+                part0 = "\"\\n%s%s" % (prefix, name)
+                part1 = '(path=\\"%s\\", newpath=\\"%s\\")\\n",'
+                s = "    logEntry(" + part0 + part1
+                ss.append(s)
+                ss.append("            path, newpath);")
+            else:
+                logE = ['    logEntry(\"\\n%s%s(' % (prefix, name) ]
+                for ndx, param in enumerate(ff.params):
+                    if ndx > 0:
+                        logE.append(', ')
+                    pName = param[1]
+                    if pName in LOG_ENTRY_PAT_MAP:
+                        pat  = LOG_ENTRY_PAT_MAP[pName]
+                    else:
+                        pat = 'UNKNOWN PAT FOR \'%s\'' % pName
+                    logE.append( '%s=%s' % (pName, pat))
+                logE.append(")\\n\",")
+                ss.append( ''.join(logE))
 
-            # now add a parameter list on the next line
-            logEP = ['            ']
-            for ndx, param in enumerate(ff.params):
-                if ndx > 0:
-                    logEP.append(', ')
-                pName = param[1]
-                logEP.append(pName)
-            logEP.append(');')
-            ss.append(''.join(logEP))
+                # now add a parameter list on the next line
+                logEP = ['            ']
+                for ndx, param in enumerate(ff.params):
+                    if ndx > 0:
+                        logEP.append(', ')
+                    pName = param[1]
+                    logEP.append(pName)
+                logEP.append(');')
+                ss.append(''.join(logEP))
 
         # -- set up absolute paths ------------------------
         if attrs & FULL_PATH:
             ss.append("    %sfullpath(fpath, path);" % prefix)
+        if attrs & DOUBLE_FULL_PATH:
+            ss.append("    %sfullpath(fnewpath, newpath);" % prefix)
         if attrs & HAS_LINK_FILE:
             ss.append("    %sfullpath(flink, link);" % prefix)
         ss.append("")
@@ -204,6 +217,8 @@ def makeFusePkg(args):
 
         if attrs & HAS_LINK_FILE:
             ss.append("    status = %s(path, flink);" % sysCall)
+        elif attrs & DOUBLE_FULL_PATH:
+            ss.append("    status = %s(fpath, fnewpath);" % sysCall)
         elif attrs & FULL_PATH:
             ss.append("    status = %s(fpath%s);" % (
                 sysCall, ff.otherArgs()))
@@ -234,7 +249,7 @@ def makeFusePkg(args):
 def main():
     """
     Expect a command like
-        fuseGen [options] 
+        fuseGen [options]
 
     """
 
@@ -242,7 +257,7 @@ def main():
     myDate   = "%04d-%02d-%02d" % time.gmtime()[:3]
 
     # parse the command line ----------------------------------------
-    
+
     DESC = 'generate a minimal FUSE (file system in user space) package'
     parser = ArgumentParser(description=DESC)
 
@@ -255,9 +270,9 @@ def main():
     parser.add_argument('-j', '--justShow', action='store_true',
         help='show options and exit')
 
-    parser.add_argument('-P', '--pkgName', 
+    parser.add_argument('-P', '--pkgName',
         help='utility package name')
-    
+
     parser.add_argument('-T', '--testing', action='store_true',
         help='this is a test run')
 
@@ -273,7 +288,7 @@ def main():
     checkDate(args.myDate)
     checkPkgName(args.pkgName)
     checkVersion(args.myVersion)
-    
+
     # fixups --------------------------------------------------------
     args.lcName = args.pkgName.lower()
     args.ucName = args.pkgName.upper()
@@ -307,7 +322,7 @@ def main():
     # do what's required --------------------------------------------
     makeFusePkg(args)
 
-        
+
 if __name__ == '__main__':
     main()
 
