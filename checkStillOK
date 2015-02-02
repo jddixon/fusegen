@@ -5,8 +5,14 @@
 ./diffEm symlink
 ./diffEm rename
 ./diffEm link
+./diffEm chmod
 ./diffEm chown
+./diffEm truncate
 ./diffEm utime
+
+./diffEm flush
+./diffEm release
+
 ./diffEm statfs
 ./diffEm setxattr
 ./diffEm removexattr

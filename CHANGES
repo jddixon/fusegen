@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.5
+    2015-02-02
+        * generate chmod, chown, utime, truncate, release, flush    SLOC  541
 v0.3.4
     2015-02-01
         * generate rename, link                                     SLOC  527
