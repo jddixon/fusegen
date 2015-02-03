@@ -226,7 +226,10 @@ def makeFusePkg(args):
         # catches release 
         if len(ff.params) == 2 and ff.params[1][1] == 'fi':
             # a HACK
-            if name != 'flush':
+            if name == 'releasedir':
+                ss.append("    // ANOMALY: status not handled")
+                ss.append("    closedir((DIR *) (uintptr_t) fi->fh);")
+            elif name != 'flush':
                 ss.append("    status = %s(fi->fh);" % sysCall)
         elif attrs & HAS_LINK_FILE:
             ss.append("    status = %s(path, flink);" % sysCall)

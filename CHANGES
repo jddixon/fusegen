@@ -1,5 +1,10 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.a6
+    2015-02-03
+        * generate statfs, setxattr, removexattr, fsyncdir, 
+            destroy, access
+
 v0.3.5
     2015-02-02
         * generate chmod, chown, utime, truncate, release, flush    SLOC  541

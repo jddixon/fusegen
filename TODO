@@ -1,21 +1,36 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-02
+    * PENDING:
+        - readlink
+        - mknod
+        - open
+        - read
+        - write
+        - fsync
+        - getxattr
+        - listxattr
+        - opendir
+        - readdir
+        - releasedir
+        - init
+        - create
+        - ftruncate
+        - fgetattr
+
 2015-02-01
     * chmod, chown, utime are actually OK; add to v0.3.5                * DONE
-
 2015-01-28
     * need IFDEFs on all xattr ops, currently getting 2 out of 4 ?      * DONE
 2015-01-27
     * ./diffEm getattr  # status test ??                                * FIXED
     * currently setting LOGGING_ENTRY for all ops -- check this is right
-
 2015-01-26
     * readlink call needs decremented size
     * getattr needs only logEntry line :-)
         - need map from arg name to format (eg statbuf => 0x%08x)
     * need map from fuse op name to name of o/s call                    * DONE
     * FIX: running make in std_fs/src                                   * DONE
-
 2015-01-25 (edited from -24)
     * add function getFuncMap which returns a map from a string         * DONE
         like 'getattr' to a FuseFunc object                             * DONE
@@ -23,11 +38,5 @@
     * in testFuseFunc verify that the list of FuseFunc returned  
         from calls to FuseFunc.parseProto can be used to reconstruct
         the text in the file FIRST_LINES
-
 2015-01-24
     * move most of makeParamLists into library (fusegen/__init__.py)    * DONE
-
-2015-01-17
-    * README needs editing 				                                * DONE
-    * follow ~/dev/gh-pages/README.orphaning				            * DONE
-    * then follow ../sharedev/README				                    * DONE

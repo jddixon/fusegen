@@ -13,6 +13,9 @@
 ./diffEm flush
 ./diffEm release
 
+./diffEm releasedir
+./diffEm fsyncdir
+
 ./diffEm statfs
 ./diffEm setxattr
 ./diffEm removexattr
