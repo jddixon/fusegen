@@ -2,21 +2,20 @@
 
 2015-02-02
     * PENDING:
-        - readlink
+        - readlink  # syscall size decremented
         - mknod
-        - open
-        - read
-        - write
-        - fsync
-        - getxattr
+        - open      # syscall param 2 is fi->flags
+        - read      # syscall param 1 is fi->fh
+        - write     # syscall param 1 is fi->fh; logEntry size is %lld
+        - fsync     # if HAVE_FDATASYNC ...
+        - getxattr  # logEntry treats value as string
         - listxattr
-        - opendir
-        - readdir
-        - releasedir
+        - opendir   # syscall returns dp, which is tested for NULL
+        - readdir   
         - init
-        - create
-        - ftruncate
-        - fgetattr
+        - create    # int fd param, returned by syscall, test on fd
+        - ftruncate # first param to syscall is fpath
+        - fgetattr  # syscall param 1 is fi->fh
 
 2015-02-01
     * chmod, chown, utime are actually OK; add to v0.3.5                * DONE

@@ -235,7 +235,7 @@ def makeFusePkg(args):
             ss.append("    status = %s(path, flink);" % sysCall)
         elif attrs & DOUBLE_FULL_PATH:
             ss.append("    status = %s(fpath, fnewpath);" % sysCall)
-        elif attrs & FULL_PATH:
+        elif attrs & (FULL_PATH | LOGGING_FI):
             ss.append("    status = %s(fpath%s);" % (
                 sysCall, ff.otherArgs()))
         # XXX OTHER CASES MISSING

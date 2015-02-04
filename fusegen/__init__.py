@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.3.6'
-__version_date__ = '2015-02-03'
+__version__      = '0.3.7'
+__version_date__ = '2015-02-04'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -196,7 +196,8 @@ class FuseFunc(object):
         pCount = len(self.params)
         s = ''
         for ndx, param in enumerate(self.params):
-            if ndx > 0:
+            pName = param[1]
+            if pName != 'fi' and ndx > 0:
                 s += ', ' +param[1]
         return s
 
