@@ -9,6 +9,7 @@
 ./diffEm chown
 ./diffEm truncate
 ./diffEm utime
+./diffEm open
 
 ./diffEm flush
 ./diffEm release
@@ -21,3 +22,4 @@
 ./diffEm removexattr
 ./diffEm destroy
 ./diffEm access
+./diffEm create

@@ -1,8 +1,11 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.8
+    2015-02-05
+        * generate open, create                                     SLOC  578
 v0.3.7
     2015-02-04
-        * generate releasedir
+        * generate releasedir                                       SLOC  547
 v0.3.6
     2015-02-03
         * generate statfs, setxattr, removexattr, fsyncdir, 

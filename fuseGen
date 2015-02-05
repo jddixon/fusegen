@@ -21,6 +21,8 @@ LOGGING_STAT    = 0x0200
 LOGGING_STATVFS = 0x0400
 HAS_LINK_FILE   = 0x0800
 LOGGING_FI      = 0x1000
+SYSCALL_RET_FD  = 0x2000
+SETTING_FD      = 0x4000
 
 def setOpAttrs():
     """
@@ -40,14 +42,14 @@ def setOpAttrs():
 
         if name in ['rename','link',]:
             attrs |= DOUBLE_FULL_PATH
-        
+
         if name not in ['symlink',
                         'read', 'write', 'flush', 'release', 'fsync',
                         'readdir', 'releasedir','fsyncdir', 'init',
                         'destroy', 'ftruncate', 'fgetattr']:
             attrs |= FULL_PATH
 
-        if name in ['mknod', 'open', 'readdir', 'create',]:
+        if name in ['mknod', 'readdir', ]:
             attrs |= COMPLEX_ERROR
         elif name in ['flush', 'releasedir', 'fsyncdir', 'init', 'destroy',]:
             pass
@@ -63,16 +65,24 @@ def setOpAttrs():
 
         # XXX THIS USED TO BE 'else'
         attrs |= LOGGING_ENTRY
-        
+
         if name in ['create', 'fgetattr', 'flush', 'fsyncdir', 'ftruncate',
                 'opendir', 'open', 'readdir', 'read', 'releasedir',
                 'release', 'write',]:
             attrs |= LOGGING_FI
 
+        if name in ['create', 'fgetattr', 
+                'opendir', 'open', 'readdir', 'read',
+                'write',]:
+            attrs |= SETTING_FD
+
         if name in ['getattr', 'fgetattr',]:
             attrs |= LOGGING_STAT
         elif name == 'statfs':
             attrs |= LOGGING_STATVFS
+
+        if name in ['create', 'open',]:
+            attrs |= SYSCALL_RET_FD
 
         opAttrs[name] = attrs
 
@@ -163,14 +173,15 @@ def makeFusePkg(args):
 
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
-            ss.append("    int status = 0;")   # XXX status
+            ss.append('    int status = 0;')   # XXX status
+        if attrs & SYSCALL_RET_FD:
+            ss.append('    int fd;')
         if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
-            ss.append("    char fpath[PATH_MAX];")
+            ss.append('    char fpath[PATH_MAX];')
         if attrs & DOUBLE_FULL_PATH:
-            ss.append("    char fnewpath[PATH_MAX];")
-
+            ss.append('    char fnewpath[PATH_MAX];')
         if attrs & HAS_LINK_FILE:
-            ss.append("    char flink[PATH_MAX];")
+            ss.append('    char flink[PATH_MAX];')
 
 
         ss.append("")
@@ -207,7 +218,8 @@ def makeFusePkg(args):
                     logEP.append(pName)
                 logEP.append(');')
                 ss.append(''.join(logEP))
-        if attrs & LOGGING_FI != 0:
+        
+        if attrs & LOGGING_FI and not attrs & SETTING_FD:
             ss.append('    log_fi(fi);')
 
         # -- set up absolute paths ------------------------
@@ -222,27 +234,45 @@ def makeFusePkg(args):
         # -- call FUSE ------------------------------------
 
         sysCall = OP_CALL_MAP[name][0]
-
-        # catches release 
-        if len(ff.params) == 2 and ff.params[1][1] == 'fi':
-            # a HACK
+        if sysCall == '':
+            if name == 'init':
+                # DEBUG
+                print("generate init body")
+                # END
+                ss.append("    // XXX MISSING init BOD$")
+            else:
+                ss.append("    // CURRENTLY A NO-OP\n")
+        else:
             if name == 'releasedir':
                 ss.append("    // ANOMALY: status not handled")
                 ss.append("    closedir((DIR *) (uintptr_t) fi->fh);")
-            elif name != 'flush':
-                ss.append("    status = %s(fi->fh);" % sysCall)
-        elif attrs & HAS_LINK_FILE:
-            ss.append("    status = %s(path, flink);" % sysCall)
-        elif attrs & DOUBLE_FULL_PATH:
-            ss.append("    status = %s(fpath, fnewpath);" % sysCall)
-        elif attrs & (FULL_PATH | LOGGING_FI):
-            ss.append("    status = %s(fpath%s);" % (
-                sysCall, ff.otherArgs()))
-        # XXX OTHER CASES MISSING
+            elif name == 'open':
+                ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
+            # catches release XXX SHOULD CATCH ftruncate
+            elif len(ff.params) == 2 and ff.params[1][1] == 'fi':
+                # a HACK
+                if name != 'flush':
+                    ss.append("    status = %s(fi->fh);" % sysCall)
+
+            elif attrs & HAS_LINK_FILE:
+                ss.append("    status = %s(path, flink);" % sysCall)
+            elif attrs & DOUBLE_FULL_PATH:
+                ss.append("    status = %s(fpath, fnewpath);" % sysCall)
+            elif attrs & (FULL_PATH | LOGGING_FI):
+                if attrs & SYSCALL_RET_FD:
+                    ss.append("    fd = %s(fpath%s);" % ( 
+                        sysCall, ff.otherArgs()))
+                else:
+                    ss.append("    status = %s(fpath%s);" % (
+                        sysCall, ff.otherArgs()))
+            # XXX OTHER CASES MISSING
 
         # -- check for error status -----------------------
         if attrs & SIMPLE_ERROR:
-            ss.append("    if (status < 0)")
+            if attrs & SYSCALL_RET_FD:
+                ss.append("    if (fd < 0)")
+            else:
+                ss.append("    if (status < 0)")
             ss.append("        status = %serror(\"%s %s\");\n" % (
                 prefix, prefix + name, sysCall))
 
@@ -252,6 +282,9 @@ def makeFusePkg(args):
         elif attrs & LOGGING_STATVFS:
             ss.append("    logStatVFS(%s);\n" % ff.params[1][1])
 
+        if attrs & SETTING_FD:
+            ss.append('    fi->fh = fd;')
+            ss.append('    log_fi(fi);')
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:
             ss.append("    return status;")

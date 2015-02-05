@@ -1,19 +1,24 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-04
+    * generated fsyncdir.inc is now wrong                               * FIXED
+    * log_fi(fi); in the wrong place, at least in opendir
+
 2015-02-02
     * PENDING:
         - readlink  # syscall size decremented
-        - mknod
-        - open      # syscall param 2 is fi->flags
+        - mknod     # var int fd; open returns fd; syscall param 2 is fi->flags
+        - open      # var int fd; assigned; syscall param 1 is fi->fh   * DONE
         - read      # syscall param 1 is fi->fh
         - write     # syscall param 1 is fi->fh; logEntry size is %lld
-        - fsync     # if HAVE_FDATASYNC ...
+        - fsync     # syscall param 1 is fi->fh; if HAVE_FDATASYNC ...
         - getxattr  # logEntry treats value as string
         - listxattr
-        - opendir   # syscall returns dp, which is tested for NULL
-        - readdir   
+        - opendir   # var Dir *dp; fi-fh assigned; syscall returns dp; 
+                        dp tested for NULL
+        - readdir   # fi->fh cast and assigned to dp
         - init
-        - create    # int fd param, returned by syscall, test on fd
+        - create    # int fd param, returned by syscall, test on fd     * DONE
         - ftruncate # first param to syscall is fpath
         - fgetattr  # syscall param 1 is fi->fh
 
