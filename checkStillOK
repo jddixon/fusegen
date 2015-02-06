@@ -12,8 +12,13 @@
 ./diffEm open
 
 ./diffEm flush
+
+./diffEm fsync
+./diffEm ftruncate
+
 ./diffEm release
 
+./diffEm readlink
 ./diffEm releasedir
 ./diffEm fsyncdir
 

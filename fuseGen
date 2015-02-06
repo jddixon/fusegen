@@ -8,21 +8,22 @@ from fusegen   import *
 
 # attributes of fuse operations
 
-RETURNS_STATUS  = 0x0001     # check
-DEPRECATED      = 0x0002     # 'D'
-SIMPLE_ERROR    = 0x0004     # 'e'
-COMPLEX_ERROR   = 0x0008     # 'ee'
-FULL_PATH       = 0x0010     # 'f'
-DOUBLE_FULL_PATH= 0x0020     # 'ff'
-LOGGING_ENTRY   = 0x0040     # 'L'
-COMPLEX_LOGGING = 0x0080     # 'LL'
-IFDEF_XATTR     = 0x0100     # 'X'
-LOGGING_STAT    = 0x0200
-LOGGING_STATVFS = 0x0400
-HAS_LINK_FILE   = 0x0800
-LOGGING_FI      = 0x1000
-SYSCALL_RET_FD  = 0x2000
-SETTING_FD      = 0x4000
+RETURNS_STATUS      = 0x0001     # check
+DEPRECATED          = 0x0002     # 'D'
+SIMPLE_ERROR        = 0x0004     # 'e'
+COMPLEX_ERROR       = 0x0008     # 'ee'
+FULL_PATH           = 0x0010     # 'f'
+DOUBLE_FULL_PATH    = 0x0020     # 'ff'
+LOGGING_ENTRY       = 0x0040     # 'L'
+COMPLEX_LOGGING     = 0x0080     # 'LL'
+IFDEF_XATTR         = 0x0100     # 'X'
+LOGGING_STAT        = 0x0200
+LOGGING_STATVFS     = 0x0400
+HAS_LINK_FILE       = 0x0800
+LOGGING_FI          = 0x1000
+SYSCALL_RET_FD      = 0x2000
+SET_FD_TO_FH        = 0x4000
+SYSCALL_FI_PARAM1   = 0x8000
 
 def setOpAttrs():
     """
@@ -66,7 +67,8 @@ def setOpAttrs():
         # XXX THIS USED TO BE 'else'
         attrs |= LOGGING_ENTRY
 
-        if name in ['create', 'fgetattr', 'flush', 'fsyncdir', 'ftruncate',
+        if name in ['create', 'fgetattr', 'flush', 'fsync', 'fsyncdir', 
+                'ftruncate',
                 'opendir', 'open', 'readdir', 'read', 'releasedir',
                 'release', 'write',]:
             attrs |= LOGGING_FI
@@ -74,7 +76,10 @@ def setOpAttrs():
         if name in ['create', 'fgetattr', 
                 'opendir', 'open', 'readdir', 'read',
                 'write',]:
-            attrs |= SETTING_FD
+            attrs |= SET_FD_TO_FH
+
+        if name in ['fgetattr', 'fsync', 'opendir', 'read', 'releasedir', 'release', 'ftruncate', 'write']:
+            attrs |= SYSCALL_FI_PARAM1
 
         if name in ['getattr', 'fgetattr',]:
             attrs |= LOGGING_STAT
@@ -219,7 +224,7 @@ def makeFusePkg(args):
                 logEP.append(');')
                 ss.append(''.join(logEP))
         
-        if attrs & LOGGING_FI and not attrs & SETTING_FD:
+        if attrs & LOGGING_FI and not attrs & SET_FD_TO_FH:
             ss.append('    log_fi(fi);')
 
         # -- set up absolute paths ------------------------
@@ -239,15 +244,26 @@ def makeFusePkg(args):
                 # DEBUG
                 print("generate init body")
                 # END
-                ss.append("    // XXX MISSING init BOD$")
+                ss.append("    // XXX MISSING init BODY")
             else:
                 ss.append("    // CURRENTLY A NO-OP\n")
         else:
-            if name == 'releasedir':
-                ss.append("    // ANOMALY: status not handled")
-                ss.append("    closedir((DIR *) (uintptr_t) fi->fh);")
+            if name == 'fsync':
+                ss.append('    // freebsd')
+                ss.append('#ifdef HAVE_FDATASYNC')
+                ss.append('    if (datasync)')
+                ss.append('        status = fdatasync(fi->fh);')
+                ss.append('    else')
+                ss.append('#endif')
+                ss.append('        status = fsync(fi->fh);')
+
             elif name == 'open':
                 ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
+            elif name == 'readlink':
+                ss.append("    status = readlink(fpath, link, size - 1);")
+            elif name == 'releasedir':
+                ss.append("    // ANOMALY: status not handled")
+                ss.append("    closedir((DIR *) (uintptr_t) fi->fh);")
             # catches release XXX SHOULD CATCH ftruncate
             elif len(ff.params) == 2 and ff.params[1][1] == 'fi':
                 # a HACK
@@ -263,8 +279,12 @@ def makeFusePkg(args):
                     ss.append("    fd = %s(fpath%s);" % ( 
                         sysCall, ff.otherArgs()))
                 else:
-                    ss.append("    status = %s(fpath%s);" % (
-                        sysCall, ff.otherArgs()))
+                    if attrs & SYSCALL_FI_PARAM1:
+                        ss.append("    status = %s(fi->fh%s);" % (
+                            sysCall, ff.otherArgs()))
+                    else:
+                        ss.append("    status = %s(fpath%s);" % (
+                            sysCall, ff.otherArgs()))
             # XXX OTHER CASES MISSING
 
         # -- check for error status -----------------------
@@ -275,14 +295,18 @@ def makeFusePkg(args):
                 ss.append("    if (status < 0)")
             ss.append("        status = %serror(\"%s %s\");\n" % (
                 prefix, prefix + name, sysCall))
-
+            if name == 'readlink':
+                ss.append('    else {')
+                ss.append('        link[status] = \'\\0\';')
+                ss.append('        status = 0;')
+                ss.append('    }')
         # -- logging stat -----------------------------
         if attrs & LOGGING_STAT:
             ss.append("    logStat(%s);\n" % ff.params[1][1])
         elif attrs & LOGGING_STATVFS:
             ss.append("    logStatVFS(%s);\n" % ff.params[1][1])
 
-        if attrs & SETTING_FD:
+        if attrs & SET_FD_TO_FH:
             ss.append('    fi->fh = fd;')
             ss.append('    log_fi(fi);')
         # -- return -----------------------------------

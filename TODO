@@ -6,12 +6,13 @@
 
 2015-02-02
     * PENDING:
-        - readlink  # syscall size decremented
-        - mknod     # var int fd; open returns fd; syscall param 2 is fi->flags
+        - readlink  # syscall size decremented                          * DONE
+        - mknod     # var int fd; open returns fd; syscall param 2 
+                        is fi->flags
         - open      # var int fd; assigned; syscall param 1 is fi->fh   * DONE
         - read      # syscall param 1 is fi->fh
         - write     # syscall param 1 is fi->fh; logEntry size is %lld
-        - fsync     # syscall param 1 is fi->fh; if HAVE_FDATASYNC ...
+        - fsync     # syscall param 1 is fi->fh; if HAVE_FDATASYNC ...  * DONE
         - getxattr  # logEntry treats value as string
         - listxattr
         - opendir   # var Dir *dp; fi-fh assigned; syscall returns dp; 
@@ -19,7 +20,7 @@
         - readdir   # fi->fh cast and assigned to dp
         - init
         - create    # int fd param, returned by syscall, test on fd     * DONE
-        - ftruncate # first param to syscall is fpath
+        - ftruncate # first param to syscall is fpath                   * DONE
         - fgetattr  # syscall param 1 is fi->fh
 
 2015-02-01
@@ -30,7 +31,7 @@
     * ./diffEm getattr  # status test ??                                * FIXED
     * currently setting LOGGING_ENTRY for all ops -- check this is right
 2015-01-26
-    * readlink call needs decremented size
+    * readlink call needs decremented size                              * DONE 
     * getattr needs only logEntry line :-)
         - need map from arg name to format (eg statbuf => 0x%08x)
     * need map from fuse op name to name of o/s call                    * DONE
