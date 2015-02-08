@@ -1,47 +1,32 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-07
+    * std has XXX_FS_DATA but ucName is XXXFS_DATA                      * FIXED
+    * invisible difference between generated and std init.inc
+    
 2015-02-04
-    * generated fsyncdir.inc is now wrong                               * FIXED
     * log_fi(fi); in the wrong place, at least in opendir
 
 2015-02-02
     * PENDING:
-        - readlink  # syscall size decremented                          * DONE
         - mknod     # var int fd; open returns fd; syscall param 2 
                         is fi->flags
-        - open      # var int fd; assigned; syscall param 1 is fi->fh   * DONE
         - read      # syscall param 1 is fi->fh
         - write     # syscall param 1 is fi->fh; logEntry size is %lld
-        - fsync     # syscall param 1 is fi->fh; if HAVE_FDATASYNC ...  * DONE
         - getxattr  # logEntry treats value as string
         - listxattr
         - opendir   # var Dir *dp; fi-fh assigned; syscall returns dp; 
                         dp tested for NULL
         - readdir   # fi->fh cast and assigned to dp
-        - init
-        - create    # int fd param, returned by syscall, test on fd     * DONE
-        - ftruncate # first param to syscall is fpath                   * DONE
+        - init                                                          * DONE
         - fgetattr  # syscall param 1 is fi->fh
 
-2015-02-01
-    * chmod, chown, utime are actually OK; add to v0.3.5                * DONE
-2015-01-28
-    * need IFDEFs on all xattr ops, currently getting 2 out of 4 ?      * DONE
 2015-01-27
-    * ./diffEm getattr  # status test ??                                * FIXED
     * currently setting LOGGING_ENTRY for all ops -- check this is right
 2015-01-26
-    * readlink call needs decremented size                              * DONE 
     * getattr needs only logEntry line :-)
         - need map from arg name to format (eg statbuf => 0x%08x)
-    * need map from fuse op name to name of o/s call                    * DONE
-    * FIX: running make in std_fs/src                                   * DONE
 2015-01-25 (edited from -24)
-    * add function getFuncMap which returns a map from a string         * DONE
-        like 'getattr' to a FuseFunc object                             * DONE
-    * replace makeParamLists with testFuseFunc                          * DONE
     * in testFuseFunc verify that the list of FuseFunc returned  
         from calls to FuseFunc.parseProto can be used to reconstruct
         the text in the file FIRST_LINES
-2015-01-24
-    * move most of makeParamLists into library (fusegen/__init__.py)    * DONE

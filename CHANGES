@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.10
+    2015-02-07
+        * generate read, write, init                                SLOC  615
 v0.3.9
     2015-02-06
         * generate fsync, ftruncate, readlink                       SLOC  604

@@ -1,4 +1,8 @@
+echo This file should be aligned with fragments/optable
+
 ./diffEm getattr
+./diffEm readlink
+
 ./diffEm mkdir
 ./diffEm unlink
 ./diffEm rmdir
@@ -10,21 +14,21 @@
 ./diffEm truncate
 ./diffEm utime
 ./diffEm open
-
+./diffEm read
+./diffEm write
+./diffEm statfs
 ./diffEm flush
-
-./diffEm fsync
-./diffEm ftruncate
-
 ./diffEm release
+./diffEm fsync
+./diffEm setxattr
 
-./diffEm readlink
+./diffEm removexattr
+
 ./diffEm releasedir
 ./diffEm fsyncdir
-
-./diffEm statfs
-./diffEm setxattr
-./diffEm removexattr
+./diffEm init
 ./diffEm destroy
 ./diffEm access
 ./diffEm create
+./diffEm ftruncate
+
