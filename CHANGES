@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.11
+    2015-02-08
+        * generate fgetattr, getxattr, lisxattr, opendir            SLOC  660
 v0.3.10
     2015-02-07
         * generate read, write, init                                SLOC  615

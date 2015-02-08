@@ -21,9 +21,9 @@ echo This file should be aligned with fragments/optable
 ./diffEm release
 ./diffEm fsync
 ./diffEm setxattr
-
+./diffEm getxattr
 ./diffEm removexattr
-
+./diffEm listxattr
 ./diffEm releasedir
 ./diffEm fsyncdir
 ./diffEm init
@@ -31,4 +31,5 @@ echo This file should be aligned with fragments/optable
 ./diffEm access
 ./diffEm create
 ./diffEm ftruncate
+./diffEm fgetattr
 

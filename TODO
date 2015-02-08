@@ -2,7 +2,7 @@
 
 2015-02-07
     * std has XXX_FS_DATA but ucName is XXXFS_DATA                      * FIXED
-    * invisible difference between generated and std init.inc
+    * invisible difference between generated and std init.inc           * OK ?!
     
 2015-02-04
     * log_fi(fi); in the wrong place, at least in opendir
@@ -11,15 +11,15 @@
     * PENDING:
         - mknod     # var int fd; open returns fd; syscall param 2 
                         is fi->flags
-        - read      # syscall param 1 is fi->fh
-        - write     # syscall param 1 is fi->fh; logEntry size is %lld
-        - getxattr  # logEntry treats value as string
-        - listxattr
-        - opendir   # var Dir *dp; fi-fh assigned; syscall returns dp; 
-                        dp tested for NULL
+        - read      # syscall param 1 is fi->fh                         * DONE
+        - write     # syscall param 1 is fi->fh; logEntry size is %lld  * DONE
+        - getxattr  # logEntry treats value as string                   * DONE
+        - listxattr                                                     * DONE
+        - opendir   # var Dir *dp; fi-fh assigned; syscall returns dp;  * DONE
+                        dp tested for NULL                              * DONE
         - readdir   # fi->fh cast and assigned to dp
         - init                                                          * DONE
-        - fgetattr  # syscall param 1 is fi->fh
+        - fgetattr  # syscall param 1 is fi->fh # SPECIAL               * DONE
 
 2015-01-27
     * currently setting LOGGING_ENTRY for all ops -- check this is right

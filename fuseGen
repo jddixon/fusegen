@@ -22,7 +22,7 @@ LOGGING_STATVFS     = 0x00400
 HAS_LINK_FILE       = 0x00800
 LOGGING_FI          = 0x01000
 SYSCALL_RET_FD      = 0x02000
-SET_FD_TO_FH        = 0x04000
+SET_FH_FROM_FD        = 0x04000
 SYSCALL_FI_PARAM1   = 0x08000
 
 def setOpAttrs():
@@ -60,6 +60,7 @@ def setOpAttrs():
         if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
             attrs |= IFDEF_XATTR
 
+        # XXX NOWHERE USED
         if name in ['readlink', 'mknod', 'write',
                     'getxattr', 'listxattr', 'readdir',]:
             attrs |= COMPLEX_LOGGING
@@ -73,8 +74,8 @@ def setOpAttrs():
                 'release', 'write',]:
             attrs |= LOGGING_FI
 
-        if name in ['create', 'opendir', 'open', 'readdir', ]:
-            attrs |= SET_FD_TO_FH
+        if name in ['create', 'open',  ]:
+            attrs |= SET_FH_FROM_FD
 
         if name in ['fgetattr', 'fsync', 'opendir', 'read', 'releasedir', 'release', 'ftruncate', 'write']:
             attrs |= SYSCALL_FI_PARAM1
@@ -149,8 +150,6 @@ def makeFusePkg(args):
         f.write("%s\n" % myDate)
         f.write("    *\n")
 
-    # XXX MUCH STUFF MISSING #
-
     opAttrs = setOpAttrs()
     # mkSrcDir(args, opAttrs)
 
@@ -186,6 +185,12 @@ def makeFusePkg(args):
         if attrs & HAS_LINK_FILE:
             ss.append('    char flink[PATH_MAX];')
 
+        if name in ['opendir', 'readdir']:
+            ss.append('    DIR *dp;')
+            if name=='readdir':
+                ss.append('    struct dirent *de;')
+        elif name == 'listxattr':
+            ss.append('    char *ptr;')
 
         ss.append("")
 
@@ -213,6 +218,11 @@ def makeFusePkg(args):
                             pat = '%lld'
                         else:
                             pat = '%d'
+                    elif pName == 'value':
+                        if name in ['getxattr',]:
+                            pat = '0x%08x'
+                        else:
+                            pat = '\\"%s\\"'
                     elif pName in LOG_ENTRY_PAT_MAP:
                         pat  = LOG_ENTRY_PAT_MAP[pName]
                     else:
@@ -231,7 +241,7 @@ def makeFusePkg(args):
                 logEP.append(');')
                 ss.append(''.join(logEP))
         
-        if attrs & LOGGING_FI and not attrs & SET_FD_TO_FH:
+        if name != 'opendir' and attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
             ss.append('    log_fi(fi);')
 
         # -- set up absolute paths ------------------------
@@ -266,11 +276,14 @@ def makeFusePkg(args):
             elif name == 'releasedir':
                 ss.append("    // ANOMALY: status not handled")
                 ss.append("    closedir((DIR *) (uintptr_t) fi->fh);")
-            # catches release XXX SHOULD CATCH ftruncate
-            elif len(ff.params) == 2 and ff.params[1][1] == 'fi':
-                # a HACK
-                if name != 'flush':
-                    ss.append("    status = %s(fi->fh);" % sysCall)
+            # catches release XXX SHOULD CATCH ftruncate *** DROPPED ***
+#            elif len(ff.params) == 2 and ff.params[1][1] == 'fi':
+#                # DEBUG
+#                print("2 PARAMS: name=%s, prefix=%s" % (name, prefix))
+#                # END
+#                # a HACK
+#                if name != 'flush':
+#                    ss.append("    status = %s(fi->fh);" % sysCall)
 
             elif attrs & HAS_LINK_FILE:
                 ss.append("    status = %s(path, flink);" % sysCall)
@@ -282,16 +295,37 @@ def makeFusePkg(args):
                         sysCall, ff.otherArgs()))
                 else:
                     if attrs & SYSCALL_FI_PARAM1:
-                        otherArgs = ff.otherArgs()
-                        ss.append("    status = %s(fi->fh%s);" % (
-                            sysCall, otherArgs))
+                        if name == 'fgetattr':
+                            ss.append('    // FreeBSD special case; ATTRIBUTION')
+                            ss.append('    if (!strcmp(path, "/")) {')
+                            ss.append('        char fpath[PATH_MAX];')
+                            ss.append("        %sfullpath(fpath, path);" % (
+                                prefix))
+                            ss.append("        status = lstat(fpath%s);" % (
+                                ff.otherArgs()))
+                            ss.append('        if (status < 0)')
+                            ss.append("            status = %serror(\"%sfgetattr lstat\");" % (prefix, prefix))
+                            ss.append('    } else {')
+                            ss.append("        status = %s(fi->fh%s);" % (
+                                sysCall, ff.otherArgs()))
+                            ss.append('        if (status < 0)')
+                            ss.append("            status = %serror(\"%sfgetattr fstat\");" % (prefix, prefix))
+                            ss.append('    }')
+                        elif name == 'opendir':
+                            ss.append('    dp = opendir(fpath);')
+                        else:
+                            ss.append("    status = %s(fi->fh%s);" % (
+                                sysCall, ff.otherArgs()))
                     else:
-                        ss.append("    status = %s(fpath%s);" % (
-                            sysCall, ff.otherArgs()))
-            # XXX OTHER CASES MISSING
-
+                        ss.append("    status = %s(fpath%s);" % ( 
+                            (sysCall, ff.otherArgs())))
+                    
         # -- check for error status -----------------------
-        if attrs & SIMPLE_ERROR:
+        if name == 'opendir':
+            ss.append('    if (dp == NULL)')
+            ss.append("        status = %serror(\"%s%s %s\");" % (
+                prefix, prefix, name, sysCall))
+        elif name != 'fgetattr' and attrs & SIMPLE_ERROR:
             if attrs & SYSCALL_RET_FD:
                 ss.append("    if (fd < 0)")
             else:
@@ -303,15 +337,30 @@ def makeFusePkg(args):
                 ss.append('        link[status] = \'\\0\';')
                 ss.append('        status = 0;')
                 ss.append('    }')
+        if name in ['getxattr',]:
+            ss.append('    else')
+            ss.append('        logMsg("    value=\\"%s\\"\\n", value);')
+
+        if name == 'listxattr':
+            ss.append(
+              '    logMsg("    returned attributes (length %d):\\n", status);')
+            ss.append(
+              '    for (ptr = list; ptr < list + status; ptr += strlen(ptr)+1)')
+            ss.append('        logMsg("    \\"%s\\"\\n", ptr);')
+
         # -- logging stat -----------------------------
         if attrs & LOGGING_STAT:
             ss.append("    logStat(%s);\n" % ff.params[1][1])
         elif attrs & LOGGING_STATVFS:
             ss.append("    logStatVFS(%s);\n" % ff.params[1][1])
 
-        if attrs & SET_FD_TO_FH:
+        if attrs & SET_FH_FROM_FD:
             ss.append('    fi->fh = fd;')
             ss.append('    log_fi(fi);')
+        elif name=='opendir':
+            ss.append('    fi->fh = (intptr_t) dp;')
+            ss.append('    log_fi(fi);')
+
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:
             ss.append("    return status;")
