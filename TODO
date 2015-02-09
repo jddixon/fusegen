@@ -5,7 +5,7 @@
     * invisible difference between generated and std init.inc           * OK ?!
     
 2015-02-04
-    * log_fi(fi); in the wrong place, at least in opendir
+    * log_fi(fi); in the wrong place, at least in opendir               * FIXED
 
 2015-02-02
     * PENDING:
@@ -17,7 +17,7 @@
         - listxattr                                                     * DONE
         - opendir   # var Dir *dp; fi-fh assigned; syscall returns dp;  * DONE
                         dp tested for NULL                              * DONE
-        - readdir   # fi->fh cast and assigned to dp
+        - readdir   # fi->fh cast and assigned to dp                    * DONE
         - init                                                          * DONE
         - fgetattr  # syscall param 1 is fi->fh # SPECIAL               * DONE
 

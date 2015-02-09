@@ -22,7 +22,7 @@ LOGGING_STATVFS     = 0x00400
 HAS_LINK_FILE       = 0x00800
 LOGGING_FI          = 0x01000
 SYSCALL_RET_FD      = 0x02000
-SET_FH_FROM_FD        = 0x04000
+SET_FH_FROM_FD      = 0x04000
 SYSCALL_FI_PARAM1   = 0x08000
 
 def setOpAttrs():
@@ -51,6 +51,7 @@ def setOpAttrs():
             attrs |= FULL_PATH
 
         if name in ['mknod', 'readdir', ]:
+            # XXX NOWHERE USED
             attrs |= COMPLEX_ERROR
         elif name in ['flush', 'releasedir', 'fsyncdir', 'init', 'destroy',]:
             pass
@@ -188,7 +189,7 @@ def makeFusePkg(args):
         if name in ['opendir', 'readdir']:
             ss.append('    DIR *dp;')
             if name=='readdir':
-                ss.append('    struct dirent *de;')
+                ss.append('    struct dirent *entry;')
         elif name == 'listxattr':
             ss.append('    char *ptr;')
 
@@ -240,9 +241,12 @@ def makeFusePkg(args):
                     logEP.append(pName)
                 logEP.append(');')
                 ss.append(''.join(logEP))
-        
-        if name != 'opendir' and attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
-            ss.append('    log_fi(fi);')
+       
+        if name == 'readdir':
+            ss.append('    dp = (DIR *) (uintptr_t) fi->fh;')
+
+        if name != 'opendir' and name != 'readdir' and attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
+            ss.append('    logFI(fi);')
 
         # -- set up absolute paths ------------------------
         if attrs & FULL_PATH:
@@ -271,6 +275,20 @@ def makeFusePkg(args):
 
             elif name == 'open':
                 ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
+            elif name == 'readdir':
+                ss.append('    entry = readdir(dp);')
+                ss.append('    if (entry == 0) {')
+                ss.append('        status = xxxfs_error("xxxfs_readdir readdir");')
+                ss.append('        return status;')
+                ss.append('    }')
+                ss.append('    do {')
+                ss.append('        logMsg("calling filler with name %s\\n", entry->d_name);')
+                ss.append('        if (filler(buf, entry->d_name, NULL, 0) != 0) {')
+                ss.append('            logMsg("    ERROR xxxfs_readdir filler:  buffer full");')
+                ss.append('            return -ENOMEM;')
+                ss.append('        }')
+                ss.append('    } while ((entry = readdir(dp)) != NULL);')
+
             elif name == 'readlink':
                 ss.append("    status = readlink(fpath, link, size - 1);")
             elif name == 'releasedir':
@@ -356,10 +374,12 @@ def makeFusePkg(args):
 
         if attrs & SET_FH_FROM_FD:
             ss.append('    fi->fh = fd;')
-            ss.append('    log_fi(fi);')
+            ss.append('    logFI(fi);')
         elif name=='opendir':
             ss.append('    fi->fh = (intptr_t) dp;')
-            ss.append('    log_fi(fi);')
+            ss.append('    logFI(fi);')
+        elif name=='readdir':
+            ss.append('    logFI(fi);')
 
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:
