@@ -9,8 +9,8 @@
 
 2015-02-02
     * PENDING:
-        - mknod     # var int fd; open returns fd; syscall param 2 
-                        is fi->flags
+        - mknod     # var int fd; open returns fd; syscall param 2      * DONE
+                        is fi->flags                                    * DONE
         - read      # syscall param 1 is fi->fh                         * DONE
         - write     # syscall param 1 is fi->fh; logEntry size is %lld  * DONE
         - getxattr  # logEntry treats value as string                   * DONE
@@ -22,10 +22,11 @@
         - fgetattr  # syscall param 1 is fi->fh # SPECIAL               * DONE
 
 2015-01-27
-    * currently setting LOGGING_ENTRY for all ops -- check this is right
+    * setting LOGGING_ENTRY for all ops - check this is right
+
 2015-01-26
-    * getattr needs only logEntry line :-)
-        - need map from arg name to format (eg statbuf => 0x%08x)
+    * getattr needs only logEntry line :-)                              * DONE
+        - need map from arg name to format (eg statbuf => 0x%08x)       * DONE
 2015-01-25 (edited from -24)
     * in testFuseFunc verify that the list of FuseFunc returned  
         from calls to FuseFunc.parseProto can be used to reconstruct

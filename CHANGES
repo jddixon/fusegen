@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.3.13
+    2015-02-10
+        * generate (optimized) mknod                                SLOC  704
 v0.3.12
     2015-02-09
         * generate readdir                                          SLOC  677

@@ -272,7 +272,30 @@ def makeFusePkg(args):
                 ss.append('    else')
                 ss.append('#endif')
                 ss.append('        status = fsync(fi->fh);')
-
+            elif name == 'mknod':
+                ss.append('    // ATTRIBUTION')
+                ss.append('    if (S_ISREG(mode)) {')
+                ss.append('        status = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);')
+                ss.append('        if (status < 0)')
+                ss.append("            status = %serror(\"%smknod open\");" % (
+                    prefix, prefix))
+                ss.append("        else {")
+                ss.append("            status = close(status);")
+                ss.append("            if (status < 0)")
+                ss.append("                status = %serror(\"%smknod close\");"%(
+                    prefix, prefix))
+                ss.append("        }")
+                ss.append("    } else if (S_ISFIFO(mode)) {")
+                ss.append("        status = mkfifo(fpath, mode);")
+                ss.append("        if (status < 0)")
+                ss.append("            status = %serror(\"%smknod mkfifo\");" % (
+                    prefix, prefix))
+                ss.append("    } else {")
+                ss.append("        status = mknod(fpath, mode, dev);")
+                ss.append("        if (status < 0)")
+                ss.append("            status = %serror(\"%smknod mknod\");" % (
+                    prefix, prefix))
+                ss.append("    }")
             elif name == 'open':
                 ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
             elif name == 'readdir':

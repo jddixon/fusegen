@@ -3,6 +3,7 @@ echo This file should be aligned with fragments/optable
 ./diffEm getattr
 ./diffEm readlink
 
+./diffEm mknod
 ./diffEm mkdir
 ./diffEm unlink
 ./diffEm rmdir
@@ -24,6 +25,9 @@ echo This file should be aligned with fragments/optable
 ./diffEm getxattr
 ./diffEm removexattr
 ./diffEm listxattr
+
+./diffEm opendir
+./diffEm releasedir
 ./diffEm releasedir
 ./diffEm fsyncdir
 ./diffEm init
