@@ -69,7 +69,7 @@ def setOpAttrs():
         # XXX THIS USED TO BE 'else'
         attrs |= LOGGING_ENTRY
 
-        if name in ['create', 'fgetattr', 'flush', 'fsync', 'fsyncdir', 
+        if name in ['create', 'fgetattr', 'flush', 'fsync', 'fsyncdir',
                 'ftruncate',
                 'opendir', 'open', 'readdir', 'read', 'releasedir',
                 'release', 'write',]:
@@ -104,6 +104,8 @@ def makedir_p(path, mode):
         pass
 
 def makeFusePkg(args):
+    acPrereq        = args.acPrereq
+    emailAddr       = args.emailAddr
     force           = args.force
     lcName          = args.lcName
     myDate          = args.myDate
@@ -138,11 +140,49 @@ def makeFusePkg(args):
         f.write("        *\n")
 
     # write configure.ac --------------------------------------------
-    todoFile = os.path.join(pathToPkg, 'configure.ac')
-    with open(todoFile, 'w', 0o644) as f:
-        f.write("~/dev/c/%s/TODO\n\n" % pkgName)
-        f.write("%s\n" % myDate)
-        f.write("    *\n")
+    configFile = os.path.join(pathToPkg, 'configure.ac')
+    configText = """#                                               -*- Autoconf -*-
+# Process this file with autoconf to produce a configure script.
+
+AC_PREREQ([{0:s}])
+AC_INIT([{1:s}], [{2:s}], [{3:s}])
+AC_CONFIG_MACRO_DIR([m4])
+LT_INIT
+AM_INIT_AUTOMAKE
+AC_CONFIG_SRCDIR([src/xxxfs.c])
+AC_CONFIG_HEADERS([src/config.h])
+
+# Programs
+AC_PROG_CC
+
+# Header files.
+AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/statvfs.h unistd.h utime.h sys/xattr.h])
+
+# FUSE development environment
+PKG_CHECK_MODULES(FUSE, fuse)
+
+# Necessary typedefs and structures
+AC_TYPE_MODE_T
+AC_TYPE_OFF_T
+AC_TYPE_PID_T
+AC_TYPE_SIZE_T
+AC_TYPE_UID_T
+AC_TYPE_UINT64_T
+AC_STRUCT_ST_BLOCKS
+AC_CHECK_MEMBERS([struct stat.st_blksize])
+AC_CHECK_MEMBERS([struct stat.st_rdev])
+
+# Necessary ibrary functions.
+AC_FUNC_CHOWN
+AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
+AC_FUNC_MALLOC
+AC_CHECK_FUNCS([fdatasync ftruncate mkdir mkfifo realpath rmdir strerror utime])
+
+AC_CONFIG_FILES([Makefile src/Makefile])
+AC_OUTPUT
+""".format(acPrereq, pkgName, myDate, emailAddr)
+    with open(configFile, 'w', 0o644) as f:
+        f.write(configText)
 
     # write TODO ----------------------------------------------------
     todoFile = os.path.join(pathToPkg, 'TODO')
@@ -241,7 +281,7 @@ def makeFusePkg(args):
                     logEP.append(pName)
                 logEP.append(');')
                 ss.append(''.join(logEP))
-       
+
         if name == 'readdir':
             ss.append('    dp = (DIR *) (uintptr_t) fi->fh;')
 
@@ -265,37 +305,39 @@ def makeFusePkg(args):
                 ss.append("    // CURRENTLY A NO-OP\n")
         else:
             if name == 'fsync':
-                ss.append('    // freebsd')
-                ss.append('#ifdef HAVE_FDATASYNC')
-                ss.append('    if (datasync)')
-                ss.append('        status = fdatasync(fi->fh);')
-                ss.append('    else')
-                ss.append('#endif')
-                ss.append('        status = fsync(fi->fh);')
+                ss.append(
+"""    // freebsd
+#ifdef HAVE_FDATASYNC
+    if (datasync)
+        status = fdatasync(fi->fh);
+    else
+#endif
+        status = fsync(fi->fh);""")
+
             elif name == 'mknod':
-                ss.append('    // ATTRIBUTION')
-                ss.append('    if (S_ISREG(mode)) {')
-                ss.append('        status = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);')
-                ss.append('        if (status < 0)')
-                ss.append("            status = %serror(\"%smknod open\");" % (
-                    prefix, prefix))
-                ss.append("        else {")
-                ss.append("            status = close(status);")
-                ss.append("            if (status < 0)")
-                ss.append("                status = %serror(\"%smknod close\");"%(
-                    prefix, prefix))
-                ss.append("        }")
-                ss.append("    } else if (S_ISFIFO(mode)) {")
-                ss.append("        status = mkfifo(fpath, mode);")
-                ss.append("        if (status < 0)")
-                ss.append("            status = %serror(\"%smknod mkfifo\");" % (
-                    prefix, prefix))
-                ss.append("    } else {")
-                ss.append("        status = mknod(fpath, mode, dev);")
-                ss.append("        if (status < 0)")
-                ss.append("            status = %serror(\"%smknod mknod\");" % (
-                    prefix, prefix))
-                ss.append("    }")
+                # in python format specs {} must be doubled :-(
+                ss.append(
+
+"""    // ATTRIBUTION
+    if (S_ISREG(mode)) {{
+        status = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
+        if (status < 0)
+            status = {0:s}error(\"{0:s}mknod open\");
+        else {{
+            status = close(status);
+            if (status < 0)
+                status = {0:s}error(\"{0:s}mknod close\");
+        }}
+    }} else if (S_ISFIFO(mode)) {{
+        status = mkfifo(fpath, mode);
+        if (status < 0)
+            status = {0:s}error(\"{0:s}mknod mkfifo\");
+    }} else {{
+        status = mknod(fpath, mode, dev);
+        if (status < 0)
+            status = {0:s}error(\"{0:s}mknod mknod\");
+    }}""".format(prefix) )
+
             elif name == 'open':
                 ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
             elif name == 'readdir':
@@ -332,7 +374,7 @@ def makeFusePkg(args):
                 ss.append("    status = %s(fpath, fnewpath);" % sysCall)
             elif attrs & (FULL_PATH | LOGGING_FI):
                 if attrs & SYSCALL_RET_FD:
-                    ss.append("    fd = %s(fpath%s);" % ( 
+                    ss.append("    fd = %s(fpath%s);" % (
                         sysCall, ff.otherArgs()))
                 else:
                     if attrs & SYSCALL_FI_PARAM1:
@@ -358,9 +400,9 @@ def makeFusePkg(args):
                             ss.append("    status = %s(fi->fh%s);" % (
                                 sysCall, ff.otherArgs()))
                     else:
-                        ss.append("    status = %s(fpath%s);" % ( 
+                        ss.append("    status = %s(fpath%s);" % (
                             (sysCall, ff.otherArgs())))
-                    
+
         # -- check for error status -----------------------
         if name == 'opendir':
             ss.append('    if (dp == NULL)')
@@ -431,8 +473,14 @@ def main():
     DESC = 'generate a minimal FUSE (file system in user space) package'
     parser = ArgumentParser(description=DESC)
 
+    parser.add_argument('-A', '--acPrereq', default='2.69',
+        help='prerequisite autoconfig version number')
+
     parser.add_argument('-D', '--myDate', default=myDate,
         help='date in YYYY-MM-DD format')
+
+    parser.add_argument('-E', '--emailAddr', default='jddixon at gmail dot com',
+        help='contact email address')
 
     parser.add_argument('-f', '--force', action='store_true',
         help='if utility already exists, overwrite it')
@@ -476,6 +524,8 @@ def main():
         print ("%s %s" % (appName, __version_date__))
 
     if args.verbose or args.justShow:
+        print('acPrereq             = ' + str(args.acPrereq))
+        print('emailAddr            = ' + str(args.emailAddr))
         print('force                = ' + str(args.force))
         print('myDate               = ' + str(args.myDate))
         print('myVersion            = ' + str(args.myVersion))

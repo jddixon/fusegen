@@ -1,5 +1,25 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-11
+    * running libtoolize in the destination directory seems to 
+        add many necessary files ... have fuseGen do this
+    * libtoolize rcommends adding LT_INIT to configure.ac               * DONE
+    * ... and -I m4 to ACLOCAL_AMFLAGS in Makefile.am
+
+    * generate configure.ac                                             * DONE
+        - copied in autogen.sh to get this to work
+            * have fuseGen copy in and run autogen.sh
+            * unless another source exists, put this in a subdir of
+                fusegen
+        - but autogen.sh (well, automake) needs Makefile.am AND 
+            src/Makefile.in
+        - generated configure, which complained because xxxfs.c
+            was not present
+
+    * all blocks of C code in fuseGen should be reworked to use 
+        python triple-quoted templates and expressions like {0:s},
+        remembering that any braces must be doubled
+        - fsync, mknod                                                  * DONE
 2015-02-07
     * std has XXX_FS_DATA but ucName is XXXFS_DATA                      * FIXED
     * invisible difference between generated and std init.inc           * OK ?!
