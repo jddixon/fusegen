@@ -124,12 +124,22 @@ def makeFusePkg(args):
     # create directories --------------------------------------------
     os.mkdir(pathToPkg, 0o755)
 
+
     makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests',]
-    otherSubDirs    = ['automAte.cache', 'ghpDoc', 'm4', ]
+    otherSubDirs    = ['automAte.cache', 'config', 'ghpDoc', 'm4', 'workdir']
     subDirs         = makeFileSubDirs + otherSubDirs
     for dir in subDirs:
         pathToSubDir = os.path.join(pathToPkg, dir)
         makedir_p(pathToSubDir, 0o755)
+
+    # copy over autogen.sh ------------------------------------------
+    agSrc  = os.path.join('src', 'autogen.sh')
+    agDest = os.path.join(pathToPkg, 'autogen.sh')
+    with open(agSrc, 'r') as a:
+        text = a.read()
+        with open(agDest,'w') as b:
+            b.write(text)
+        os.chmod(agDest, 0o744)
 
     # write CHANGES -------------------------------------------------
     chgFile = os.path.join(pathToPkg, 'CHANGES')
@@ -148,6 +158,7 @@ AC_PREREQ([{0:s}])
 AC_INIT([{1:s}], [{2:s}], [{3:s}])
 AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
+AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/xxxfs.c])
 AC_CONFIG_HEADERS([src/config.h])
@@ -183,6 +194,26 @@ AC_OUTPUT
 """.format(acPrereq, pkgName, myDate, emailAddr)
     with open(configFile, 'w', 0o644) as f:
         f.write(configText)
+
+    # write Makefile.am  --------------------------------------------
+    # XXX The EXTRA_DIST line seems senseless, as we copy it in.
+    makeAMFile = os.path.join(pathToPkg, 'Makefile.am')
+    content = """
+ACLOCAL_AMFLAGS = -I m4
+EXTRA_DIST = autogen.sh
+SUBDIRS = workdir src
+"""
+    with open(makeAMFile, 'w', 0o644) as f:
+        f.write(content)
+
+    # write Makefile.in  --------------------------------------------
+    # XXX This bit of silliness handles aclocal's requirement that 
+    # the file exist before we create it
+    makeInFile = os.path.join(pathToPkg, os.path.join('src','Makefile.in'))
+    content = """
+"""
+    with open(makeInFile, 'w', 0o644) as f:
+        f.write(content)
 
     # write TODO ----------------------------------------------------
     todoFile = os.path.join(pathToPkg, 'TODO')

@@ -1,18 +1,42 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-12
+    * add autogen.sh in ./src; fuseGen must copy to build directory     * DONE
+    * autogen.sh (AG) complains that libtoolize can't create ltmain.sh  * DONE
+        in 'auxiliary directory'; add AC_CONFIG_AUX_DIR([config])       * DONE
+        before the AM_INIT_AUTOMAKE                                     * DONE
+    * aclocal, invoked by AG, complains that Makefile.am is absent      * FIXED
+        - XXX Makefile.am is still incomplete; add text preventing
+            installation (because of unacceptable security risks)
+    * AG complains that configure.ac line 38 requires src/Makefile.in   * YEP
+        - this is illogical, because configure creates the file ;       * YEP
+            but just touching the file makes the error go away          * YEP
+    * add dummy src/Makefile.in to build; XXX an ugly hack              * DONE
+
 2015-02-11
-    * running libtoolize in the destination directory seems to 
-        add many necessary files ... have fuseGen do this
+    * as an experiment, generate bootstrap
+        - it expects to find m4/
+        - website suggests also running libtoolize and/or autoheader
+        - they consider bootstrap an alternative to autogen.sh
+    * add a PACKAGES file, need to install at least libtool for         * DONE
+        libtoolize                                                      * DONE
+
+    * there are a thousand versions of autogen.sh - look at a few!
+
+2015-02-11
+    * running libtoolize in the destination directory seems to          * DONE
+        add many necessary files ... have fuseGen do this               * DONE
     * libtoolize rcommends adding LT_INIT to configure.ac               * DONE
     * ... and -I m4 to ACLOCAL_AMFLAGS in Makefile.am
 
     * generate configure.ac                                             * DONE
-        - copied in autogen.sh to get this to work
-            * have fuseGen copy in and run autogen.sh
-            * unless another source exists, put this in a subdir of
-                fusegen
-        - but autogen.sh (well, automake) needs Makefile.am AND 
-            src/Makefile.in
+        - copied in autogen.sh to get this to work                      * DONE
+            * have fuseGen copy in autogen.sh                           * DONE
+            * ... and run autogen.sh
+            * unless another source exists, put this in a subdir of     * DONE
+                fusegen                                                 * DONE
+        - but autogen.sh (well, automake) needs Makefile.am AND         * DONE 
+            src/Makefile.in                                             * DONE
         - generated configure, which complained because xxxfs.c
             was not present
 
