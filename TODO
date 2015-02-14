@@ -1,5 +1,14 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-13
+    * fix generation of Makefile.am
+    * generate src/Makefile.am                                          * DONE
+    * choose a better name than 'workdir'
+    * write a dummy install-sh program
+    * also copy these from src/:
+        - config.sub, config.guess                                      * DONE
+    * move fullpath into util.c, removing static attribute              * DONE
+
 2015-02-12
     * copy over src/ files
         - autogen.sh                                                    * DONE

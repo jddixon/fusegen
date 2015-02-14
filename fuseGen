@@ -124,9 +124,11 @@ def makeFusePkg(args):
     # create directories --------------------------------------------
     os.mkdir(pathToPkg, 0o755)
 
-
+    mountPoint      = os.path.join('workdir', 'mountPoint')
+    rootDir         = os.path.join('workdir', 'rootdir')
     makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests',]
-    otherSubDirs    = ['automAte.cache', 'config', 'ghpDoc', 'm4', 'workdir']
+    otherSubDirs    = ['config', 'ghpDoc', 'm4', 'workdir',
+                        mountPoint, rootDir, ]
     subDirs         = makeFileSubDirs + otherSubDirs
     for dir in subDirs:
         pathToSubDir = os.path.join(pathToPkg, dir)
@@ -149,7 +151,8 @@ def makeFusePkg(args):
             else:
                 os.chmod(dest, 0o644)
 
-    for x in ['autogen.sh', 'COPYING', 'COPYING.LESSER', 
+    for x in ['autogen.sh',
+            'config.guess', 'config.sub', 'COPYING', 'COPYING.LESSER', 
             'COPYING.AUTOCONF.EXCEPTION', 'README.licenses',]:
         copyFromSrc(x, x == 'autogen.sh')
     for x in ['fuse.h', ]:
@@ -215,7 +218,7 @@ AC_OUTPUT
     content = """
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = autogen.sh
-SUBDIRS = workdir src
+SUBDIRS = src
 """
     with open(makeAMFile, 'w', 0o644) as f:
         f.write(content)
@@ -236,9 +239,23 @@ SUBDIRS = workdir src
         f.write("%s\n" % myDate)
         f.write("    *\n")
 
-    # generate .inc files -------------------------------------------
+    # src/ FILE GENERATION ==========================================
+
+    # src/Makefile.am -------------------------------------
+    makeAMFile = os.path.join(pathToPkg, os.path.join('src', 'Makefile.am'))
+    content = """
+bin_PROGRAMS = {0:s}
+{1:s}SOURCES = {0:s}.c fuse.h  fuse_version.h {0:s}.h util.c 
+AM_CFLAGS = @FUSE_CFLAGS@
+LDADD = @FUSE_LIBS@
+""".format(pkgName, prefix)
+    
+    with open(makeAMFile, 'w', 0o644) as f:
+        f.write(content)
+
+    # generate .inc files ---------------------------------
    
-    # optable.inc ---------------------------------------------------
+    # optable.inc -----------------------------------------
     content = """/** optable.inc */
 
 struct fuse_operations xxxfs_oper = {
@@ -287,7 +304,7 @@ struct fuse_operations xxxfs_oper = {
     with open(opTableFile, 'w') as f:
         f.write(content)
 
-    # generate op .inc files ----------------------------------------
+    # generate op .inc files ------------------------------
     opAttrs = setOpAttrs()
     # mkSrcDir(args, opAttrs)
 
