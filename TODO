@@ -1,6 +1,20 @@
 ~/dev/py/fusegen/TODO
 
 2015-02-12
+    * copy over src/ files
+        - autogen.sh                                                    * DONE
+        - COPYHING*                                                     * DONE 
+        - fuse.h                                                        * DONE
+        - README.licenses                                               * DONE
+
+    * generate optable.inc                                              * DONE
+    * generate main.inc
+    * generate xxxfs.h
+    * need to add workdir to Makefile.am 
+    * generate xxxfs.c
+        - then make sure xxxfs still works
+
+2015-02-12
     * add autogen.sh in ./src; fuseGen must copy to build directory     * DONE
     * autogen.sh (AG) complains that libtoolize can't create ltmain.sh  * DONE
         in 'auxiliary directory'; add AC_CONFIG_AUX_DIR([config])       * DONE
@@ -27,7 +41,7 @@
     * running libtoolize in the destination directory seems to          * DONE
         add many necessary files ... have fuseGen do this               * DONE
     * libtoolize rcommends adding LT_INIT to configure.ac               * DONE
-    * ... and -I m4 to ACLOCAL_AMFLAGS in Makefile.am
+    * ... and -I m4 to ACLOCAL_AMFLAGS in Makefile.am                   * DONE
 
     * generate configure.ac                                             * DONE
         - copied in autogen.sh to get this to work                      * DONE

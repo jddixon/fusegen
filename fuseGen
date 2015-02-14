@@ -132,14 +132,28 @@ def makeFusePkg(args):
         pathToSubDir = os.path.join(pathToPkg, dir)
         makedir_p(pathToSubDir, 0o755)
 
-    # copy over autogen.sh ------------------------------------------
-    agSrc  = os.path.join('src', 'autogen.sh')
-    agDest = os.path.join(pathToPkg, 'autogen.sh')
-    with open(agSrc, 'r') as a:
-        text = a.read()
-        with open(agDest,'w') as b:
-            b.write(text)
-        os.chmod(agDest, 0o744)
+    # copy over fusgegen/src files  ------------------------------------------
+    def copyFromSrc(name, executable=False, topLevel=True):
+        """ copy a file from py/fusegen/src/ to the top level package dir """
+        src  = os.path.join('src', name)
+        if topLevel:
+            dest = os.path.join(pathToPkg, name)
+        else:
+            dest = os.path.join(pathToPkg, os.path.join('src', name))
+        with open(src, 'r') as a:
+            text = a.read()
+            with open(dest,'w') as b:
+                b.write(text)
+            if executable:
+                os.chmod(dest, 0o744)
+            else:
+                os.chmod(dest, 0o644)
+
+    for x in ['autogen.sh', 'COPYING', 'COPYING.LESSER', 
+            'COPYING.AUTOCONF.EXCEPTION', 'README.licenses',]:
+        copyFromSrc(x, x == 'autogen.sh')
+    for x in ['fuse.h', ]:
+        copyFromSrc(x, False, False)
 
     # write CHANGES -------------------------------------------------
     chgFile = os.path.join(pathToPkg, 'CHANGES')
@@ -222,6 +236,58 @@ SUBDIRS = workdir src
         f.write("%s\n" % myDate)
         f.write("    *\n")
 
+    # generate .inc files -------------------------------------------
+   
+    # optable.inc ---------------------------------------------------
+    content = """/** optable.inc */
+
+struct fuse_operations xxxfs_oper = {
+    .getattr      = xxxfs_getattr,
+    .readlink     = xxxfs_readlink,
+    .getdir       = NULL,
+    .mknod        = xxxfs_mknod,
+    .mkdir        = xxxfs_mkdir,
+    .unlink       = xxxfs_unlink,
+    .rmdir        = xxxfs_rmdir,
+    .symlink      = xxxfs_symlink,
+    .rename       = xxxfs_rename,
+    .link         = xxxfs_link,
+    .chmod        = xxxfs_chmod,
+    .chown        = xxxfs_chown,
+    .truncate     = xxxfs_truncate,
+    .utime        = xxxfs_utime,
+    .open         = xxxfs_open,
+    .read         = xxxfs_read,
+    .write        = xxxfs_write,
+    .statfs       = xxxfs_statfs,
+    .flush        = xxxfs_flush,
+    .release      = xxxfs_release,
+    .fsync        = xxxfs_fsync,
+
+#ifdef HAVE_SYS_XATTR_H
+    .setxattr     = xxxfs_setxattr,
+    .getxattr     = xxxfs_getxattr,
+    .listxattr    = xxxfs_listxattr,
+    .removexattr  = xxxfs_removexattr,
+#endif
+    
+    .opendir      = xxxfs_opendir,
+    .readdir      = xxxfs_readdir,
+    .releasedir   = xxxfs_releasedir,
+    .fsyncdir     = xxxfs_fsyncdir,
+    .init         = xxxfs_init,
+    .destroy      = xxxfs_destroy,
+    .access       = xxxfs_access,
+    .create       = xxxfs_create,
+    .ftruncate    = xxxfs_ftruncate,
+    .fgetattr     = xxxfs_fgetattr
+};
+"""
+    opTableFile = os.path.join(pathToPkg, os.path.join('src', 'optable.inc'))
+    with open(opTableFile, 'w') as f:
+        f.write(content)
+
+    # generate op .inc files ----------------------------------------
     opAttrs = setOpAttrs()
     # mkSrcDir(args, opAttrs)
 

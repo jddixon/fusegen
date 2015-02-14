@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.4.2
+    2015-02-13
+        * copy over fusegen/src to distribution directory
 v0.4.1
     2015-02-12
         * copy in autogen.sh; improve configure.ac; generate 
