@@ -1,0 +1,4 @@
+#!/bin/sh
+#
+echo 'A fuse file system should never be installed because it cannot be'
+echo 'safely run as root.'

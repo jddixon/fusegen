@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.4.3'
-__version_date__ = '2015-02-14'
+__version__      = '0.4.4'
+__version_date__ = '2015-02-15'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'

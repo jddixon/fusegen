@@ -127,7 +127,7 @@ def makeFusePkg(args):
     mountPoint      = os.path.join('workdir', 'mountPoint')
     rootDir         = os.path.join('workdir', 'rootdir')
     makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests',]
-    otherSubDirs    = ['config', 'ghpDoc', 'm4', 'workdir',
+    otherSubDirs    = ['bin', 'config', 'ghpDoc', 'm4', 'workdir',
                         mountPoint, rootDir, ]
     subDirs         = makeFileSubDirs + otherSubDirs
     for dir in subDirs:
@@ -151,10 +151,10 @@ def makeFusePkg(args):
             else:
                 os.chmod(dest, 0o644)
 
-    for x in ['autogen.sh',
-            'config.guess', 'config.sub', 'COPYING', 'COPYING.LESSER', 
-            'COPYING.AUTOCONF.EXCEPTION', 'README.licenses',]:
-        copyFromSrc(x, x == 'autogen.sh')
+    for x in ['autogen.sh', 'config.guess', 'config.sub', 'COPYING',
+            'COPYING.LESSER', 'COPYING.AUTOCONF.EXCEPTION',
+            'install-sh', 'README.licenses',]:
+        copyFromSrc(x, x in ['autogen.sh', 'install-sh',])
     for x in ['fuse.h', ]:
         copyFromSrc(x, False, False)
 
@@ -219,12 +219,22 @@ AC_OUTPUT
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = autogen.sh
 SUBDIRS = src
+
+# <ATTRIBUTION>
+#
+# Make it impossible to install the fuse file system. It must never be run
+# as root, because that causes critical security risks.
+install install-data install-exec uninstall installdirs check installcheck:
+	echo This package must never be installed.
+
+install-dvi install-info install-ps install-pdf dvi pdf ps info :
+	echo This package must never be installed.
 """
     with open(makeAMFile, 'w', 0o644) as f:
         f.write(content)
 
     # write Makefile.in  --------------------------------------------
-    # XXX This bit of silliness handles aclocal's requirement that 
+    # XXX This bit of silliness handles aclocal's requirement that
     # the file exist before we create it
     makeInFile = os.path.join(pathToPkg, os.path.join('src','Makefile.in'))
     content = """
@@ -239,22 +249,120 @@ SUBDIRS = src
         f.write("%s\n" % myDate)
         f.write("    *\n")
 
-    # src/ FILE GENERATION ==========================================
+    # ===============================================================
+    # bin/ FILE GENERATION
+    # ===============================================================
 
-    # src/Makefile.am -------------------------------------
-    makeAMFile = os.path.join(pathToPkg, os.path.join('src', 'Makefile.am'))
+    # write bin/mountNAME
+    pathToBin = os.path.join(pathToPkg, 'bin')
+    pathToCmd = os.path.join(pathToBin, 'mount' + ucName)
+    with open(pathToCmd, 'w') as f:
+        f.write("cd %s\n" % pathToPkg)
+        f.write("src/%s workdir/rootdir workdir/mountPoint\n" % pkgName)
+    os.chmod(pathToCmd, 0o744)
+
+    # write bin/umountNAME
+    pathToCmd = os.path.join(pathToBin, 'umount' + ucName)
+    with open(pathToCmd, 'w') as f:
+        f.write("cd %s\n" % pathToPkg)
+        f.write("sudo umount workdir/mountPoint\n")
+    os.chmod(pathToCmd, 0o744)
+
+    # ===============================================================
+    # src/ FILE GENERATION
+    # ===============================================================
+
+    pathToSrc = os.path.join(pathToPkg, 'src')
+
+    # fuse_version.h ------------------------------------------------
+
+    fuseVersionFile = os.path.join(pathToSrc, 'fuse_version.h')
+    content = """/** fuse_version.h */
+
+#ifndef _FUSE_VERSION_H_
+#define _FUSE_VERSION_H_
+
+#define FUSE_USE_VERSION 26
+
+#endif
+"""
+
+    with open(fuseVersionFile, 'w') as f:
+        f.write(content)
+
+    # src/Makefile.am -----------------------------------------------
+    makeAMFile = os.path.join(pathToSrc, 'Makefile.am')
     content = """
 bin_PROGRAMS = {0:s}
-{1:s}SOURCES = {0:s}.c fuse.h  fuse_version.h {0:s}.h util.c 
+{1:s}SOURCES = {0:s}.c fuse.h  fuse_version.h {0:s}.h util.c
 AM_CFLAGS = @FUSE_CFLAGS@
 LDADD = @FUSE_LIBS@
 """.format(pkgName, prefix)
-    
+
     with open(makeAMFile, 'w', 0o644) as f:
         f.write(content)
 
-    # generate .inc files ---------------------------------
-   
+    # package header file -------------------------------------------
+    content = """/** {0:s}.h */
+
+#ifndef _{2:s}_H_
+#define _{2:s}_H_
+
+#include <errno.h>
+#include <fuse.h>
+#include <limits.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+// prototypes
+int {1:s}error(char *);
+void {1:s}fullpath(char fpath[PATH_MAX], const char *path);
+
+struct {1:s}state {{
+    // XXX next line should be generated only if logging capability
+    FILE *logfile;
+    char *rootdir;
+}};
+
+#define {2:s}_DATA ((struct {1:s}state *) fuse_get_context()->private_data)
+
+// BEGIN LOGGING CODE -----------------------------------------------
+// This block generated only if including logging capability
+
+/** generate only if logging enabled */
+#define LogStruct(st, field, format, typecast) \\
+  logMsg("    " #field " = " #format "\\n", typecast st->field)
+
+void logConn   (struct fuse_conn_info *conn);
+void logEntry  (const char *format, ...);
+void logFI     (struct fuse_file_info *fi);
+void logMsg    (const char *format, ...);
+void logStat   (struct stat *si);
+void logstatVFS(struct statvfs *sv);
+FILE *openLog(void);
+
+// END LOGGING CODE -------------------------------------------------
+
+#endif
+""".format(pkgName, prefix, ucName)
+
+    headerFile = os.path.join(pathToSrc, "%s.h" % pkgName)
+    with open(headerFile, 'w') as f:
+        f.write(content)
+
+    # package .c file -----------------------------------------------
+
+    # XXX STUB FOR CONTENT XXX
+
+    pkgCFile = os.path.join(pathToSrc, "%s.c" % pkgName)
+    with open(pkgCFile, 'w') as f:
+        f.write(content)
+
+    # generate .inc files -------------------------------------------
+
     # optable.inc -----------------------------------------
     content = """/** optable.inc */
 
@@ -287,7 +395,7 @@ struct fuse_operations xxxfs_oper = {
     .listxattr    = xxxfs_listxattr,
     .removexattr  = xxxfs_removexattr,
 #endif
-    
+
     .opendir      = xxxfs_opendir,
     .readdir      = xxxfs_readdir,
     .releasedir   = xxxfs_releasedir,

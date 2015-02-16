@@ -1,10 +1,35 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-15
+    * generate and test
+        - bin/mountNAME                                                 * DONE
+        - bin/umountNAME                                                * DONE
+
+    * implement and remove from FIXUPS
+        - src/fuse_version.h                                            * DONE
+        - src/xxxfs.h                                                   * DONE
+        THE ABOVE HAVE BEEN TESTED MANUALLY
+        - src/xxxfs.c
+        - src/main.inc
+        - src/util.c
+
+    * need a test program that exercises each and every FUSE opcode
+    * need a fuseGen -L option which enables the generation of logging
+        code
+        - the package will then need a correlative 
+            --fgLogging <LOG_FILE_NAME>
+            option to turn it on; with a dash meaning STDOUT
+    * need a fuseGen -C option which enables the collection of stats
+        over a TCP/IP connection
+        - the package will then need a correlative 
+            --fgPort <PORT_NUMBER>
+            with a reasonable default
+
 2015-02-13
-    * fix generation of Makefile.am
+    * fix generation of Makefile.am                                     * DONE
     * generate src/Makefile.am                                          * DONE
     * choose a better name than 'workdir'
-    * write a dummy install-sh program
+    * write a dummy install-sh program, generate it                     * DONE
     * also copy these from src/:
         - config.sub, config.guess                                      * DONE
     * move fullpath into util.c, removing static attribute              * DONE
