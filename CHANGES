@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.4.5
+    2015-02-16
+        * generate PKG_NAME.c (and fixed pySloc to handle """)      SLOC  996
 v0.4.4
     2015-02-15
         * fixed Makefile.am to prevent installation

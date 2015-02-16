@@ -134,7 +134,11 @@ def makeFusePkg(args):
         pathToSubDir = os.path.join(pathToPkg, dir)
         makedir_p(pathToSubDir, 0o755)
 
-    # copy over fusgegen/src files  ------------------------------------------
+    # ===============================================================
+    # TOP LEVEL FILES 
+    # ===============================================================
+
+    # copy over fusgegen/src files  ---------------------------------
     def copyFromSrc(name, executable=False, topLevel=True):
         """ copy a file from py/fusegen/src/ to the top level package dir """
         src  = os.path.join('src', name)
@@ -321,13 +325,13 @@ LDADD = @FUSE_LIBS@
 int {1:s}error(char *);
 void {1:s}fullpath(char fpath[PATH_MAX], const char *path);
 
-struct {1:s}state {{
+struct {0:s}State {{
     // XXX next line should be generated only if logging capability
     FILE *logfile;
     char *rootdir;
 }};
 
-#define {2:s}_DATA ((struct {1:s}state *) fuse_get_context()->private_data)
+#define {2:s}_DATA ((struct {0:s}State *) fuse_get_context()->private_data)
 
 // BEGIN LOGGING CODE -----------------------------------------------
 // This block generated only if including logging capability
@@ -355,7 +359,70 @@ FILE *openLog(void);
 
     # package .c file -----------------------------------------------
 
-    # XXX STUB FOR CONTENT XXX
+    content = """/* {0:s}.c */
+
+#include "fuse_version.h"   // this should be the first header file
+
+#include <ctype.h>
+#include <dirent.h>
+#include <fcntl.h>
+#include <libgen.h>
+#include <string.h>
+
+#ifdef HAVE_SYS_XATTR_H
+#include <sys/xattr.h>
+#endif
+
+#include "{0:s}.h"          // this should be the last header file
+
+///////////////////////////////////////////////////////////
+//
+// Prototypes for all these functions, and the C-style comments,
+// come indirectly from /usr/include/fuse.h
+
+#include "getattr.inc"
+#include "readlink.inc"
+#include "mknod.inc"
+#include "mkdir.inc"
+#include "unlink.inc"
+#include "rmdir.inc"
+#include "symlink.inc"
+#include "rename.inc"
+#include "link.inc"
+#include "chmod.inc"
+#include "chown.inc"
+#include "truncate.inc"
+#include "utime.inc"
+#include "open.inc"
+#include "read.inc"
+#include "write.inc"
+#include "statfs.inc"
+#include "flush.inc"
+#include "release.inc"
+#include "fsync.inc"
+
+#ifdef HAVE_SYS_XATTR_H
+/** Set extended attributes */
+#include "setxattr.inc"
+#include "getxattr.inc"
+#include "listxattr.inc"
+#include "removexattr.inc"
+#endif
+
+#include "opendir.inc"
+#include "readdir.inc"
+#include "releasedir.inc"
+#include "fsyncdir.inc"
+#include "init.inc"
+#include "destroy.inc"
+#include "access.inc"
+#include "create.inc"
+#include "ftruncate.inc"
+#include "fgetattr.inc"
+
+#include "optable.inc"
+#include "main.inc"
+""".format(pkgName)
 
     pkgCFile = os.path.join(pathToSrc, "%s.c" % pkgName)
     with open(pkgCFile, 'w') as f:

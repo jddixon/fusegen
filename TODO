@@ -1,5 +1,10 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-16
+    * need a README.filesystem.generation which describes how to run
+        fuseGen and thereby create the FUSE file system
+        - main point: run ./autogen.sh
+
 2015-02-15
     * generate and test
         - bin/mountNAME                                                 * DONE
@@ -8,8 +13,8 @@
     * implement and remove from FIXUPS
         - src/fuse_version.h                                            * DONE
         - src/xxxfs.h                                                   * DONE
+        - src/xxxfs.c                                                   * DONE
         THE ABOVE HAVE BEEN TESTED MANUALLY
-        - src/xxxfs.c
         - src/main.inc
         - src/util.c
 
