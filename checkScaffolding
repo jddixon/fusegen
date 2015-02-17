@@ -1,0 +1,4 @@
+./diffTop configure.ac
+#./diffTop install-sh
+./diffTop Makefile.am
+./diffSrc Makefile.am

@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.4.6
+    2015-02-17
+        * generate main.inc                                         SLOC 1025
 v0.4.5
     2015-02-16
         * generate PKG_NAME.c (and fixed pySloc to handle """)      SLOC  996

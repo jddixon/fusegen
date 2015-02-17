@@ -4,6 +4,23 @@
     * need a README.filesystem.generation which describes how to run
         fuseGen and thereby create the FUSE file system
         - main point: run ./autogen.sh
+    * generated main.inc 
+        - should verify that rootdir and mountPoint exist and have      * DONE
+            acceptable names                                            * DONE
+        - must remove any fg* options from the argv passed to fuse 
+            (remembering to update argc)
+
+    // VERSION 2.6 ADDITIONS
+    * add utimens() - and deprecate utime()
+    * add lock() 
+    * add bmap()
+    // VERSION 2.8 ADDITIONS
+    * add ioctl()
+    * add poll()
+    // VERSION 2.9 ADDITIONS
+    * add write_buf()
+    * add read_buf()
+    * add flock()
 
 2015-02-15
     * generate and test
@@ -14,8 +31,8 @@
         - src/fuse_version.h                                            * DONE
         - src/xxxfs.h                                                   * DONE
         - src/xxxfs.c                                                   * DONE
+        - src/main.inc                                                  * DONE
         THE ABOVE HAVE BEEN TESTED MANUALLY
-        - src/main.inc
         - src/util.c
 
     * need a test program that exercises each and every FUSE opcode

@@ -8,22 +8,25 @@ from fusegen   import *
 
 # attributes of fuse operations
 
-RETURNS_STATUS      = 0x00001     # check
-DEPRECATED          = 0x00002     # 'D'
-SIMPLE_ERROR        = 0x00004     # 'e'
-COMPLEX_ERROR       = 0x00008     # 'ee'
-FULL_PATH           = 0x00010     # 'f'
-DOUBLE_FULL_PATH    = 0x00020     # 'ff'
-LOGGING_ENTRY       = 0x00040     # 'L'
-COMPLEX_LOGGING     = 0x00080     # 'LL'
-IFDEF_XATTR         = 0x00100     # 'X'
-LOGGING_STAT        = 0x00200
-LOGGING_STATVFS     = 0x00400
-HAS_LINK_FILE       = 0x00800
-LOGGING_FI          = 0x01000
-SYSCALL_RET_FD      = 0x02000
-SET_FH_FROM_FD      = 0x04000
-SYSCALL_FI_PARAM1   = 0x08000
+DEPRECATED          = 0x00000001
+RETURNS_STATUS      = 0x00000002
+
+SIMPLE_ERROR        = 0x00000004
+
+FULL_PATH           = 0x00000010
+DOUBLE_FULL_PATH    = 0x00000020
+LOGGING_ENTRY       = 0x00000040
+COMPLEX_LOGGING     = 0x00000080
+
+LOGGING_STAT        = 0x00000200
+LOGGING_STATVFS     = 0x00000400
+HAS_LINK_FILE       = 0x00000800
+LOGGING_FI          = 0x00001000
+SYSCALL_RET_FD      = 0x00002000
+SET_FH_FROM_FD      = 0x00004000
+SYSCALL_FI_PARAM1   = 0x00008000
+
+CHK_DEF_XATTR       = 0x10000000
 
 def setOpAttrs():
     """
@@ -50,16 +53,12 @@ def setOpAttrs():
                         'destroy', 'ftruncate', 'fgetattr']:
             attrs |= FULL_PATH
 
-        if name in ['mknod', 'readdir', ]:
-            # XXX NOWHERE USED
-            attrs |= COMPLEX_ERROR
-        elif name in ['flush', 'releasedir', 'fsyncdir', 'init', 'destroy',]:
-            pass
-        else:
+        if name not in [ 'destroy', 'flush', 'fsyncdir',
+                'init', 'mknod', 'releasedir', ]:
             attrs |= SIMPLE_ERROR
 
         if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
-            attrs |= IFDEF_XATTR
+            attrs |= CHK_DEF_XATTR
 
         # XXX NOWHERE USED
         if name in ['readlink', 'mknod', 'write',
@@ -135,7 +134,7 @@ def makeFusePkg(args):
         makedir_p(pathToSubDir, 0o755)
 
     # ===============================================================
-    # TOP LEVEL FILES 
+    # TOP LEVEL FILES
     # ===============================================================
 
     # copy over fusgegen/src files  ---------------------------------
@@ -204,10 +203,11 @@ AC_STRUCT_ST_BLOCKS
 AC_CHECK_MEMBERS([struct stat.st_blksize])
 AC_CHECK_MEMBERS([struct stat.st_rdev])
 
-# Necessary ibrary functions.
+# Necessary library functions.
 AC_FUNC_CHOWN
 AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_MALLOC
+
 AC_CHECK_FUNCS([fdatasync ftruncate mkdir mkfifo realpath rmdir strerror utime])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
@@ -298,12 +298,82 @@ install-dvi install-info install-ps install-pdf dvi pdf ps info :
     makeAMFile = os.path.join(pathToSrc, 'Makefile.am')
     content = """
 bin_PROGRAMS = {0:s}
-{1:s}SOURCES = {0:s}.c fuse.h  fuse_version.h {0:s}.h util.c
+{1:s}SOURCES = {0:s}.c fuse.h fuse_version.h {0:s}.h util.c
 AM_CFLAGS = @FUSE_CFLAGS@
 LDADD = @FUSE_LIBS@
 """.format(pkgName, prefix)
 
     with open(makeAMFile, 'w', 0o644) as f:
+        f.write(content)
+
+    # generate main.inc ---------------------------------------------
+    content = """/** main.inc */
+
+void {0:s}Usage()
+{{
+    fprintf(stderr,
+        "usage:  {0:s} [FUSE, mount, and fg* options] rootDir mountPoint\\n");
+    exit(0);
+}}
+
+// Return 0 if OK
+int {0:s}ChkDir(const char *dirName)
+{{
+    struct stat sb;
+    int status = -1;
+    if ((dirName != NULL) && (dirName[0] != '-') &&
+       (stat(dirName, &sb) == 0) && S_ISDIR(sb.st_mode))
+       status = 0;
+    return status;
+}}
+int main(int argc, char *argv[])
+{{
+    int status;
+    struct {0:s}Data *myData;
+
+    // Prevent this script from being run by root, because such use is
+    // an unacceptable security risk.
+    if ((getuid() == 0) || (geteuid() == 0)) {{
+        fprintf(stderr, "{0:s} must not be run as root\\n");
+        abort();    // raises SIGABRT, terminating the process
+    }}
+
+    // The last two arguments are the paths to the root directory and the
+    // mount point respectively.  They must represent valid names for
+    // existing directories that the user may access.
+    if ((argc < 3) || {0:s}ChkDir(argv[argc-2]) || {0:s}ChkDir(argv[argc-1]))
+        {0:s}Usage();
+
+    // Try to allocate memory for file system's private data.
+    myData = malloc(sizeof(struct {0:s}Data));
+    if (myData == NULL) {{
+        perror("main malloc");
+        abort();
+    }}
+
+    // The next to the last argument is the root directory.  Save it to
+    // private data and then remove it from the argument list passed to fuse,
+    // which doesn't expect to see it.
+    //
+    // XXX Any fg* arguments must also be removed.
+    myData->rootdir = realpath(argv[argc-2], NULL);
+    argv[argc-2] = argv[argc-1];
+    argv[argc-1] = NULL;
+    argc--;
+
+    // Set up logging; this should be conditional.
+    myData->logfile = openLog();
+
+    fprintf(stderr, "Branching to fuse_main\\n");
+    status = fuse_main(argc, argv, &{1:s}oper, myData);
+    fprintf(stderr, "fuse_main returned %d\\n", status);
+
+    return status;
+}}
+""".format(pkgName, prefix)
+
+    pathToMain = os.path.join(pathToSrc, 'main.inc')
+    with open(pathToMain, 'w') as f:
         f.write(content)
 
     # package header file -------------------------------------------
@@ -325,13 +395,13 @@ LDADD = @FUSE_LIBS@
 int {1:s}error(char *);
 void {1:s}fullpath(char fpath[PATH_MAX], const char *path);
 
-struct {0:s}State {{
+struct {0:s}Data {{
     // XXX next line should be generated only if logging capability
     FILE *logfile;
     char *rootdir;
 }};
 
-#define {2:s}_DATA ((struct {0:s}State *) fuse_get_context()->private_data)
+#define {2:s}_DATA ((struct {0:s}Data *) fuse_get_context()->private_data)
 
 // BEGIN LOGGING CODE -----------------------------------------------
 // This block generated only if including logging capability
@@ -497,7 +567,7 @@ struct fuse_operations xxxfs_oper = {
         pathToInc = os.path.join(srcDir, "%s.inc" % name)
         ss = []
         ss.append("/** %s.inc */\n" % (name))
-        if attrs & IFDEF_XATTR:
+        if attrs & CHK_DEF_XATTR:
             ss.append("#ifdef HAVE_SYS_XATTR_H")
 
         # -- first line, LBRACE -----------------------
@@ -505,7 +575,7 @@ struct fuse_operations xxxfs_oper = {
 
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
-            ss.append('    int status = 0;')   # XXX status
+            ss.append('    int status;')
         if attrs & SYSCALL_RET_FD:
             ss.append('    int fd;')
         if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
@@ -562,7 +632,7 @@ struct fuse_operations xxxfs_oper = {
                 ss.append( ''.join(logE))
 
                 # now add a parameter list on the next line
-                logEP = ['            ']
+                logEP = ['             ']
                 for ndx, param in enumerate(ff.params):
                     if ndx > 0:
                         logEP.append(', ')
@@ -741,8 +811,8 @@ struct fuse_operations xxxfs_oper = {
         elif name == 'init':
             ss.append("    return %s_DATA;" % ucName)
         ss.append("}")
-        if attrs & IFDEF_XATTR:
-            ss.append("#endif")     # GEEP
+        if attrs & CHK_DEF_XATTR:
+            ss.append("#endif")
 
         out = "\n".join(ss) + "\n"
         with open(pathToInc, 'w') as f:
