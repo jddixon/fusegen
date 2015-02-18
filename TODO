@@ -1,5 +1,19 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-17
+    * FIX: any occurrence of the string xxxfs_ in fuseGen is an error
+        - optable generation                                            * FIXED
+        - readdir generation                                            * FIXED
+        - configure.ac generation
+    * FIX: if fuse file system is not umounted, a completely 
+        inscrutable error message appears when ./genEm is run
+        ('numerical result out of range: mountPoint')
+        - should silently umount
+    * FIX: workdir/mountPoint is not mounting correctly; after
+        invoking bin/mountXXXFS, running tree gets an 'error opening
+            dir' message; after I run bin/umountXXXFS, this disappears
+    * URGENT: xxxfs executable must depend upon all *.inc
+    * need better checks on rootdir, mountPoint in main.inc ChkDir()
 2015-02-16
     * need a README.filesystem.generation which describes how to run
         fuseGen and thereby create the FUSE file system
@@ -48,27 +62,10 @@
             with a reasonable default
 
 2015-02-13
-    * fix generation of Makefile.am                                     * DONE
-    * generate src/Makefile.am                                          * DONE
     * choose a better name than 'workdir'
-    * write a dummy install-sh program, generate it                     * DONE
-    * also copy these from src/:
-        - config.sub, config.guess                                      * DONE
-    * move fullpath into util.c, removing static attribute              * DONE
 
 2015-02-12
-    * copy over src/ files
-        - autogen.sh                                                    * DONE
-        - COPYHING*                                                     * DONE 
-        - fuse.h                                                        * DONE
-        - README.licenses                                               * DONE
-
-    * generate optable.inc                                              * DONE
-    * generate main.inc
-    * generate xxxfs.h
     * need to add workdir to Makefile.am 
-    * generate xxxfs.c
-        - then make sure xxxfs still works
 
 2015-02-12
     * add autogen.sh in ./src; fuseGen must copy to build directory     * DONE
@@ -76,71 +73,29 @@
         in 'auxiliary directory'; add AC_CONFIG_AUX_DIR([config])       * DONE
         before the AM_INIT_AUTOMAKE                                     * DONE
     * aclocal, invoked by AG, complains that Makefile.am is absent      * FIXED
-        - XXX Makefile.am is still incomplete; add text preventing
-            installation (because of unacceptable security risks)
+        - XXX Makefile.am is still incomplete; add text preventing      * DONE
+            installation (because of unacceptable security risks)       * DONE
     * AG complains that configure.ac line 38 requires src/Makefile.in   * YEP
         - this is illogical, because configure creates the file ;       * YEP
             but just touching the file makes the error go away          * YEP
     * add dummy src/Makefile.in to build; XXX an ugly hack              * DONE
 
 2015-02-11
-    * as an experiment, generate bootstrap
-        - it expects to find m4/
-        - website suggests also running libtoolize and/or autoheader
-        - they consider bootstrap an alternative to autogen.sh
+    * as an experiment, generate bootstrap                              * SKIP
+        - it expects to find m4/                                        * SKIP
+        - website suggests also running libtoolize and/or autoheader    * SKIP
+        - they consider bootstrap an alternative to autogen.sh          * SKIP
     * add a PACKAGES file, need to install at least libtool for         * DONE
         libtoolize                                                      * DONE
 
-    * there are a thousand versions of autogen.sh - look at a few!
+    * there are a thousand versions of autogen.sh - look at a few!      * DONE
 
 2015-02-11
-    * running libtoolize in the destination directory seems to          * DONE
-        add many necessary files ... have fuseGen do this               * DONE
-    * libtoolize rcommends adding LT_INIT to configure.ac               * DONE
-    * ... and -I m4 to ACLOCAL_AMFLAGS in Makefile.am                   * DONE
-
-    * generate configure.ac                                             * DONE
-        - copied in autogen.sh to get this to work                      * DONE
-            * have fuseGen copy in autogen.sh                           * DONE
-            * ... and run autogen.sh
-            * unless another source exists, put this in a subdir of     * DONE
-                fusegen                                                 * DONE
-        - but autogen.sh (well, automake) needs Makefile.am AND         * DONE 
-            src/Makefile.in                                             * DONE
-        - generated configure, which complained because xxxfs.c
-            was not present
-
     * all blocks of C code in fuseGen should be reworked to use 
         python triple-quoted templates and expressions like {0:s},
         remembering that any braces must be doubled
         - fsync, mknod                                                  * DONE
-2015-02-07
-    * std has XXX_FS_DATA but ucName is XXXFS_DATA                      * FIXED
-    * invisible difference between generated and std init.inc           * OK ?!
-    
-2015-02-04
-    * log_fi(fi); in the wrong place, at least in opendir               * FIXED
 
-2015-02-02
-    * PENDING:
-        - mknod     # var int fd; open returns fd; syscall param 2      * DONE
-                        is fi->flags                                    * DONE
-        - read      # syscall param 1 is fi->fh                         * DONE
-        - write     # syscall param 1 is fi->fh; logEntry size is %lld  * DONE
-        - getxattr  # logEntry treats value as string                   * DONE
-        - listxattr                                                     * DONE
-        - opendir   # var Dir *dp; fi-fh assigned; syscall returns dp;  * DONE
-                        dp tested for NULL                              * DONE
-        - readdir   # fi->fh cast and assigned to dp                    * DONE
-        - init                                                          * DONE
-        - fgetattr  # syscall param 1 is fi->fh # SPECIAL               * DONE
-
-2015-01-27
-    * setting LOGGING_ENTRY for all ops - check this is right
-
-2015-01-26
-    * getattr needs only logEntry line :-)                              * DONE
-        - need map from arg name to format (eg statbuf => 0x%08x)       * DONE
 2015-01-25 (edited from -24)
     * in testFuseFunc verify that the list of FuseFunc returned  
         from calls to FuseFunc.parseProto can be used to reconstruct

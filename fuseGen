@@ -180,7 +180,7 @@ AC_CONFIG_MACRO_DIR([m4])
 LT_INIT
 AC_CONFIG_AUX_DIR([config])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/xxxfs.c])
+AC_CONFIG_SRCDIR([src/{1:s}.c])
 AC_CONFIG_HEADERS([src/config.h])
 
 # Programs
@@ -503,48 +503,48 @@ FILE *openLog(void);
     # optable.inc -----------------------------------------
     content = """/** optable.inc */
 
-struct fuse_operations xxxfs_oper = {
-    .getattr      = xxxfs_getattr,
-    .readlink     = xxxfs_readlink,
+struct fuse_operations {0:s}oper = {{
+    .getattr      = {0:s}getattr,
+    .readlink     = {0:s}readlink,
     .getdir       = NULL,
-    .mknod        = xxxfs_mknod,
-    .mkdir        = xxxfs_mkdir,
-    .unlink       = xxxfs_unlink,
-    .rmdir        = xxxfs_rmdir,
-    .symlink      = xxxfs_symlink,
-    .rename       = xxxfs_rename,
-    .link         = xxxfs_link,
-    .chmod        = xxxfs_chmod,
-    .chown        = xxxfs_chown,
-    .truncate     = xxxfs_truncate,
-    .utime        = xxxfs_utime,
-    .open         = xxxfs_open,
-    .read         = xxxfs_read,
-    .write        = xxxfs_write,
-    .statfs       = xxxfs_statfs,
-    .flush        = xxxfs_flush,
-    .release      = xxxfs_release,
-    .fsync        = xxxfs_fsync,
+    .mknod        = {0:s}mknod,
+    .mkdir        = {0:s}mkdir,
+    .unlink       = {0:s}unlink,
+    .rmdir        = {0:s}rmdir,
+    .symlink      = {0:s}symlink,
+    .rename       = {0:s}rename,
+    .link         = {0:s}link,
+    .chmod        = {0:s}chmod,
+    .chown        = {0:s}chown,
+    .truncate     = {0:s}truncate,
+    .utime        = {0:s}utime,
+    .open         = {0:s}open,
+    .read         = {0:s}read,
+    .write        = {0:s}write,
+    .statfs       = {0:s}statfs,
+    .flush        = {0:s}flush,
+    .release      = {0:s}release,
+    .fsync        = {0:s}fsync,
 
 #ifdef HAVE_SYS_XATTR_H
-    .setxattr     = xxxfs_setxattr,
-    .getxattr     = xxxfs_getxattr,
-    .listxattr    = xxxfs_listxattr,
-    .removexattr  = xxxfs_removexattr,
+    .setxattr     = {0:s}setxattr,
+    .getxattr     = {0:s}getxattr,
+    .listxattr    = {0:s}listxattr,
+    .removexattr  = {0:s}removexattr,
 #endif
 
-    .opendir      = xxxfs_opendir,
-    .readdir      = xxxfs_readdir,
-    .releasedir   = xxxfs_releasedir,
-    .fsyncdir     = xxxfs_fsyncdir,
-    .init         = xxxfs_init,
-    .destroy      = xxxfs_destroy,
-    .access       = xxxfs_access,
-    .create       = xxxfs_create,
-    .ftruncate    = xxxfs_ftruncate,
-    .fgetattr     = xxxfs_fgetattr
-};
-"""
+    .opendir      = {0:s}opendir,
+    .readdir      = {0:s}readdir,
+    .releasedir   = {0:s}releasedir,
+    .fsyncdir     = {0:s}fsyncdir,
+    .init         = {0:s}init,
+    .destroy      = {0:s}destroy,
+    .access       = {0:s}access,
+    .create       = {0:s}create,
+    .ftruncate    = {0:s}ftruncate,
+    .fgetattr     = {0:s}fgetattr
+}};
+""".format(prefix)
     opTableFile = os.path.join(pathToPkg, os.path.join('src', 'optable.inc'))
     with open(opTableFile, 'w') as f:
         f.write(content)
@@ -700,18 +700,22 @@ struct fuse_operations xxxfs_oper = {
             elif name == 'open':
                 ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
             elif name == 'readdir':
-                ss.append('    entry = readdir(dp);')
-                ss.append('    if (entry == 0) {')
-                ss.append('        status = xxxfs_error("xxxfs_readdir readdir");')
-                ss.append('        return status;')
-                ss.append('    }')
-                ss.append('    do {')
-                ss.append('        logMsg("calling filler with name %s\\n", entry->d_name);')
-                ss.append('        if (filler(buf, entry->d_name, NULL, 0) != 0) {')
-                ss.append('            logMsg("    ERROR xxxfs_readdir filler:  buffer full");')
-                ss.append('            return -ENOMEM;')
-                ss.append('        }')
-                ss.append('    } while ((entry = readdir(dp)) != NULL);')
+                content = """
+    entry = readdir(dp);
+    if (entry == 0) {{
+        status = {0:s}error("{0:s}readdir readdir");
+        return status;
+    }}
+    do {{
+        logMsg("calling filler with name %s\\n", entry->d_name);
+        if (filler(buf, entry->d_name, NULL, 0) != 0) {{
+            logMsg("    ERROR {0:s}readdir filler:  buffer full");
+            return -ENOMEM;
+        }}
+    }} while ((entry = readdir(dp)) != NULL);
+""".format(prefix)
+                ss.append(content)
+                
 
             elif name == 'readlink':
                 ss.append("    status = readlink(fpath, link, size - 1);")
