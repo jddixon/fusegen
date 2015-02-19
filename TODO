@@ -1,17 +1,20 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-18
+    * opendir returning status of 1 = EPERM = operation not permitted   * FIXED
+
 2015-02-17
     * FIX: any occurrence of the string xxxfs_ in fuseGen is an error
         - optable generation                                            * FIXED
         - readdir generation                                            * FIXED
-        - configure.ac generation
-    * FIX: if fuse file system is not umounted, a completely 
-        inscrutable error message appears when ./genEm is run
-        ('numerical result out of range: mountPoint')
-        - should silently umount
-    * FIX: workdir/mountPoint is not mounting correctly; after
-        invoking bin/mountXXXFS, running tree gets an 'error opening
-            dir' message; after I run bin/umountXXXFS, this disappears
+        - configure.ac generation                                       * FIXED
+    * FIX: if fuse file system is not umounted, a completely 			* DONE
+        inscrutable error message appears when ./genEm is run			* DONE
+        ('numerical result out of range: mountPoint')			        * DONE
+        - should silently umount			                            * DONE
+    * FIX: workdir/mountPoint is not mounting correctly; after			* DONE
+        invoking bin/mountXXXFS, running tree gets an 'error opening	* DONE
+            dir' message; after I run bin/umountXXXFS, this disappears	* DONE
     * URGENT: xxxfs executable must depend upon all *.inc
     * need better checks on rootdir, mountPoint in main.inc ChkDir()
 2015-02-16

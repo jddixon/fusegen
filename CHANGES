@@ -1,9 +1,11 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.4.8
+    2015-02-19
+        * many minor fixes, some of them cosmetic                   SLOC 1028
 v0.4.7
     2015-02-18
         * fixed references to xxxfs in various places               SLOC 1028
-
 v0.4.6
     2015-02-17
         * generate main.inc                                         SLOC 1025

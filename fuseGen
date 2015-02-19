@@ -177,8 +177,8 @@ def makeFusePkg(args):
 AC_PREREQ([{0:s}])
 AC_INIT([{1:s}], [{2:s}], [{3:s}])
 AC_CONFIG_MACRO_DIR([m4])
-LT_INIT
 AC_CONFIG_AUX_DIR([config])
+LT_INIT
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/{1:s}.c])
 AC_CONFIG_HEADERS([src/config.h])
@@ -328,7 +328,7 @@ int {0:s}ChkDir(const char *dirName)
 }}
 int main(int argc, char *argv[])
 {{
-    int status;
+    int status = 0;
     struct {0:s}Data *myData;
 
     // Prevent this script from being run by root, because such use is
@@ -392,8 +392,8 @@ int main(int argc, char *argv[])
 #include <sys/types.h>
 
 // prototypes
-int {1:s}error(char *);
-void {1:s}fullpath(char fpath[PATH_MAX], const char *path);
+int  {1:s}Error(char *);
+void {1:s}FullPath(char fpath[PATH_MAX], const char *path);
 
 struct {0:s}Data {{
     // XXX next line should be generated only if logging capability
@@ -406,9 +406,9 @@ struct {0:s}Data {{
 // BEGIN LOGGING CODE -----------------------------------------------
 // This block generated only if including logging capability
 
-/** generate only if logging enabled */
-#define LogStruct(st, field, format, typecast) \\
-  logMsg("    " #field " = " #format "\\n", typecast st->field)
+// log the name and value of a particular field of the structure s
+#define LOG_FIELD(s, field, format) \\
+  logMsg("  " #field " = " #format "\\n", s->field)
 
 void logConn   (struct fuse_conn_info *conn);
 void logEntry  (const char *format, ...);
@@ -575,7 +575,7 @@ struct fuse_operations {0:s}oper = {{
 
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
-            ss.append('    int status;')
+            ss.append('    int status = 0;')
         if attrs & SYSCALL_RET_FD:
             ss.append('    int fd;')
         if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
@@ -649,11 +649,11 @@ struct fuse_operations {0:s}oper = {{
 
         # -- set up absolute paths ------------------------
         if attrs & FULL_PATH:
-            ss.append("    %sfullpath(fpath, path);" % prefix)
+            ss.append("    %sFullPath(fpath, path);" % prefix)
         if attrs & DOUBLE_FULL_PATH:
-            ss.append("    %sfullpath(fnewpath, newpath);" % prefix)
+            ss.append("    %sFullPath(fnewpath, newpath);" % prefix)
         if attrs & HAS_LINK_FILE:
-            ss.append("    %sfullpath(flink, link);" % prefix)
+            ss.append("    %sFullPath(flink, link);" % prefix)
         ss.append("")
 
         # -- call FUSE ------------------------------------
@@ -681,20 +681,20 @@ struct fuse_operations {0:s}oper = {{
     if (S_ISREG(mode)) {{
         status = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
         if (status < 0)
-            status = {0:s}error(\"{0:s}mknod open\");
+            status = {0:s}Error(\"{0:s}mknod open\");
         else {{
             status = close(status);
             if (status < 0)
-                status = {0:s}error(\"{0:s}mknod close\");
+                status = {0:s}Error(\"{0:s}mknod close\");
         }}
     }} else if (S_ISFIFO(mode)) {{
         status = mkfifo(fpath, mode);
         if (status < 0)
-            status = {0:s}error(\"{0:s}mknod mkfifo\");
+            status = {0:s}Error(\"{0:s}mknod mkfifo\");
     }} else {{
         status = mknod(fpath, mode, dev);
         if (status < 0)
-            status = {0:s}error(\"{0:s}mknod mknod\");
+            status = {0:s}Error(\"{0:s}mknod mknod\");
     }}""".format(prefix) )
 
             elif name == 'open':
@@ -703,7 +703,7 @@ struct fuse_operations {0:s}oper = {{
                 content = """
     entry = readdir(dp);
     if (entry == 0) {{
-        status = {0:s}error("{0:s}readdir readdir");
+        status = {0:s}Error("{0:s}readdir readdir");
         return status;
     }}
     do {{
@@ -715,7 +715,7 @@ struct fuse_operations {0:s}oper = {{
     }} while ((entry = readdir(dp)) != NULL);
 """.format(prefix)
                 ss.append(content)
-                
+
 
             elif name == 'readlink':
                 ss.append("    status = readlink(fpath, link, size - 1);")
@@ -745,17 +745,17 @@ struct fuse_operations {0:s}oper = {{
                             ss.append('    // FreeBSD special case; ATTRIBUTION')
                             ss.append('    if (!strcmp(path, "/")) {')
                             ss.append('        char fpath[PATH_MAX];')
-                            ss.append("        %sfullpath(fpath, path);" % (
+                            ss.append("        %sFullPath(fpath, path);" % (
                                 prefix))
                             ss.append("        status = lstat(fpath%s);" % (
                                 ff.otherArgs()))
                             ss.append('        if (status < 0)')
-                            ss.append("            status = %serror(\"%sfgetattr lstat\");" % (prefix, prefix))
+                            ss.append("            status = %sError(\"%sfgetattr lstat\");" % (prefix, prefix))
                             ss.append('    } else {')
                             ss.append("        status = %s(fi->fh%s);" % (
                                 sysCall, ff.otherArgs()))
                             ss.append('        if (status < 0)')
-                            ss.append("            status = %serror(\"%sfgetattr fstat\");" % (prefix, prefix))
+                            ss.append("            status = %sError(\"%sfgetattr fstat\");" % (prefix, prefix))
                             ss.append('    }')
                         elif name == 'opendir':
                             ss.append('    dp = opendir(fpath);')
@@ -769,14 +769,14 @@ struct fuse_operations {0:s}oper = {{
         # -- check for error status -----------------------
         if name == 'opendir':
             ss.append('    if (dp == NULL)')
-            ss.append("        status = %serror(\"%s%s %s\");" % (
+            ss.append("        status = %sError(\"%s%s %s\");" % (
                 prefix, prefix, name, sysCall))
         elif name != 'fgetattr' and attrs & SIMPLE_ERROR:
             if attrs & SYSCALL_RET_FD:
                 ss.append("    if (fd < 0)")
             else:
                 ss.append("    if (status < 0)")
-            ss.append("        status = %serror(\"%s %s\");\n" % (
+            ss.append("        status = %sError(\"%s %s\");\n" % (
                 prefix, prefix + name, sysCall))
             if name == 'readlink':
                 ss.append('    else {')
