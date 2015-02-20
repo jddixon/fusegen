@@ -1,8 +1,9 @@
 include netDistrib.conf
-include CHANGES LICENSE.md MANIFEST.in README* TODO
-include countem fuseGen
+include CHANGES COPYING* LICENSE.md MANIFEST.in README* TODO
+include check* diff* countem fuseGen
 include ghpDoc/*
-include licenses/*
+include PACKAGES
+include src/*
 include test*.py
 recursive-include *.py
 global-exclude junk* .*swp

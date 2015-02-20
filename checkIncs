@@ -1,8 +1,12 @@
 echo This file should be aligned with fragments/optable
 
+./diffEm main
+./diffEm optable
+
+# The actual ops follow.
+
 ./diffEm getattr
 ./diffEm readlink
-
 ./diffEm mknod
 ./diffEm mkdir
 ./diffEm unlink
@@ -25,7 +29,6 @@ echo This file should be aligned with fragments/optable
 ./diffEm getxattr
 ./diffEm removexattr
 ./diffEm listxattr
-
 ./diffEm opendir
 ./diffEm releasedir
 ./diffEm releasedir

@@ -8,7 +8,7 @@ General Public License, the GPL, that license is set out in COPYING.
 
 Should there be any material present covered by the Free Software Foundation's
 Lesser General Public License, the LGPL, that license is set out in 
-COPYING.LESSER.
+COPYING.LIB (sometimes called COPYING.LESSER).
 
 Autotools software is distributed under an exception to the GPL as set out
 in COPYING.AUTOCONF.EXCEPTION.

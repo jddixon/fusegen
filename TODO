@@ -2,6 +2,8 @@
 
 2015-02-18
     * opendir returning status of 1 = EPERM = operation not permitted   * FIXED
+    * need a README.install which explains that you should not install
+        this package
 
 2015-02-17
     * FIX: any occurrence of the string xxxfs_ in fuseGen is an error
@@ -27,14 +29,14 @@
         - must remove any fg* options from the argv passed to fuse 
             (remembering to update argc)
 
-    // VERSION 2.6 ADDITIONS
+    // FUSE VERSION 2.6 ADDITIONS
     * add utimens() - and deprecate utime()
     * add lock() 
     * add bmap()
-    // VERSION 2.8 ADDITIONS
+    // FUSE VERSION 2.8 ADDITIONS
     * add ioctl()
     * add poll()
-    // VERSION 2.9 ADDITIONS
+    // FUSE VERSION 2.9 ADDITIONS
     * add write_buf()
     * add read_buf()
     * add flock()
@@ -43,7 +45,6 @@
     * generate and test
         - bin/mountNAME                                                 * DONE
         - bin/umountNAME                                                * DONE
-
     * implement and remove from FIXUPS
         - src/fuse_version.h                                            * DONE
         - src/xxxfs.h                                                   * DONE
@@ -69,29 +70,6 @@
 
 2015-02-12
     * need to add workdir to Makefile.am 
-
-2015-02-12
-    * add autogen.sh in ./src; fuseGen must copy to build directory     * DONE
-    * autogen.sh (AG) complains that libtoolize can't create ltmain.sh  * DONE
-        in 'auxiliary directory'; add AC_CONFIG_AUX_DIR([config])       * DONE
-        before the AM_INIT_AUTOMAKE                                     * DONE
-    * aclocal, invoked by AG, complains that Makefile.am is absent      * FIXED
-        - XXX Makefile.am is still incomplete; add text preventing      * DONE
-            installation (because of unacceptable security risks)       * DONE
-    * AG complains that configure.ac line 38 requires src/Makefile.in   * YEP
-        - this is illogical, because configure creates the file ;       * YEP
-            but just touching the file makes the error go away          * YEP
-    * add dummy src/Makefile.in to build; XXX an ugly hack              * DONE
-
-2015-02-11
-    * as an experiment, generate bootstrap                              * SKIP
-        - it expects to find m4/                                        * SKIP
-        - website suggests also running libtoolize and/or autoheader    * SKIP
-        - they consider bootstrap an alternative to autogen.sh          * SKIP
-    * add a PACKAGES file, need to install at least libtool for         * DONE
-        libtoolize                                                      * DONE
-
-    * there are a thousand versions of autogen.sh - look at a few!      * DONE
 
 2015-02-11
     * all blocks of C code in fuseGen should be reworked to use 

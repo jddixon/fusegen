@@ -1,3 +1,3 @@
 cd /home/jdd/dev/py/fusegen
 rm -rf build/
-pySloc countem checkStillOK diffEm diffSrc diffTop genEm fuseGen 
+pySloc countem checkIncs checkScaffolding diffEm diffSrc diffTop genEm fuseGen 

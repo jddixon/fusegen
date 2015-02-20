@@ -155,10 +155,10 @@ def makeFusePkg(args):
                 os.chmod(dest, 0o644)
 
     for x in ['autogen.sh', 'config.guess', 'config.sub', 'COPYING',
-            'COPYING.LESSER', 'COPYING.AUTOCONF.EXCEPTION',
+            'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION',
             'install-sh', 'README.licenses',]:
         copyFromSrc(x, x in ['autogen.sh', 'install-sh',])
-    for x in ['fuse.h', ]:
+    for x in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
         copyFromSrc(x, False, False)
 
     # write CHANGES -------------------------------------------------
@@ -313,7 +313,7 @@ void {0:s}Usage()
 {{
     fprintf(stderr,
         "usage:  {0:s} [FUSE, mount, and fg* options] rootDir mountPoint\\n");
-    exit(0);
+    abort();
 }}
 
 // Return 0 if OK
@@ -322,8 +322,8 @@ int {0:s}ChkDir(const char *dirName)
     struct stat sb;
     int status = -1;
     if ((dirName != NULL) && (dirName[0] != '-') &&
-       (stat(dirName, &sb) == 0) && S_ISDIR(sb.st_mode))
-       status = 0;
+           (stat(dirName, &sb) == 0) && S_ISDIR(sb.st_mode))
+        status = 0;
     return status;
 }}
 int main(int argc, char *argv[])
@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
     // Prevent this script from being run by root, because such use is
     // an unacceptable security risk.
     if ((getuid() == 0) || (geteuid() == 0)) {{
-        fprintf(stderr, "{0:s} must not be run as root\\n");
+        fprintf(stderr, "{0:s} must not be run as root -- aborting\\n");
         abort();    // raises SIGABRT, terminating the process
     }}
 
@@ -345,11 +345,13 @@ int main(int argc, char *argv[])
         {0:s}Usage();
 
     // Try to allocate memory for file system's private data.
-    myData = malloc(sizeof(struct {0:s}Data));
+    myData = calloc(1, sizeof(struct {0:s}Data));
     if (myData == NULL) {{
-        perror("main malloc");
+        perror("main calloc failed");
         abort();
     }}
+    // Set up logging; this should be conditional.
+    myData->logfile = openLog();
 
     // The next to the last argument is the root directory.  Save it to
     // private data and then remove it from the argument list passed to fuse,
@@ -361,13 +363,7 @@ int main(int argc, char *argv[])
     argv[argc-1] = NULL;
     argc--;
 
-    // Set up logging; this should be conditional.
-    myData->logfile = openLog();
-
-    fprintf(stderr, "Branching to fuse_main\\n");
-    status = fuse_main(argc, argv, &{1:s}oper, myData);
-    fprintf(stderr, "fuse_main returned %d\\n", status);
-
+    status = fuse_main(argc, argv, &{1:s}OpTable, myData);
     return status;
 }}
 """.format(pkgName, prefix)
@@ -416,7 +412,7 @@ void logFI     (struct fuse_file_info *fi);
 void logMsg    (const char *format, ...);
 void logStat   (struct stat *si);
 void logstatVFS(struct statvfs *sv);
-FILE *openLog(void);
+FILE *openLog  (void);
 
 // END LOGGING CODE -------------------------------------------------
 
@@ -503,7 +499,7 @@ FILE *openLog(void);
     # optable.inc -----------------------------------------
     content = """/** optable.inc */
 
-struct fuse_operations {0:s}oper = {{
+struct fuse_operations {0:s}OpTable = {{
     .getattr      = {0:s}getattr,
     .readlink     = {0:s}readlink,
     .getdir       = NULL,
@@ -707,7 +703,7 @@ struct fuse_operations {0:s}oper = {{
         return status;
     }}
     do {{
-        logMsg("calling filler with name %s\\n", entry->d_name);
+        logMsg("calling filler(%s)\\n", entry->d_name);
         if (filler(buf, entry->d_name, NULL, 0) != 0) {{
             logMsg("    ERROR {0:s}readdir filler:  buffer full");
             return -ENOMEM;
