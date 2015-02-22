@@ -10,21 +10,17 @@ from fusegen   import *
 
 DEPRECATED          = 0x00000001
 RETURNS_STATUS      = 0x00000002
-
-SIMPLE_ERROR        = 0x00000004
-
-FULL_PATH           = 0x00000010
-DOUBLE_FULL_PATH    = 0x00000020
-LOGGING_ENTRY       = 0x00000040
-COMPLEX_LOGGING     = 0x00000080
-
-LOGGING_STAT        = 0x00000200
-LOGGING_STATVFS     = 0x00000400
-HAS_LINK_FILE       = 0x00000800
-LOGGING_FI          = 0x00001000
-SYSCALL_RET_FD      = 0x00002000
-SET_FH_FROM_FD      = 0x00004000
-SYSCALL_FI_PARAM1   = 0x00008000
+CHECK_ERR_AND_FLIP  = 0x00000004
+FULL_PATH           = 0x00000008
+DOUBLE_FULL_PATH    = 0x00000010
+LOGGING_ENTRY       = 0x00000020
+LOGGING_STAT        = 0x00000040
+LOGGING_STATVFS     = 0x00000080
+HAS_LINK_FILE       = 0x00000100
+LOGGING_FI          = 0x00000200
+SYSCALL_RET_FD      = 0x00000400
+SET_FH_FROM_FD      = 0x00000800
+SYSCALL_FI_PARAM1   = 0x00001000
 
 CHK_DEF_XATTR       = 0x10000000
 
@@ -54,16 +50,11 @@ def setOpAttrs():
             attrs |= FULL_PATH
 
         if name not in [ 'destroy', 'flush', 'fsyncdir',
-                'init', 'mknod', 'releasedir', ]:
-            attrs |= SIMPLE_ERROR
+                'init', 'mknod', 'readdir', 'releasedir', ]:
+            attrs |= CHECK_ERR_AND_FLIP
 
         if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
             attrs |= CHK_DEF_XATTR
-
-        # XXX NOWHERE USED
-        if name in ['readlink', 'mknod', 'write',
-                    'getxattr', 'listxattr', 'readdir',]:
-            attrs |= COMPLEX_LOGGING
 
         # XXX THIS USED TO BE 'else'
         attrs |= LOGGING_ENTRY
@@ -89,7 +80,6 @@ def setOpAttrs():
             attrs |= SYSCALL_RET_FD
 
         opAttrs[name] = attrs
-
     return opAttrs
 
 def makedir_p(path, mode):
@@ -258,11 +248,12 @@ install-dvi install-info install-ps install-pdf dvi pdf ps info :
     # ===============================================================
 
     # write bin/mountNAME
+    # XXX The -s ('single-threaded') is a temporary hack and should be dropped
     pathToBin = os.path.join(pathToPkg, 'bin')
     pathToCmd = os.path.join(pathToBin, 'mount' + ucName)
     with open(pathToCmd, 'w') as f:
         f.write("cd %s\n" % pathToPkg)
-        f.write("src/%s workdir/rootdir workdir/mountPoint\n" % pkgName)
+        f.write("src/%s -s workdir/rootdir workdir/mountPoint\n" % pkgName)
     os.chmod(pathToCmd, 0o744)
 
     # write bin/umountNAME
@@ -403,13 +394,13 @@ struct {0:s}Data {{
 // This block generated only if including logging capability
 
 // log the name and value of a particular field of the structure s
-#define LOG_FIELD(s, field, format) \\
-  logMsg("  " #field " = " #format "\\n", s->field)
+#define LOG_FIELD(s, field, fmt) \\
+  logMsg("  %-20s = " #fmt "\\n\", " " #field "  ", s->field)
 
 void logConn   (struct fuse_conn_info *conn);
-void logEntry  (const char *format, ...);
+void logEntry  (const char *fmt, ...);
 void logFI     (struct fuse_file_info *fi);
-void logMsg    (const char *format, ...);
+void logMsg    (const char *fmt, ...);
 void logStat   (struct stat *si);
 void logstatVFS(struct statvfs *sv);
 FILE *openLog  (void);
@@ -492,6 +483,155 @@ FILE *openLog  (void);
 
     pkgCFile = os.path.join(pathToSrc, "%s.c" % pkgName)
     with open(pkgCFile, 'w') as f:
+        f.write(content)
+
+    # generate util.c -----------------------------------------------
+
+    content = """/** util.c */
+
+#include "fuse_version.h"   // make me first
+#include <stdarg.h>
+#include <sys/stat.h>
+#include "{0:s}.h"          // this header file should be last
+
+// Log errors to logfile and return -errno to caller.
+
+int {1:s}Error(char *msg)
+{{
+    int errCode = -errno;
+    /** BEGIN 'ONLY IF LOGGING' */
+    logMsg("    ERROR %s: %s\\n", msg, strerror(errno));
+    /** END 'ONLY IF LOGGING' */
+    return errCode;
+}}
+
+void {1:s}FullPath(char fpath[PATH_MAX], const char *path)
+{{
+    strcpy(fpath, {2:s}_DATA->rootdir);
+    strncat(fpath, path, PATH_MAX);
+    /** BEGIN 'ONLY IF LOGGING' */
+    logMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\", fpath = \\"%s\\"\\n",
+           {2:s}_DATA->rootdir, path, fpath);
+    /** END 'ONLY IF LOGGING' */
+}}
+
+/** BEGIN 'ONLY IF LOGGING' SECTION */
+FILE *openLog()
+{{
+    FILE *logfile;
+
+    logfile = fopen("{0:s}.log", "w");
+    if (logfile == NULL) {{
+        perror("logfile");
+        exit(EXIT_FAILURE);
+    }}
+    setvbuf(logfile, NULL, _IOLBF, 0);
+    return logfile;
+}}
+
+void logEntry(const char *format, ...)
+{{
+    va_list ap;
+    va_start(ap, format);
+
+    vfprintf({2:s}_DATA->logfile, format, ap);
+}}
+void logMsg(const char *format, ...)
+{{
+    va_list ap;
+    va_start(ap, format);
+
+    vfprintf({2:s}_DATA->logfile, format, ap);
+}}
+
+// from fuse.h
+void logContext(struct fuse_context *ctx)
+{{
+    logMsg("  ctx:\\n");
+    LOG_FIELD(ctx, fuse,            0x%08x);
+    LOG_FIELD(ctx, uid,             %d);
+    LOG_FIELD(ctx, gid,             %d);
+    LOG_FIELD(ctx, pid,             %d);
+    LOG_FIELD(ctx, umask,           %05o);
+    
+    LOG_FIELD(ctx, private_data,    0x%08x);
+    // two fields defined locally
+    LOG_FIELD(((struct {0:s}Data *)ctx->private_data), logfile, %08x);
+    LOG_FIELD(((struct {0:s}Data *)ctx->private_data), rootdir, %s);
+}}
+
+// from fuse_common.h
+void logConn(struct fuse_conn_info *conn)
+{{
+    logMsg("  conn:\\n");
+    LOG_FIELD(conn, proto_major,        %d);
+    LOG_FIELD(conn, proto_minor,        %d);
+    LOG_FIELD(conn, async_read,         %d);
+    LOG_FIELD(conn, max_write,          %d);
+    LOG_FIELD(conn, max_readahead,      %d);
+    LOG_FIELD(conn, capable,            0x%08x);
+    LOG_FIELD(conn, want,               0x%08x);
+    LOG_FIELD(conn, max_background,     %d);
+    LOG_FIELD(conn, congestion_threshold, %d);
+}}
+
+// from fuse_common.h
+void logFI (struct fuse_file_info *fi)
+{{
+    logMsg("  fi:\\n");
+    LOG_FIELD(fi, flags,        0x%08x);
+    LOG_FIELD(fi, fh_old,       0x%08lx);
+    LOG_FIELD(fi, writepage,    %d);
+    LOG_FIELD(fi, direct_io,    %d);
+    LOG_FIELD(fi, keep_cache,   %d);
+    LOG_FIELD(fi, flush,        %d);
+    LOG_FIELD(fi, nonseekable,  %d);
+    LOG_FIELD(fi, flock_release,%d);
+    LOG_FIELD(fi, fh,           0x%016llx);
+    LOG_FIELD(fi, lock_owner,   0x%016llx);
+}};
+
+// man struct stat
+void logStat(struct stat *ss)
+{{
+    logMsg("  ss:\\n");
+    LOG_FIELD(ss, st_dev,       %lld);
+    LOG_FIELD(ss, st_ino,       %lld);
+    LOG_FIELD(ss, st_mode,      0%o);
+    LOG_FIELD(ss, st_nlink,     %d);
+    LOG_FIELD(ss, st_uid,       %d);
+    LOG_FIELD(ss, st_gid,       %d);
+    LOG_FIELD(ss, st_rdev,      %lld);
+    LOG_FIELD(ss, st_size,      %lld);
+    LOG_FIELD(ss, st_blksize,   %ld);
+    LOG_FIELD(ss, st_blocks,    %lld);
+    LOG_FIELD(ss, st_atime,     0x%08lx);
+    LOG_FIELD(ss, st_mtime,     0x%08lx);
+    LOG_FIELD(ss, st_ctime,     0x%08lx);
+}}
+
+// man struct statvfs
+void logStatVFS(struct statvfs *sv)
+{{
+    logMsg("  sv:\\n");
+    LOG_FIELD(sv, f_bsize,      %ld);
+    LOG_FIELD(sv, f_frsize,     %ld);
+    LOG_FIELD(sv, f_blocks,     %lld);
+    LOG_FIELD(sv, f_bfree,      %lld);
+    LOG_FIELD(sv, f_bavail,     %lld);
+    LOG_FIELD(sv, f_files,      %lld);
+    LOG_FIELD(sv, f_ffree,      %lld);
+    LOG_FIELD(sv, f_favail,     %lld);
+    LOG_FIELD(sv, f_fsid,       %ld);
+    LOG_FIELD(sv, f_flag,       0x%08lx);
+    LOG_FIELD(sv, f_namemax,    %ld);
+}}
+
+/** END 'ONLY IF LOGGING' SECTION */
+""".format(pkgName, prefix, ucName)
+
+    utilCFile = os.path.join(pathToSrc, "util.c")
+    with open(utilCFile, 'w') as f:
         f.write(content)
 
     # generate .inc files -------------------------------------------
@@ -709,24 +849,15 @@ struct fuse_operations {0:s}OpTable = {{
             return -ENOMEM;
         }}
     }} while ((entry = readdir(dp)) != NULL);
+    closedir(dp);
 """.format(prefix)
                 ss.append(content)
-
 
             elif name == 'readlink':
                 ss.append("    status = readlink(fpath, link, size - 1);")
             elif name == 'releasedir':
                 ss.append("    // ANOMALY: status not handled")
                 ss.append("    closedir((DIR *) (uintptr_t) fi->fh);")
-            # catches release XXX SHOULD CATCH ftruncate *** DROPPED ***
-#            elif len(ff.params) == 2 and ff.params[1][1] == 'fi':
-#                # DEBUG
-#                print("2 PARAMS: name=%s, prefix=%s" % (name, prefix))
-#                # END
-#                # a HACK
-#                if name != 'flush':
-#                    ss.append("    status = %s(fi->fh);" % sysCall)
-
             elif attrs & HAS_LINK_FILE:
                 ss.append("    status = %s(path, flink);" % sysCall)
             elif attrs & DOUBLE_FULL_PATH:
@@ -767,7 +898,7 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append('    if (dp == NULL)')
             ss.append("        status = %sError(\"%s%s %s\");" % (
                 prefix, prefix, name, sysCall))
-        elif name != 'fgetattr' and attrs & SIMPLE_ERROR:
+        elif name != 'fgetattr' and attrs & CHECK_ERR_AND_FLIP:
             if attrs & SYSCALL_RET_FD:
                 ss.append("    if (fd < 0)")
             else:
@@ -792,7 +923,7 @@ struct fuse_operations {0:s}OpTable = {{
 
         # -- logging stat -----------------------------
         if attrs & LOGGING_STAT:
-            ss.append("    logStat(%s);\n" % ff.params[1][1])
+            ss.append("    logStat(%s);\n"    % ff.params[1][1])
         elif attrs & LOGGING_STATVFS:
             ss.append("    logStatVFS(%s);\n" % ff.params[1][1])
 
@@ -806,6 +937,11 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append('    logFI(fi);')
 
         # -- return -----------------------------------
+        # DEBUG
+        if name == 'opendir':
+            ss.append(
+                "    logMsg(\"opendir returning status = %d\\n\", status);")
+        # END
         if attrs & RETURNS_STATUS:
             ss.append("    return status;")
         elif name == 'init':
@@ -818,12 +954,6 @@ struct fuse_operations {0:s}OpTable = {{
         with open(pathToInc, 'w') as f:
             f.write(out)
 def main():
-    """
-    Expect a command like
-        fuseGen [options]
-
-    """
-
     # program defaults ----------------------------------------------
     myDate   = "%04d-%02d-%02d" % time.gmtime()[:3]
 
@@ -900,7 +1030,6 @@ def main():
 
     # do what's required --------------------------------------------
     makeFusePkg(args)
-
 
 if __name__ == '__main__':
     main()

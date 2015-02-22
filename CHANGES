@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.4.10
+    2015-02-21
+        * generate util.c; more fixes                               SLOC 1207
 v0.4.9
     2015-02-20
         * add missing FUSE header files; minor fixes                SLOC 1064
