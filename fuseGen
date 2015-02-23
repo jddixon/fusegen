@@ -144,10 +144,11 @@ def makeFusePkg(args):
             else:
                 os.chmod(dest, 0o644)
 
+    # install-sh removed from both lists 2015-02-22
     for x in ['autogen.sh', 'config.guess', 'config.sub', 'COPYING',
             'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION',
-            'install-sh', 'README.licenses',]:
-        copyFromSrc(x, x in ['autogen.sh', 'install-sh',])
+            'README.licenses',]:
+        copyFromSrc(x, x in ['autogen.sh', ])
     for x in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
         copyFromSrc(x, False, False)
 
@@ -260,7 +261,7 @@ install-dvi install-info install-ps install-pdf dvi pdf ps info :
     pathToCmd = os.path.join(pathToBin, 'umount' + ucName)
     with open(pathToCmd, 'w') as f:
         f.write("cd %s\n" % pathToPkg)
-        f.write("sudo umount workdir/mountPoint\n")
+        f.write("fusermount -uz workdir/mountPoint\n")
     os.chmod(pathToCmd, 0o744)
 
     # ===============================================================
@@ -304,18 +305,29 @@ void {0:s}Usage()
 {{
     fprintf(stderr,
         "usage:  {0:s} [FUSE, mount, and fg* options] rootDir mountPoint\\n");
-    abort();
+    exit(0);
 }}
-
+void {0:s}PerrorAndUsage(int status)
+{{
+    fprintf(stderr, "%s\\n", strerror(status));
+    {0:s}Usage();
+}}
 // Return 0 if OK
-int {0:s}ChkDir(const char *dirName)
+void {0:s}ChkDir(const char *dirName)
 {{
     struct stat sb;
-    int status = -1;
-    if ((dirName != NULL) && (dirName[0] != '-') &&
-           (stat(dirName, &sb) == 0) && S_ISDIR(sb.st_mode))
-        status = 0;
-    return status;
+    int status = 0;
+    if (dirName == NULL)
+        status = ENOENT;
+    else if (dirName[0] == '-')
+        status = EPERM;
+    else {{
+        status = stat(dirName, &sb);
+        if ((status == 0) && (!S_ISDIR(sb.st_mode)))
+            status = ENOTDIR;
+    }}
+    if (status)
+        {0:s}PerrorAndUsage(status);
 }}
 int main(int argc, char *argv[])
 {{
@@ -325,15 +337,17 @@ int main(int argc, char *argv[])
     // Prevent this script from being run by root, because such use is
     // an unacceptable security risk.
     if ((getuid() == 0) || (geteuid() == 0)) {{
-        fprintf(stderr, "{0:s} must not be run as root -- aborting\\n");
-        abort();    // raises SIGABRT, terminating the process
+        fprintf(stderr, "{0:s} must not be run as root\\n");
+        exit(EPERM);
     }}
 
     // The last two arguments are the paths to the root directory and the
     // mount point respectively.  They must represent valid names for
     // existing directories that the user may access.
-    if ((argc < 3) || {0:s}ChkDir(argv[argc-2]) || {0:s}ChkDir(argv[argc-1]))
+    if (argc < 3)
         {0:s}Usage();
+    {0:s}ChkDir(argv[argc-2]);
+    {0:s}ChkDir(argv[argc-1]);
 
     // Try to allocate memory for file system's private data.
     myData = calloc(1, sizeof(struct {0:s}Data));
@@ -553,7 +567,7 @@ void logContext(struct fuse_context *ctx)
     LOG_FIELD(ctx, gid,             %d);
     LOG_FIELD(ctx, pid,             %d);
     LOG_FIELD(ctx, umask,           %05o);
-    
+
     LOG_FIELD(ctx, private_data,    0x%08x);
     // two fields defined locally
     LOG_FIELD(((struct {0:s}Data *)ctx->private_data), logfile, %08x);
