@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.4.12
+    2015-02-23
+        * fixed bug in readdir                                      SLOC 1218
 v0.4.11
     2015-02-22
         * improved checks on CLI arg list                           SLOC 1220

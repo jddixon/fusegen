@@ -50,7 +50,7 @@ def setOpAttrs():
             attrs |= FULL_PATH
 
         if name not in [ 'destroy', 'flush', 'fsyncdir',
-                'init', 'mknod', 'readdir', 'releasedir', ]:
+                'init', 'mknod', 'readdir', ]:
             attrs |= CHECK_ERR_AND_FLIP
 
         if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
@@ -409,7 +409,7 @@ struct {0:s}Data {{
 
 // log the name and value of a particular field of the structure s
 #define LOG_FIELD(s, field, fmt) \\
-  logMsg("  %-20s = " #fmt "\\n\", " " #field "  ", s->field)
+  logMsg("   %-20s = " #fmt "\\n\", " " #field "  ", s->field)
 
 void logConn   (struct fuse_conn_info *conn);
 void logEntry  (const char *fmt, ...);
@@ -863,15 +863,13 @@ struct fuse_operations {0:s}OpTable = {{
             return -ENOMEM;
         }}
     }} while ((entry = readdir(dp)) != NULL);
-    closedir(dp);
 """.format(prefix)
                 ss.append(content)
 
             elif name == 'readlink':
                 ss.append("    status = readlink(fpath, link, size - 1);")
             elif name == 'releasedir':
-                ss.append("    // ANOMALY: status not handled")
-                ss.append("    closedir((DIR *) (uintptr_t) fi->fh);")
+                ss.append("    status = closedir((DIR *) (uintptr_t) fi->fh);")
             elif attrs & HAS_LINK_FILE:
                 ss.append("    status = %s(path, flink);" % sysCall)
             elif attrs & DOUBLE_FULL_PATH:
