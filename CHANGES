@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.4.13
+    2015-02-24
+        * rewrote util.c                                            SLOC 1265
 v0.4.12
     2015-02-23
         * fixed bug in readdir                                      SLOC 1218

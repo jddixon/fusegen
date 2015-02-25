@@ -30,6 +30,7 @@ echo This file should be aligned with fragments/optable
 ./diffEm removexattr
 ./diffEm listxattr
 ./diffEm opendir
+./diffEm readdir
 ./diffEm releasedir
 ./diffEm releasedir
 ./diffEm fsyncdir

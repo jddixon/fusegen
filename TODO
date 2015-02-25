@@ -1,5 +1,21 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-24
+    * to prevent scrambling of log messages, open the log in append
+        mode                                                            * DONE
+    * ah, but log messages then must not be split into separate
+        parts; so fix
+        - LOG_FIELD to produce a single formatted string
+        - logContext() to concatenate LOG_FIELD strings to produce
+            and log a single message
+            * need a glue function ('msgJoin' or similar)
+            * possibly copy data structure, pass that to buffer,
+                and return; with logging done in a separate thread
+        - ditto for logConn()
+        - and for logFI()
+        - and for logStat()
+        - and for logStatVFS()
+
 2015-02-22 (-18, rewritten)
     * need a README.install which explains that this package should 
         never be installed by root

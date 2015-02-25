@@ -249,12 +249,11 @@ install-dvi install-info install-ps install-pdf dvi pdf ps info :
     # ===============================================================
 
     # write bin/mountNAME
-    # XXX The -s ('single-threaded') is a temporary hack and should be dropped
     pathToBin = os.path.join(pathToPkg, 'bin')
     pathToCmd = os.path.join(pathToBin, 'mount' + ucName)
     with open(pathToCmd, 'w') as f:
         f.write("cd %s\n" % pathToPkg)
-        f.write("src/%s -s workdir/rootdir workdir/mountPoint\n" % pkgName)
+        f.write("src/%s workdir/rootdir workdir/mountPoint\n" % pkgName)
     os.chmod(pathToCmd, 0o744)
 
     # write bin/umountNAME
@@ -407,10 +406,6 @@ struct {0:s}Data {{
 // BEGIN LOGGING CODE -----------------------------------------------
 // This block generated only if including logging capability
 
-// log the name and value of a particular field of the structure s
-#define LOG_FIELD(s, field, fmt) \\
-  logMsg("   %-20s = " #fmt "\\n\", " " #field "  ", s->field)
-
 void logConn   (struct fuse_conn_info *conn);
 void logEntry  (const char *fmt, ...);
 void logFI     (struct fuse_file_info *fi);
@@ -530,11 +525,13 @@ void {1:s}FullPath(char fpath[PATH_MAX], const char *path)
 }}
 
 /** BEGIN 'ONLY IF LOGGING' SECTION */
+
 FILE *openLog()
 {{
     FILE *logfile;
 
-    logfile = fopen("{0:s}.log", "w");
+    // Linux appends are guaranteed to be atomic
+    logfile = fopen("{0:s}.log", "a");
     if (logfile == NULL) {{
         perror("logfile");
         exit(EXIT_FAILURE);
@@ -558,87 +555,138 @@ void logMsg(const char *format, ...)
     vfprintf({2:s}_DATA->logfile, format, ap);
 }}
 
+static char *msgHeader(char *p, int *maxChar, char *name)
+{{
+    int n =  snprintf(p, *maxChar, "  %s:\\n", name);
+    *maxChar -= n;
+    return p + n;
+}}
+
+#define MAX_BUFFER (1024 - 1)
+
+// log the name and value of a particular field of the structure s
+#define ADD_FIELD(s, field, fmt) \\
+  n = snprintf(p, bytesLeft, \\
+          "   %-20s = " #fmt "\\n", " " #field "  ", s->field); \\
+  bytesLeft -= n;   \\
+  p += n;
+
 // from fuse.h
 void logContext(struct fuse_context *ctx)
 {{
-    logMsg("  ctx:\\n");
-    LOG_FIELD(ctx, fuse,            0x%08x);
-    LOG_FIELD(ctx, uid,             %d);
-    LOG_FIELD(ctx, gid,             %d);
-    LOG_FIELD(ctx, pid,             %d);
-    LOG_FIELD(ctx, umask,           %05o);
+    char buffer[MAX_BUFFER+1];  // allow for null byte
+    char *p = buffer;
+    int  bytesLeft = MAX_BUFFER;
+    int  n;
 
-    LOG_FIELD(ctx, private_data,    0x%08x);
+    p = msgHeader(p, &bytesLeft, "ctx");
+    ADD_FIELD(ctx, fuse,            0x%08x);
+    ADD_FIELD(ctx, uid,             %d);
+    ADD_FIELD(ctx, gid,             %d);
+    ADD_FIELD(ctx, pid,             %d);
+    ADD_FIELD(ctx, umask,           %05o);
+
+    ADD_FIELD(ctx, private_data,    0x%08x);
     // two fields defined locally
-    LOG_FIELD(((struct {0:s}Data *)ctx->private_data), logfile, %08x);
-    LOG_FIELD(((struct {0:s}Data *)ctx->private_data), rootdir, %s);
+    ADD_FIELD(((struct xxxfsData *)ctx->private_data), logfile, %08x);
+    ADD_FIELD(((struct xxxfsData *)ctx->private_data), rootdir, %s);
+
+    logMsg(buffer);
 }}
 
 // from fuse_common.h
 void logConn(struct fuse_conn_info *conn)
 {{
-    logMsg("  conn:\\n");
-    LOG_FIELD(conn, proto_major,        %d);
-    LOG_FIELD(conn, proto_minor,        %d);
-    LOG_FIELD(conn, async_read,         %d);
-    LOG_FIELD(conn, max_write,          %d);
-    LOG_FIELD(conn, max_readahead,      %d);
-    LOG_FIELD(conn, capable,            0x%08x);
-    LOG_FIELD(conn, want,               0x%08x);
-    LOG_FIELD(conn, max_background,     %d);
-    LOG_FIELD(conn, congestion_threshold, %d);
+    char buffer[MAX_BUFFER+1];  // allow for null byte
+    char *p = buffer;
+    int  bytesLeft = MAX_BUFFER;
+    int  n;
+
+    p = msgHeader(p, &bytesLeft, "conn");
+    ADD_FIELD(conn, proto_major,        %d);
+    ADD_FIELD(conn, proto_minor,        %d);
+    ADD_FIELD(conn, async_read,         %d);
+    ADD_FIELD(conn, max_write,          %d);
+    ADD_FIELD(conn, max_readahead,      %d);
+    ADD_FIELD(conn, capable,            0x%08x);
+    ADD_FIELD(conn, want,               0x%08x);
+    ADD_FIELD(conn, max_background,     %d);
+    ADD_FIELD(conn, congestion_threshold, %d);
+
+    logMsg(buffer);
 }}
 
 // from fuse_common.h
 void logFI (struct fuse_file_info *fi)
 {{
-    logMsg("  fi:\\n");
-    LOG_FIELD(fi, flags,        0x%08x);
-    LOG_FIELD(fi, fh_old,       0x%08lx);
-    LOG_FIELD(fi, writepage,    %d);
-    LOG_FIELD(fi, direct_io,    %d);
-    LOG_FIELD(fi, keep_cache,   %d);
-    LOG_FIELD(fi, flush,        %d);
-    LOG_FIELD(fi, nonseekable,  %d);
-    LOG_FIELD(fi, flock_release,%d);
-    LOG_FIELD(fi, fh,           0x%016llx);
-    LOG_FIELD(fi, lock_owner,   0x%016llx);
+    char buffer[MAX_BUFFER+1];  // allow for null byte
+    char *p = buffer;
+    int  bytesLeft = MAX_BUFFER;
+    int  n;
+
+    p = msgHeader(p, &bytesLeft, "fi");
+    ADD_FIELD(fi, flags,        0x%08x);
+    ADD_FIELD(fi, fh_old,       0x%08lx);
+    ADD_FIELD(fi, writepage,    %d);
+    ADD_FIELD(fi, direct_io,    %d);
+    ADD_FIELD(fi, keep_cache,   %d);
+    ADD_FIELD(fi, flush,        %d);
+    ADD_FIELD(fi, nonseekable,  %d);
+    ADD_FIELD(fi, flock_release,%d);
+    ADD_FIELD(fi, fh,           0x%016llx);
+    ADD_FIELD(fi, lock_owner,   0x%016llx);
+
+    logMsg(buffer);
 }};
 
 // man struct stat
 void logStat(struct stat *ss)
 {{
-    logMsg("  ss:\\n");
-    LOG_FIELD(ss, st_dev,       %lld);
-    LOG_FIELD(ss, st_ino,       %lld);
-    LOG_FIELD(ss, st_mode,      0%o);
-    LOG_FIELD(ss, st_nlink,     %d);
-    LOG_FIELD(ss, st_uid,       %d);
-    LOG_FIELD(ss, st_gid,       %d);
-    LOG_FIELD(ss, st_rdev,      %lld);
-    LOG_FIELD(ss, st_size,      %lld);
-    LOG_FIELD(ss, st_blksize,   %ld);
-    LOG_FIELD(ss, st_blocks,    %lld);
-    LOG_FIELD(ss, st_atime,     0x%08lx);
-    LOG_FIELD(ss, st_mtime,     0x%08lx);
-    LOG_FIELD(ss, st_ctime,     0x%08lx);
+    char buffer[MAX_BUFFER+1];  // allow for null byte
+    char *p = buffer;
+    int  bytesLeft = MAX_BUFFER;
+    int  n;
+
+    p = msgHeader(p, &bytesLeft, "ss");
+    ADD_FIELD(ss, st_dev,       %lld);
+    ADD_FIELD(ss, st_ino,       %lld);
+    ADD_FIELD(ss, st_mode,      0%o);
+    ADD_FIELD(ss, st_nlink,     %d);
+    ADD_FIELD(ss, st_uid,       %d);
+    ADD_FIELD(ss, st_gid,       %d);
+    ADD_FIELD(ss, st_rdev,      %lld);
+    ADD_FIELD(ss, st_size,      %lld);
+    ADD_FIELD(ss, st_blksize,   %ld);
+    ADD_FIELD(ss, st_blocks,    %lld);
+    ADD_FIELD(ss, st_atime,     0x%08lx);
+    ADD_FIELD(ss, st_mtime,     0x%08lx);
+    ADD_FIELD(ss, st_ctime,     0x%08lx);
+
+    logMsg(buffer);
 }}
 
 // man struct statvfs
 void logStatVFS(struct statvfs *sv)
 {{
-    logMsg("  sv:\\n");
-    LOG_FIELD(sv, f_bsize,      %ld);
-    LOG_FIELD(sv, f_frsize,     %ld);
-    LOG_FIELD(sv, f_blocks,     %lld);
-    LOG_FIELD(sv, f_bfree,      %lld);
-    LOG_FIELD(sv, f_bavail,     %lld);
-    LOG_FIELD(sv, f_files,      %lld);
-    LOG_FIELD(sv, f_ffree,      %lld);
-    LOG_FIELD(sv, f_favail,     %lld);
-    LOG_FIELD(sv, f_fsid,       %ld);
-    LOG_FIELD(sv, f_flag,       0x%08lx);
-    LOG_FIELD(sv, f_namemax,    %ld);
+    char buffer[MAX_BUFFER+1];  // allow for null byte
+    char *p = buffer;
+    int  bytesLeft = MAX_BUFFER;
+    int  n;
+
+    p = msgHeader(p, &bytesLeft, "sv");
+    ADD_FIELD(sv, f_bsize,      %ld);
+    ADD_FIELD(sv, f_frsize,     %ld);
+    ADD_FIELD(sv, f_blocks,     %lld);
+    ADD_FIELD(sv, f_bfree,      %lld);
+    ADD_FIELD(sv, f_bavail,     %lld);
+    ADD_FIELD(sv, f_files,      %lld);
+    ADD_FIELD(sv, f_ffree,      %lld);
+    ADD_FIELD(sv, f_favail,     %lld);
+    ADD_FIELD(sv, f_fsid,       %ld);
+    ADD_FIELD(sv, f_flag,       0x%08lx);
+    ADD_FIELD(sv, f_namemax,    %ld);
+
+    logMsg(buffer);
 }}
 
 /** END 'ONLY IF LOGGING' SECTION */
@@ -949,11 +997,6 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append('    logFI(fi);')
 
         # -- return -----------------------------------
-        # DEBUG
-        if name == 'opendir':
-            ss.append(
-                "    logMsg(\"opendir returning status = %d\\n\", status);")
-        # END
         if attrs & RETURNS_STATUS:
             ss.append("    return status;")
         elif name == 'init':
