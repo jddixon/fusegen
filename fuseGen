@@ -382,6 +382,10 @@ int main(int argc, char *argv[])
 #ifndef _{2:s}_H_
 #define _{2:s}_H_
 
+// IF INSTRUMENTING CODE ------------------------
+#include <pthread.h>        // should be first
+// END INSTRUMENTING CODE -----------------------
+
 #include <errno.h>
 #include <fuse.h>
 #include <limits.h>
@@ -416,6 +420,27 @@ FILE *openLog  (void);
 
 // END LOGGING CODE -------------------------------------------------
 
+// BEGIN INSTRUMENTATION --------------------------------------------
+
+#define BUCKET_SIZE (32 * 1024)
+#define BUCKET_COUNT (60*15)
+
+typedef struct o_ {{
+    uint32_t    ns;
+    uint64_t    bytes;
+    uint8_t     opCode;
+}} opData_t;
+
+typedef struct b_ {{
+    uint32_t        count;
+    pthread_mutex_t mu;
+    pthread_cond_t  cond;
+    opData_t        ops[BUCKET_SIZE];
+}} bucket_t;
+
+extern bucket_t *buckets[BUCKET_COUNT];
+
+// END INSTRUMENTATION ----------------------------------------------
 #endif
 """.format(pkgName, prefix, ucName)
 
@@ -588,8 +613,8 @@ void logContext(struct fuse_context *ctx)
 
     ADD_FIELD(ctx, private_data,    0x%08x);
     // two fields defined locally
-    ADD_FIELD(((struct xxxfsData *)ctx->private_data), logfile, %08x);
-    ADD_FIELD(((struct xxxfsData *)ctx->private_data), rootdir, %s);
+    ADD_FIELD(((struct {0:s}Data *)ctx->private_data), logfile, %08x);
+    ADD_FIELD(((struct {0:s}Data *)ctx->private_data), rootdir, %s);
 
     logMsg(buffer);
 }}

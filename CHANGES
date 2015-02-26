@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.5.0
+    2015-02-25
+        * began adding instrumentation                              SLOC 1290
 v0.4.13
     2015-02-24
         * rewrote util.c                                            SLOC 1265

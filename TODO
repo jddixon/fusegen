@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-25
+    * FIX: xxxfs found in fuseGen                                       * DONE
+    * add instrumentation code to {0:s}.h
+
 2015-02-24
     * to prevent scrambling of log messages, open the log in append
         mode                                                            * DONE
