@@ -596,6 +596,26 @@ static char *msgHeader(char *p, int *maxChar, char *name)
   bytesLeft -= n;   \\
   p += n;
 
+#define ADD_INT_FIELD(s, field) \\
+  n = snprintf(p, bytesLeft, "  %-20s  = %d\\n", "  " #field "  ", (int) s->field); \\
+  bytesLeft -= n;   \\
+  p += n;
+
+#define ADD_ULONG_FIELD(s, field) \\
+  n = snprintf(p, bytesLeft, "  %-20s  = 0x%08lx\\n", "  " #field "  ", (uintptr_t) s->field); \\
+  bytesLeft -= n;   \\
+  p += n;
+
+#define ADD_LL_FIELD(s, field) \\
+  n = snprintf(p, bytesLeft, "  %-20s  = %lld\\n", "  " #field "  ", (long long) s->field); \\
+  bytesLeft -= n;   \\
+  p += n;
+
+#define ADD_ULL_FIELD(s, field) \\
+  n = snprintf(p, bytesLeft, "  %-20s  = 0x%016llx\\n", "  " #field "  ", (unsigned long long) s->field); \\
+  bytesLeft -= n;   \\
+  p += n;
+
 // from fuse.h
 void logContext(struct fuse_context *ctx)
 {{
@@ -605,16 +625,16 @@ void logContext(struct fuse_context *ctx)
     int  n;
 
     p = msgHeader(p, &bytesLeft, "ctx");
-    ADD_FIELD(ctx, fuse,            0x%08x);
-    ADD_FIELD(ctx, uid,             %d);
-    ADD_FIELD(ctx, gid,             %d);
-    ADD_FIELD(ctx, pid,             %d);
-    ADD_FIELD(ctx, umask,           %05o);
+    ADD_ULONG_FIELD(ctx, fuse);
+    ADD_INT_FIELD(ctx, uid);
+    ADD_INT_FIELD(ctx, gid);
+    ADD_INT_FIELD(ctx, pid);
+    ADD_FIELD(ctx, umask,                   %05o);
 
-    ADD_FIELD(ctx, private_data,    0x%08x);
+    ADD_ULONG_FIELD(ctx, private_data);
     // two fields defined locally
-    ADD_FIELD(((struct {0:s}Data *)ctx->private_data), logfile, %08x);
-    ADD_FIELD(((struct {0:s}Data *)ctx->private_data), rootdir, %s);
+    ADD_ULONG_FIELD(((struct xxxfsData *)ctx->private_data), logfile);
+    ADD_FIELD(((struct xxxfsData *)ctx->private_data), rootdir, %s);
 
     logMsg(buffer);
 }}
@@ -628,15 +648,15 @@ void logConn(struct fuse_conn_info *conn)
     int  n;
 
     p = msgHeader(p, &bytesLeft, "conn");
-    ADD_FIELD(conn, proto_major,        %d);
-    ADD_FIELD(conn, proto_minor,        %d);
-    ADD_FIELD(conn, async_read,         %d);
-    ADD_FIELD(conn, max_write,          %d);
-    ADD_FIELD(conn, max_readahead,      %d);
-    ADD_FIELD(conn, capable,            0x%08x);
-    ADD_FIELD(conn, want,               0x%08x);
-    ADD_FIELD(conn, max_background,     %d);
-    ADD_FIELD(conn, congestion_threshold, %d);
+    ADD_INT_FIELD(conn, proto_major);
+    ADD_INT_FIELD(conn, proto_minor);
+    ADD_INT_FIELD(conn, async_read);
+    ADD_INT_FIELD(conn, max_write);
+    ADD_INT_FIELD(conn, max_readahead);
+    ADD_ULONG_FIELD(conn, capable);
+    ADD_ULONG_FIELD(conn, want);
+    ADD_INT_FIELD(conn, max_background);
+    ADD_INT_FIELD(conn, congestion_threshold);
 
     logMsg(buffer);
 }}
@@ -650,16 +670,16 @@ void logFI (struct fuse_file_info *fi)
     int  n;
 
     p = msgHeader(p, &bytesLeft, "fi");
-    ADD_FIELD(fi, flags,        0x%08x);
-    ADD_FIELD(fi, fh_old,       0x%08lx);
-    ADD_FIELD(fi, writepage,    %d);
-    ADD_FIELD(fi, direct_io,    %d);
-    ADD_FIELD(fi, keep_cache,   %d);
-    ADD_FIELD(fi, flush,        %d);
-    ADD_FIELD(fi, nonseekable,  %d);
-    ADD_FIELD(fi, flock_release,%d);
-    ADD_FIELD(fi, fh,           0x%016llx);
-    ADD_FIELD(fi, lock_owner,   0x%016llx);
+    ADD_ULONG_FIELD(fi, flags);
+    ADD_ULL_FIELD(fi, fh_old);
+    ADD_INT_FIELD(fi, writepage);
+    ADD_INT_FIELD(fi, direct_io);
+    ADD_INT_FIELD(fi, keep_cache);
+    ADD_INT_FIELD(fi, flush);
+    ADD_INT_FIELD(fi, nonseekable);
+    ADD_INT_FIELD(fi, flock_release);
+    ADD_ULL_FIELD(fi, fh);
+    ADD_ULL_FIELD(fi, lock_owner);
 
     logMsg(buffer);
 }};
@@ -673,19 +693,19 @@ void logStat(struct stat *ss)
     int  n;
 
     p = msgHeader(p, &bytesLeft, "ss");
-    ADD_FIELD(ss, st_dev,       %lld);
-    ADD_FIELD(ss, st_ino,       %lld);
+    ADD_ULL_FIELD(ss, st_dev);
+    ADD_ULL_FIELD(ss, st_ino);
     ADD_FIELD(ss, st_mode,      0%o);
-    ADD_FIELD(ss, st_nlink,     %d);
-    ADD_FIELD(ss, st_uid,       %d);
-    ADD_FIELD(ss, st_gid,       %d);
-    ADD_FIELD(ss, st_rdev,      %lld);
-    ADD_FIELD(ss, st_size,      %lld);
+    ADD_INT_FIELD(ss, st_nlink);
+    ADD_INT_FIELD(ss, st_uid);
+    ADD_INT_FIELD(ss, st_gid);
+    ADD_ULL_FIELD(ss, st_rdev);
+    ADD_ULL_FIELD(ss, st_size);
     ADD_FIELD(ss, st_blksize,   %ld);
-    ADD_FIELD(ss, st_blocks,    %lld);
-    ADD_FIELD(ss, st_atime,     0x%08lx);
-    ADD_FIELD(ss, st_mtime,     0x%08lx);
-    ADD_FIELD(ss, st_ctime,     0x%08lx);
+    ADD_ULL_FIELD(ss, st_blocks);
+    ADD_ULONG_FIELD(ss, st_atime);
+    ADD_ULONG_FIELD(ss, st_mtime);
+    ADD_ULONG_FIELD(ss, st_ctime);
 
     logMsg(buffer);
 }}
@@ -701,14 +721,14 @@ void logStatVFS(struct statvfs *sv)
     p = msgHeader(p, &bytesLeft, "sv");
     ADD_FIELD(sv, f_bsize,      %ld);
     ADD_FIELD(sv, f_frsize,     %ld);
-    ADD_FIELD(sv, f_blocks,     %lld);
-    ADD_FIELD(sv, f_bfree,      %lld);
-    ADD_FIELD(sv, f_bavail,     %lld);
-    ADD_FIELD(sv, f_files,      %lld);
-    ADD_FIELD(sv, f_ffree,      %lld);
-    ADD_FIELD(sv, f_favail,     %lld);
+    ADD_LL_FIELD(sv, f_blocks);
+    ADD_LL_FIELD(sv, f_bfree);
+    ADD_LL_FIELD(sv, f_bavail);
+    ADD_LL_FIELD(sv, f_files);
+    ADD_LL_FIELD(sv, f_ffree);
+    ADD_LL_FIELD(sv, f_favail);
     ADD_FIELD(sv, f_fsid,       %ld);
-    ADD_FIELD(sv, f_flag,       0x%08lx);
+    ADD_ULL_FIELD(sv, f_flag);
     ADD_FIELD(sv, f_namemax,    %ld);
 
     logMsg(buffer);

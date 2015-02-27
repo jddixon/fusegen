@@ -2,23 +2,23 @@
 
 2015-02-25
     * FIX: xxxfs found in fuseGen                                       * DONE
-    * add instrumentation code to {0:s}.h
+    * add instrumentation code to {0:s}.h                               * DONE
 
 2015-02-24
-    * to prevent scrambling of log messages, open the log in append
+    * to prevent scrambling of log messages, open the log in append     * DONE
         mode                                                            * DONE
-    * ah, but log messages then must not be split into separate
-        parts; so fix
-        - LOG_FIELD to produce a single formatted string
-        - logContext() to concatenate LOG_FIELD strings to produce
-            and log a single message
-            * need a glue function ('msgJoin' or similar)
-            * possibly copy data structure, pass that to buffer,
-                and return; with logging done in a separate thread
-        - ditto for logConn()
-        - and for logFI()
-        - and for logStat()
-        - and for logStatVFS()
+    * ah, but log messages then must not be split into separate         * DONE
+        parts; so fix                                                   * DONE
+        - LOG_FIELD to produce a single formatted string                * DONE
+        - logContext() to concatenate LOG_FIELD strings to produce		* DONE
+            and log a single message	                        		* DONE
+            * need a glue function ('msgJoin' or similar)	    		* DONE
+            * possibly copy data structure, pass that to buffer,		* DONE
+                and return; with logging done in a separate thread		* DONE
+        - ditto for logConn()			                                * DONE
+        - and for logFI()			                                    * DONE
+        - and for logStat()			                                    * DONE
+        - and for logStatVFS()			                                * DONE
 
 2015-02-22 (-18, rewritten)
     * need a README.install which explains that this package should 
