@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.5.2
+    2015-02-27
+        * extended util.c                                           SLOC 1353
 v0.5.1
     2015-02-26
         * re-rewrote util.c                                         SLOC 1310

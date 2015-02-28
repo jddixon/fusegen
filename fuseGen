@@ -386,12 +386,14 @@ int main(int argc, char *argv[])
 #include <pthread.h>        // should be first
 // END INSTRUMENTING CODE -----------------------
 
+#include <assert.h>
 #include <errno.h>
 #include <fuse.h>
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
 
@@ -422,14 +424,14 @@ FILE *openLog  (void);
 
 // BEGIN INSTRUMENTATION --------------------------------------------
 
-#define BUCKET_SIZE (32 * 1024)
+#define BUCKET_SIZE (64 * 1024)
 #define BUCKET_COUNT (60*15)
 
 typedef struct o_ {{
-    uint32_t    ns;
-    uint64_t    bytes;
+    uint64_t    blockCount;     // number of blocks read or written
+    uint32_t    latency;
     uint8_t     opCode;
-}} opData_t;
+}} __attribute__((aligned(8))) opData_t;
 
 typedef struct b_ {{
     uint32_t        count;
@@ -438,7 +440,10 @@ typedef struct b_ {{
     opData_t        ops[BUCKET_SIZE];
 }} bucket_t;
 
-extern bucket_t *buckets[BUCKET_COUNT];
+extern bucket_t *buckets;   // [BUCKET_COUNT];
+
+opData_t *clockMeIn(struct timespec *tEntry);
+void clockMeOut(struct timespec *tEntry, opData_t *mySlot);
 
 // END INSTRUMENTATION ----------------------------------------------
 #endif
@@ -735,6 +740,44 @@ void logStatVFS(struct statvfs *sv)
 }}
 
 /** END 'ONLY IF LOGGING' SECTION */
+
+/** BEGIN INSTRUMENTATION */
+
+// calloc BUCKET_COUNT of these
+bucket_t *buckets;
+
+opData_t *clockMeIn(struct timespec *tEntry)
+{{
+    int status = clock_gettime(CLOCK_MONOTONIC, tEntry);
+    assert(status == 0);
+    int bktNdx = ((long) tEntry->tv_sec) % BUCKET_COUNT;
+    bucket_t *myBucket = &buckets[bktNdx];
+    // LOCK
+    int myCount = myBucket->count++;
+    // UNLOCK
+    return &myBucket->ops[myCount];
+}}
+
+#define BILLION (1000000000LL)
+void clockMeOut(struct timespec *tEntry, opData_t *mySlot)
+{{
+    struct timespec tExit;
+    long inSec  = tEntry->tv_sec;
+    long inNsec = tEntry->tv_nsec;
+    int status = clock_gettime(CLOCK_MONOTONIC, &tExit);
+    assert(status == 0);
+    long outSec  = tExit.tv_sec;
+    long outNsec = tExit.tv_nsec;
+    if (inNsec > outNsec) {{
+        outNsec += BILLION;
+        outSec  --;
+    }}
+    long latency = outNsec - inNsec;
+    assert(outSec >= inSec);
+    assert(latency < BILLION);
+    mySlot->latency = latency;
+}}
+/** END INSTRUMENTATION */
 """.format(pkgName, prefix, ucName)
 
     utilCFile = os.path.join(pathToSrc, "util.c")

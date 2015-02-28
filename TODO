@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/TODO
 
+2015-02-26
+    * std countOps
+
 2015-02-25
     * FIX: xxxfs found in fuseGen                                       * DONE
     * add instrumentation code to {0:s}.h                               * DONE
