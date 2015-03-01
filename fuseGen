@@ -424,13 +424,16 @@ FILE *openLog  (void);
 
 // BEGIN INSTRUMENTATION --------------------------------------------
 
-#define BUCKET_SIZE (64 * 1024)
-#define BUCKET_COUNT (60*15)
+#define BILLION     (1000000000UL)
+#define BUCKET_COUNT (2)
 
+// Beware: the standard does not guarantee the order of fields!
 typedef struct o_ {{
-    uint64_t    blockCount;     // number of blocks read or written
-    uint32_t    latency;
-    uint8_t     opCode;
+    uint32_t    opSec;
+    uint32_t    opNsec;             // may not exceed BILLION
+    uint32_t    latency;            // may not exceed BILLION
+    unsigned    blockCount  : 56;   // number of blocks read or written
+    unsigned    opCode      : 8;
 }} __attribute__((aligned(8))) opData_t;
 
 typedef struct b_ {{

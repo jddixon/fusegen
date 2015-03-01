@@ -1,7 +1,7 @@
 ~/dev/py/fusegen/TODO
 
 2015-02-26
-    * std countOps
+    * std countOps                                                      * DONE
 
 2015-02-25
     * FIX: xxxfs found in fuseGen                                       * DONE
@@ -34,34 +34,31 @@
         run bin/mountPKG_NAME a second time), you get a 'usage' 		* OK
         message 		                                                * OK
 
-2015-02-22 (from -21, edited, extended)
-    * URGENT: FIX: can't tree workdir (again), something is screwing 
-        up mounting the mountPoint, no hint in logs
-        - this is possibly related to stdfs and xxxfs both using the
-            same name (xxxfs)
-            * wrong, no change after reboot, when stdfs definitely not 
-                mounted)
-        - major clue: the problem goes away if I reboot paloalto
-            * WRONG, the tree succeeds until you create a file under
-                rootdir/, at which point mountdir/ disappears from
-                the tree
-        - /etc/mtab and /proc/mounts contain a list of mounted file 
-            systems; the latter is more reliable but the former may
-            be more informative
-            * there is of course a race condition involved
-    * bin/mount now works, but any file access (touch, read, write,
-        rm, ls) trashes the mount point
-        - "ls: cannot open directory workdir/mountPoint: Transport
-            endpoint is not connected"
-        - first tree works, but after that tree cannot see mountPoint
-        - nothing appears in the log, including the file access that
-            trashed the mountPoint
+2015-02-22 (from -21, edited, extended)		                            * DONE
+    * URGENT: FIX: can't tree workdir (again), something is screwing 	* DONE
+        up mounting the mountPoint, no hint in logs		                * DONE
+        - this is possibly related to stdfs and xxxfs both using the	* DONE
+            same name (xxxfs)		                                    * DONE
+            * wrong, no change after reboot, when stdfs definitely not 	* DONE
+                mounted)		                                        * DONE
+        - major clue: the problem goes away if I reboot paloalto		* DONE
+            * WRONG, the tree succeeds until you create a file under	* DONE
+                rootdir/, at which point mountdir/ disappears from		* DONE
+                the tree		                                        * DONE
+        - /etc/mtab and /proc/mounts contain a list of mounted file 	* DONE
+            systems; the latter is more reliable but the former may		* DONE
+            be more informative		                                    * DONE
+            * there is of course a race condition involved		        * DONE
+    * bin/mount now works, but any file access (touch, read, write,		* DONE
+        rm, ls) trashes the mount point		                            * DONE
+        - "ls: cannot open directory workdir/mountPoint: Transport		* DONE
+            endpoint is not connected"		                            * DONE
+        - first tree works, but after that tree cannot see mountPoint	* DONE
+        - nothing appears in the log, including the file access that	* DONE
+            trashed the mountPoint		                                * DONE
 2015-02-21
-    * drop COMPLEX_LOGGING                                              * DONE
-    * set -s (single-threaded) in script mounting fuse file system      * DONE
-        (a temporary fix for the log being scrambled)                   * DONE
-    * FIX: log is screwed up because of lack of concurrency control 
-        (messages are intermixed 
+    * FIX: log is screwed up because of lack of concurrency control     * FIXED
+        (messages are intermixed                                        * FIXED
 
 2015-02-17
     * URGENT: xxxfs executable must depend upon all *.inc
