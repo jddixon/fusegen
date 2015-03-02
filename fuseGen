@@ -306,34 +306,71 @@ void {0:s}Usage()
         "usage:  {0:s} [FUSE, mount, and fg* options] rootDir mountPoint\\n");
     exit(0);
 }}
-void {0:s}PerrorAndUsage(int status)
+void {0:s}PerrorAndUsage(const char* where)
 {{
-    fprintf(stderr, "%s\\n", strerror(status));
+    if (where && (strlen(where) > 0))
+        fprintf(stderr, "%s: ", where);
+    fprintf(stderr, "%s\\n", strerror(errno));
     {0:s}Usage();
 }}
 // Return 0 if OK
-void {0:s}ChkDir(const char *dirName)
+void xxxfsChkDir(char *dirName)
 {{
     struct stat sb;
     int status = 0;
-    if (dirName == NULL)
-        status = ENOENT;
-    else if (dirName[0] == '-')
-        status = EPERM;
-    else {{
-        status = stat(dirName, &sb);
-        if ((status == 0) && (!S_ISDIR(sb.st_mode)))
-            status = ENOTDIR;
+    char *name = "";
+    if (dirName == NULL) {{
+        fprintf(stderr, "null directory name\\n");
+        status = -1;
+        errno  = ENOENT;
+    }} else {{
+        name = dirName;
+        if (dirName[0] == '-') {{
+            fprintf(stderr, "directory name may not begin with '-'\\n");
+            status = -1;
+            errno  = EPERM;
+        }} else {{
+            status = stat(dirName, &sb);
+            if ((!status) && (!S_ISDIR(sb.st_mode))) {{
+                fprintf(stderr, "'%s' is not a directory\\n", dirName);
+                status = -1;
+                errno  = ENOTDIR;
+            }}
+        }}
     }}
     if (status)
-        {0:s}PerrorAndUsage(status);
+        xxxfsPerrorAndUsage(name);
+}}
+
+int32_t xxxfsGetULongArg(const char *name, const char *s)
+{{
+    char *end = NULL;
+    int32_t val = strtol(s, &end, 0);
+    if (*end != 0) {{
+        fprintf(stderr, "%s must be numeric but is '%s'\\n", name, s);
+        xxxfsUsage();
+    }}
+    if (val <= 0) {{
+        fprintf(stderr, "%s must be a positive integer but is '%s'\\n",
+                name, s);
+        xxxfsUsage();
+    }}
+    return val;
 }}
 int main(int argc, char *argv[])
 {{
     int status = 0;
     struct {0:s}Data *myData;
     int fuseArgc;
-    char *fuseArgv[];
+    char **fuseArgv;
+
+    // defaults for local (=fuseGen) arguments
+    long fgBlockSize = 4;
+    long fgJobCount  = 4;
+    long fgMBPerJob  = 512;
+    int  fgVerbose   = 0;
+
+    int  localArgs   = 0;   // count of command line args consumed here
 
     // Prevent this script from being run by root, because such use is
     // an unacceptable security risk.
@@ -341,14 +378,6 @@ int main(int argc, char *argv[])
         fprintf(stderr, "{0:s} must not be run as root\\n");
         exit(EPERM);
     }}
-
-    // The last two arguments are the paths to the root directory and the
-    // mount point respectively.  They must represent valid names for
-    // existing directories that the user may access.
-    if (argc < 3)
-        {0:s}Usage();
-    {0:s}ChkDir(argv[argc-2]);
-    {0:s}ChkDir(argv[argc-1]);
 
     // Try to allocate memory for file system's private data.
     myData = calloc(1, sizeof(struct {0:s}Data));
@@ -366,35 +395,89 @@ int main(int argc, char *argv[])
     // (excluding the fg* but including the path to mount point) are
     // passed on to fuse_main.
 
-    Static struct option longOptions[] = {{
-        {{'fgBlockSize', 1, NULL, 0}},    // default = 4, multiple of 1024 bytes
-        {{'fgJobCount',  1, NULL, 0}},    // default = 4
-        {{'fgMBPerJob',  1, NULL, 0}},
+    static struct option longOptions[] = {{
+        {{"fgBlockSize", 1, NULL, 0}},    // default = 4, multiple of 1024 bytes
+        {{"fgHelp",      0, NULL, 0}},
+        {{"fgJobCount",  1, NULL, 0}},    // default = 4
+        {{"fgMBPerJob",  1, NULL, 0}},
+        {{"fgVerbose",   0, NULL, 0}},
         {{NULL,          1, NULL, 0 }}    // marks end of list
     }};
 
-    // we are looking for fgBlockSize, fgJobCount, fgMBPerJob
-
-    // THIS CODE IS NOT YET FIXED -- remember to keep argv[0] !
-    int c;
-    int myArgs = 0;
-    int whichOpt = 0;
-    while ((c = getopt_long(argc, argv, "", longOptions, &whichpt)) != -1) {{
-        printf("option %s, value %s\\n",
-            longOptions[whichOpt].name, optarg);
-
+    // process the argument list, permuting it so that local fg* arguments
+    // are moved towards the front
+    while (1) {{
+        int optNdx;
+        int c = getopt_long(argc, argv, "", longOptions, &optNdx);
+        if (c == -1)
+            break;
+        switch (optNdx) {{
+        case 0:
+            fgBlockSize = xxxfsGetULongArg(longOptions[optNdx].name, optarg);
+            localArgs += 2;
+            break;
+        case 1:
+            xxxfsUsage();
+            localArgs += 1;
+            break;
+        case 2:
+            fgJobCount = xxxfsGetULongArg(longOptions[optNdx].name, optarg);
+            localArgs += 2;
+            break;
+        case 3:
+            fgMBPerJob = xxxfsGetULongArg(longOptions[optNdx].name, optarg);
+            localArgs += 2;
+            break;
+        case 4:
+            fgVerbose = 1;
+            localArgs += 1;
+            break;
+        }}
     }}
+    int i;
+
+    if (fgVerbose) {{
+        fprintf(stderr, "fgBlockSize := %ld\\n", fgBlockSize);
+        fprintf(stderr, "fgJobCount  := %ld\\n", fgJobCount);
+        fprintf(stderr, "fgMBPerJob  := %ld\\n", fgMBPerJob);
+        fprintf(stderr, "\\nafter processing the %d local arguments\\n",
+            localArgs);
+        for (i = 0; i < argc; i++)
+            fprintf(stderr, "  %d: %s\\n", i, argv[i]);
+    }}
+
+    int n = argc - localArgs;
+    if (n > 0)
+        for (i = 1; i < n; i++)
+            argv[i] = argv[i + localArgs];
+    argc -= localArgs;
+
+    // The last two arguments are the paths to the root directory and the
+    // mount point respectively.  They must represent valid names for
+    // existing directories that the user may access.
+    if (argc < 3) {{
+        fprintf(stderr, "not enough arguments\\n");
+        {0:s}Usage();
+    }}
+    {0:s}ChkDir(argv[argc-2]);
+    {0:s}ChkDir(argv[argc-1]);
+
     // The next to the last argument is the root directory.  Save it to
     // private data and then remove it from the argument list passed to fuse,
     // which doesn't expect to see it.
     //
-    // XXX Any fg* arguments must also be removed.
     myData->rootdir = realpath(argv[argc-2], NULL);
     argv[argc-2] = argv[argc-1];
     argv[argc-1] = NULL;
     argc--;
 
-    status = fuse_main(argc, argv, &{1:s}OpTable, myData);
+    if (fgVerbose) {{
+        fprintf(stderr, "\\nafter editing argument list\\n");
+        for (i = 0; i < argc; i++)
+            printf("  %d: %s\\n", i, argv[i]);
+    }}
+
+    status = fuse_main(argc, argv, &xxxfs_OpTable, myData);
     return status;
 }}
 """.format(pkgName, prefix)
@@ -464,15 +547,15 @@ typedef struct o_ {{
     uint32_t    opSec;
     uint32_t    opNsec;             // may not exceed BILLION
     uint32_t    latency;            // may not exceed BILLION
-    unsigned    blockCount  : 56;   // number of blocks read or written
-    unsigned    opCode      : 8;
+    uint64_t    blockCount  : 56;   // number of blocks read or written
+    uint8_t     opCode      : 8;
 }} __attribute__((aligned(8))) opData_t;
 
 typedef struct b_ {{
     uint32_t        count;
     pthread_mutex_t mu;
     pthread_cond_t  cond;
-    opData_t        ops[BUCKET_SIZE];
+    opData_t        *ops;           // [BUCKET_SIZE];
 }} bucket_t;
 
 extern bucket_t *buckets;           // [BUCKET_COUNT];
@@ -799,7 +882,6 @@ opData_t *clockMeIn(struct timespec *tEntry)
     return &myBucket->ops[myCount];
 }}
 
-#define BILLION (1000000000LL)
 void clockMeOut(struct timespec *tEntry, opData_t *mySlot)
 {{
     struct timespec tExit;
