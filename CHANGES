@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.5.4
+    2015-03-01
+        * command line arguments                                    SLOC 1394
 v0.5.3
     2015-02-28
         * fiddling with data strucures                              SLOC 1356

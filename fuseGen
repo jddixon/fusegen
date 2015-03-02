@@ -332,6 +332,8 @@ int main(int argc, char *argv[])
 {{
     int status = 0;
     struct {0:s}Data *myData;
+    int fuseArgc;
+    char *fuseArgv[];
 
     // Prevent this script from being run by root, because such use is
     // an unacceptable security risk.
@@ -357,6 +359,31 @@ int main(int argc, char *argv[])
     // Set up logging; this should be conditional.
     myData->logfile = openLog();
 
+    // Handle the argument list.  Any arguments whose names begin with "fg"
+    // are assumed to be local and are not passed on to fuse.  The last two
+    // arguments are the paths to the root directory and the mount point
+    // respectively.  The first of these is removed.  Other arguments
+    // (excluding the fg* but including the path to mount point) are
+    // passed on to fuse_main.
+
+    Static struct option longOptions[] = {{
+        {{'fgBlockSize', 1, NULL, 0}},    // default = 4, multiple of 1024 bytes
+        {{'fgJobCount',  1, NULL, 0}},    // default = 4
+        {{'fgMBPerJob',  1, NULL, 0}},
+        {{NULL,          1, NULL, 0 }}    // marks end of list
+    }};
+
+    // we are looking for fgBlockSize, fgJobCount, fgMBPerJob
+
+    // THIS CODE IS NOT YET FIXED -- remember to keep argv[0] !
+    int c;
+    int myArgs = 0;
+    int whichOpt = 0;
+    while ((c = getopt_long(argc, argv, "", longOptions, &whichpt)) != -1) {{
+        printf("option %s, value %s\\n",
+            longOptions[whichOpt].name, optarg);
+
+    }}
     // The next to the last argument is the root directory.  Save it to
     // private data and then remove it from the argument list passed to fuse,
     // which doesn't expect to see it.
@@ -424,6 +451,11 @@ FILE *openLog  (void);
 
 // BEGIN INSTRUMENTATION --------------------------------------------
 
+// from the command line
+extern unsigned fgBlockSize;        // in kilobytes, so 1 means 1024
+extern unsigned fgJobCount;
+extern unsigned fgMBPerJob;         // in megabytes
+
 #define BILLION     (1000000000UL)
 #define BUCKET_COUNT (2)
 
@@ -443,7 +475,7 @@ typedef struct b_ {{
     opData_t        ops[BUCKET_SIZE];
 }} bucket_t;
 
-extern bucket_t *buckets;   // [BUCKET_COUNT];
+extern bucket_t *buckets;           // [BUCKET_COUNT];
 
 opData_t *clockMeIn(struct timespec *tEntry);
 void clockMeOut(struct timespec *tEntry, opData_t *mySlot);
@@ -472,7 +504,13 @@ void clockMeOut(struct timespec *tEntry, opData_t *mySlot);
 #include <sys/xattr.h>
 #endif
 
-#include "{0:s}.h"          // this should be the last header file
+#include <getopt.h>             // for getopt_long
+#include "{0:s}.h"              // this should be the last header file
+
+// command line arguments with defaults
+unsigned fgBlockSize = 4;       // in kilobytes, so 1 means 1024
+unsigned fgJobCount  = 4;
+unsigned fgMBPerJob  = 512;     // in megabytes
 
 ///////////////////////////////////////////////////////////
 //
