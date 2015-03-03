@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.5.6
+    2015-03-03
+        * generates clockMeIn/clockMeOut() calls                    SLOC 1499
 v0.5.5
     2015-03-02
         * completed handling command line                           SLOC 1476

@@ -1,27 +1,13 @@
 ~/dev/py/fusegen/TODO
 
-2015-02-26
-    * std countOps                                                      * DONE
-
-2015-02-25
-    * FIX: xxxfs found in fuseGen                                       * DONE
-    * add instrumentation code to {0:s}.h                               * DONE
-
-2015-02-24
-    * to prevent scrambling of log messages, open the log in append     * DONE
-        mode                                                            * DONE
-    * ah, but log messages then must not be split into separate         * DONE
-        parts; so fix                                                   * DONE
-        - LOG_FIELD to produce a single formatted string                * DONE
-        - logContext() to concatenate LOG_FIELD strings to produce		* DONE
-            and log a single message	                        		* DONE
-            * need a glue function ('msgJoin' or similar)	    		* DONE
-            * possibly copy data structure, pass that to buffer,		* DONE
-                and return; with logging done in a separate thread		* DONE
-        - ditto for logConn()			                                * DONE
-        - and for logFI()			                                    * DONE
-        - and for logStat()			                                    * DONE
-        - and for logStatVFS()			                                * DONE
+2015-03-02
+    * introduce a table of upper-cases opcode names for use on 
+        the C side (eg FG_GETATTR instead of 12), to make the
+        generated code more readable
+    * FIXME: xxxfs/bin/blk-31-4k gets the 'transport endpoint not
+        connected' message
+    * more important: stdfs does not get mounted when bin/mountStdFS    * FIXED
+        is invoked                                                      * FIXED
 
 2015-02-22 (-18, rewritten)
     * need a README.install which explains that this package should 
@@ -30,35 +16,6 @@
         - rm src/install.sh                                             * DONE
         - see man install
         - model may be ~/extern/xen-api/scripts/install.sh
-    * if you attempt to mount fs which is already mounted (that is,		* OK
-        run bin/mountPKG_NAME a second time), you get a 'usage' 		* OK
-        message 		                                                * OK
-
-2015-02-22 (from -21, edited, extended)		                            * DONE
-    * URGENT: FIX: can't tree workdir (again), something is screwing 	* DONE
-        up mounting the mountPoint, no hint in logs		                * DONE
-        - this is possibly related to stdfs and xxxfs both using the	* DONE
-            same name (xxxfs)		                                    * DONE
-            * wrong, no change after reboot, when stdfs definitely not 	* DONE
-                mounted)		                                        * DONE
-        - major clue: the problem goes away if I reboot paloalto		* DONE
-            * WRONG, the tree succeeds until you create a file under	* DONE
-                rootdir/, at which point mountdir/ disappears from		* DONE
-                the tree		                                        * DONE
-        - /etc/mtab and /proc/mounts contain a list of mounted file 	* DONE
-            systems; the latter is more reliable but the former may		* DONE
-            be more informative		                                    * DONE
-            * there is of course a race condition involved		        * DONE
-    * bin/mount now works, but any file access (touch, read, write,		* DONE
-        rm, ls) trashes the mount point		                            * DONE
-        - "ls: cannot open directory workdir/mountPoint: Transport		* DONE
-            endpoint is not connected"		                            * DONE
-        - first tree works, but after that tree cannot see mountPoint	* DONE
-        - nothing appears in the log, including the file access that	* DONE
-            trashed the mountPoint		                                * DONE
-2015-02-21
-    * FIX: log is screwed up because of lack of concurrency control     * FIXED
-        (messages are intermixed                                        * FIXED
 
 2015-02-17
     * URGENT: xxxfs executable must depend upon all *.inc

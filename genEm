@@ -1,2 +1,2 @@
 cd ~/dev/py/fusegen
-./fuseGen -fvP xxxfs
+./fuseGen -fIvP xxxfs

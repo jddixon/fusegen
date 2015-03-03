@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.5.5'
-__version_date__ = '2015-03-02'
+__version__      = '0.5.6'
+__version_date__ = '2015-03-03'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -28,6 +28,12 @@ OP_NAMES = [
     'fsync',    'setxattr', 'getxattr',     'listxattr',    'removexattr',
     'opendir',  'readdir',  'releasedir',   'fsyncdir',     'init',
     'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
+    # not yet implemented - fuse version 2.6
+    'utimens',  'lock',     'bmap',
+    # fusion 2.8
+    'ioctl',        'poll',
+    # fusion 2.9
+    'write_buf','read_buf', 'flock',
     ]
 
 
@@ -277,9 +283,12 @@ class FuseFunc(object):
                 #
                 line = f.readline()
 
-        funcMap = {}    # this maps prefixed names to FuseFunc objects
-        for line in lines:
-            name, ff = FuseFunc.parseProto(line, prefix)
-            funcMap[name] = ff
+        funcMap   = {}  # this maps prefixed names to FuseFunc objects
+        opCodeMap = {}  # maps names to integer opCodes
 
-        return funcMap
+        for ndx, line in enumerate(lines):
+            name, ff = FuseFunc.parseProto(line, prefix)
+            funcMap[name]   = ff
+            opCodeMap[name] = ndx
+
+        return funcMap, opCodeMap

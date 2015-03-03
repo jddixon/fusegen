@@ -95,6 +95,7 @@ def makedir_p(path, mode):
 def makeFusePkg(args):
     acPrereq        = args.acPrereq
     emailAddr       = args.emailAddr
+    instrumenting   = args.instrumenting
     force           = args.force
     lcName          = args.lcName
     myDate          = args.myDate
@@ -314,7 +315,7 @@ void {0:s}PerrorAndUsage(const char* where)
     {0:s}Usage();
 }}
 // Return 0 if OK
-void xxxfsChkDir(char *dirName)
+void {0:s}ChkDir(char *dirName)
 {{
     struct stat sb;
     int status = 0;
@@ -339,21 +340,21 @@ void xxxfsChkDir(char *dirName)
         }}
     }}
     if (status)
-        xxxfsPerrorAndUsage(name);
+        {0:s}PerrorAndUsage(name);
 }}
 
-int32_t xxxfsGetULongArg(const char *name, const char *s)
+int32_t {0:s}GetULongArg(const char *name, const char *s)
 {{
     char *end = NULL;
     int32_t val = strtol(s, &end, 0);
     if (*end != 0) {{
         fprintf(stderr, "%s must be numeric but is '%s'\\n", name, s);
-        xxxfsUsage();
+        {0:s}Usage();
     }}
     if (val <= 0) {{
         fprintf(stderr, "%s must be a positive integer but is '%s'\\n",
                 name, s);
-        xxxfsUsage();
+        {0:s}Usage();
     }}
     return val;
 }}
@@ -413,19 +414,19 @@ int main(int argc, char *argv[])
             break;
         switch (optNdx) {{
         case 0:
-            fgBlockSize = xxxfsGetULongArg(longOptions[optNdx].name, optarg);
+            fgBlockSize = {0:s}GetULongArg(longOptions[optNdx].name, optarg);
             localArgs += 2;
             break;
         case 1:
-            xxxfsUsage();
+            {0:s}Usage();
             localArgs += 1;
             break;
         case 2:
-            fgJobCount = xxxfsGetULongArg(longOptions[optNdx].name, optarg);
+            fgJobCount = {0:s}GetULongArg(longOptions[optNdx].name, optarg);
             localArgs += 2;
             break;
         case 3:
-            fgMBPerJob = xxxfsGetULongArg(longOptions[optNdx].name, optarg);
+            fgMBPerJob = {0:s}GetULongArg(longOptions[optNdx].name, optarg);
             localArgs += 2;
             break;
         case 4:
@@ -477,7 +478,7 @@ int main(int argc, char *argv[])
             printf("  %d: %s\\n", i, argv[i]);
     }}
 
-    status = fuse_main(argc, argv, &xxxfs_OpTable, myData);
+    status = fuse_main(argc, argv, &{1:s}OpTable, myData);
     return status;
 }}
 """.format(pkgName, prefix)
@@ -553,14 +554,14 @@ typedef struct o_ {{
 
 typedef struct b_ {{
     uint32_t        count;
-    pthread_mutex_t mu;
+    pthread_mutex_t lock;
     pthread_cond_t  cond;
     opData_t        *ops;           // [BUCKET_SIZE];
 }} bucket_t;
 
 extern bucket_t *buckets;           // [BUCKET_COUNT];
 
-opData_t *clockMeIn(struct timespec *tEntry);
+opData_t *clockMeIn(struct timespec *tEntry, int opCode);
 void clockMeOut(struct timespec *tEntry, opData_t *mySlot);
 
 // END INSTRUMENTATION ----------------------------------------------
@@ -870,16 +871,21 @@ void logStatVFS(struct statvfs *sv)
 // calloc BUCKET_COUNT of these
 bucket_t *buckets;
 
-opData_t *clockMeIn(struct timespec *tEntry)
+opData_t *clockMeIn(struct timespec *tEntry, int opcode)
 {{
     int status = clock_gettime(CLOCK_MONOTONIC, tEntry);
     assert(status == 0);
-    int bktNdx = ((long) tEntry->tv_sec) % BUCKET_COUNT;
-    bucket_t *myBucket = &buckets[bktNdx];
-    // LOCK
+    // int bktNdx = ((long) tEntry->tv_sec) % BUCKET_COUNT;
+    // bucket_t *myBucket = &buckets[bktNdx];
+    bucket_t *myBucket = &buckets[0];
+    status = pthread_mutex_lock(&myBucket->lock);
+    assert(status == 0);
     int myCount = myBucket->count++;
-    // UNLOCK
-    return &myBucket->ops[myCount];
+    status = pthread_mutex_unlock(&myBucket->lock);
+    assert(status == 0);
+    opData_t* mySlot = &myBucket->ops[myCount];
+    mySlot->opCode = (uint8_t opcode;
+    return mySlot;
 }}
 
 void clockMeOut(struct timespec *tEntry, opData_t *mySlot)
@@ -965,14 +971,17 @@ struct fuse_operations {0:s}OpTable = {{
     srcDir = os.path.join(pathToPkg, 'src')
     makedir_p(srcDir, 0o755)
 
-    m = FuseFunc.getFuncMap(prefix)
+    funcMap, opCodeMap = FuseFunc.getFuncMap(prefix)
 
     # XXX does not catch 'main'
     for name in OP_NAMES:
         attrs = opAttrs[name]
         if attrs & DEPRECATED:
             continue
-        ff = m[name]    # FuseFunc for this name
+        if not name in funcMap:   # names at end are not yet implemented
+            break
+        ff = funcMap[name]    # FuseFunc for this name
+        opCode = opCodeMap[name]
         pathToInc = os.path.join(srcDir, "%s.inc" % name)
         ss = []
         ss.append("/** %s.inc */\n" % (name))
@@ -981,6 +990,12 @@ struct fuse_operations {0:s}OpTable = {{
 
         # -- first line, LBRACE -----------------------
         ss.append("%s\n{" % ff.firstLine())
+
+        # -- instrumenation ---------------------------
+        if instrumenting:
+            ss.append('    struct timespec tEntry;')
+            ss.append(
+                "    opData_t *myData = clockMeIn(&tEntry, %d);\n:" % opCode)
 
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
@@ -1207,6 +1222,10 @@ struct fuse_operations {0:s}OpTable = {{
         elif name=='readdir':
             ss.append('    logFI(fi);')
 
+        # -- instrumentation at exit ------------------
+        if instrumenting:
+            ss.append('    clockMeOut(&tEntry, myData);')
+
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:
             ss.append("    return status;")
@@ -1236,6 +1255,9 @@ def main():
 
     parser.add_argument('-E', '--emailAddr', default='jddixon at gmail dot com',
         help='contact email address')
+
+    parser.add_argument('-I', '--instrumenting', action='store_true',
+        help='generate instrumentation code')
 
     parser.add_argument('-f', '--force', action='store_true',
         help='if utility already exists, overwrite it')
@@ -1281,6 +1303,7 @@ def main():
     if args.verbose or args.justShow:
         print('acPrereq             = ' + str(args.acPrereq))
         print('emailAddr            = ' + str(args.emailAddr))
+        print('instrumenting        = ' + str(args.instrumenting))
         print('force                = ' + str(args.force))
         print('myDate               = ' + str(args.myDate))
         print('myVersion            = ' + str(args.myVersion))
