@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.5.7
+    2015-03-04
+        * add build, writeBucket(), misc fixes                      SLOC 1535
 v0.5.6
     2015-03-03
         * generates clockMeIn/clockMeOut() calls                    SLOC 1499

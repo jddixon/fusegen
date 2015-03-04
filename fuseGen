@@ -146,10 +146,10 @@ def makeFusePkg(args):
                 os.chmod(dest, 0o644)
 
     # install-sh removed from both lists 2015-02-22
-    for x in ['autogen.sh', 'config.guess', 'config.sub', 'COPYING',
+    for x in ['autogen.sh', 'build', 'config.guess', 'config.sub', 'COPYING',
             'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION',
             'README.licenses',]:
-        copyFromSrc(x, x in ['autogen.sh', ])
+        copyFromSrc(x, x in ['autogen.sh', 'build', ])
     for x in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
         copyFromSrc(x, False, False)
 
@@ -365,12 +365,6 @@ int main(int argc, char *argv[])
     int fuseArgc;
     char **fuseArgv;
 
-    // defaults for local (=fuseGen) arguments
-    long fgBlockSize = 4;
-    long fgJobCount  = 4;
-    long fgMBPerJob  = 512;
-    int  fgVerbose   = 0;
-
     int  localArgs   = 0;   // count of command line args consumed here
 
     // Prevent this script from being run by root, because such use is
@@ -435,12 +429,28 @@ int main(int argc, char *argv[])
             break;
         }}
     }}
+    // number of slots in a bucket
+    bucketSize = 1024 * fgMBPerJob * fgJobCount / fgBlockSize;
+    // ... with a slop factor
+    bucketSize      = (129 * bucketSize + 127)/128;
+    buckets         = (bucket_t*)calloc(BUCKET_COUNT, sizeof(bucket_t));
+    buckets[0].ops  = (opData_t*)calloc(bucketSize, sizeof(opData_t));
+    status = pthread_mutex_init(&buckets[0].lock, NULL);
+    if (status)
+        perror("initializing bucket lock");
+    assert(status == 0);
+
     int i;
 
     if (fgVerbose) {{
         fprintf(stderr, "fgBlockSize := %ld\\n", fgBlockSize);
         fprintf(stderr, "fgJobCount  := %ld\\n", fgJobCount);
         fprintf(stderr, "fgMBPerJob  := %ld\\n", fgMBPerJob);
+        fprintf(stderr, "opData_ per bucket: %ld\\n", bucketSize);
+        fprintf(stderr, "  sizeof(opData_t)  %ld\\n",  sizeof(opData_t));
+        fprintf(stderr, "  so size of buffer %ld bytes\\n",
+            bucketSize * sizeof(opData_t));
+
         fprintf(stderr, "\\nafter processing the %d local arguments\\n",
             localArgs);
         for (i = 0; i < argc; i++)
@@ -536,9 +546,10 @@ FILE *openLog  (void);
 // BEGIN INSTRUMENTATION --------------------------------------------
 
 // from the command line
-extern unsigned fgBlockSize;        // in kilobytes, so 1 means 1024
-extern unsigned fgJobCount;
-extern unsigned fgMBPerJob;         // in megabytes
+extern long fgBlockSize;            // in kilobytes, so 1 means 1024
+extern long fgJobCount;
+extern long fgMBPerJob;             // in megabytes
+extern int  fgVerbose;
 
 #define BILLION     (1000000000UL)
 #define BUCKET_COUNT (2)
@@ -548,17 +559,18 @@ typedef struct o_ {{
     uint32_t    opSec;
     uint32_t    opNsec;             // may not exceed BILLION
     uint32_t    latency;            // may not exceed BILLION
-    uint64_t    blockCount  : 56;   // number of blocks read or written
+    uint32_t    blockCount  : 24;   // number of blocks read or written
     uint8_t     opCode      : 8;
-}} __attribute__((aligned(8))) opData_t;
+}} __attribute__((aligned(16), packed)) opData_t;
 
 typedef struct b_ {{
-    uint32_t        count;
+    uint32_t        count;          // number of slots in use
     pthread_mutex_t lock;
     pthread_cond_t  cond;
     opData_t        *ops;           // [BUCKET_SIZE];
 }} bucket_t;
 
+extern long      bucketSize;        // number of opData_t
 extern bucket_t *buckets;           // [BUCKET_COUNT];
 
 opData_t *clockMeIn(struct timespec *tEntry, int opCode);
@@ -591,10 +603,13 @@ void clockMeOut(struct timespec *tEntry, opData_t *mySlot);
 #include <getopt.h>             // for getopt_long
 #include "{0:s}.h"              // this should be the last header file
 
-// command line arguments with defaults
-unsigned fgBlockSize = 4;       // in kilobytes, so 1 means 1024
-unsigned fgJobCount  = 4;
-unsigned fgMBPerJob  = 512;     // in megabytes
+// defaults for local (=fuseGen) command line arguments
+long fgBlockSize = 4L;
+long fgJobCount  = 4L;
+long fgMBPerJob  = 512L;
+int  fgVerbose   = 0;
+
+long bucketSize;
 
 ///////////////////////////////////////////////////////////
 //
@@ -877,14 +892,14 @@ opData_t *clockMeIn(struct timespec *tEntry, int opcode)
     assert(status == 0);
     // int bktNdx = ((long) tEntry->tv_sec) % BUCKET_COUNT;
     // bucket_t *myBucket = &buckets[bktNdx];
-    bucket_t *myBucket = &buckets[0];
+    bucket_t *myBucket = &buckets[0];   // should be bktNdx
     status = pthread_mutex_lock(&myBucket->lock);
     assert(status == 0);
     int myCount = myBucket->count++;
     status = pthread_mutex_unlock(&myBucket->lock);
     assert(status == 0);
-    opData_t* mySlot = &myBucket->ops[myCount];
-    mySlot->opCode = (uint8_t opcode;
+    opData_t *mySlot = &myBucket->ops[myCount];
+    mySlot->opCode = (uint8_t) opcode;
     return mySlot;
 }}
 
@@ -905,6 +920,25 @@ void clockMeOut(struct timespec *tEntry, opData_t *mySlot)
     assert(outSec >= inSec);
     assert(latency < BILLION);
     mySlot->latency = latency;
+}}
+
+int writeBucket()
+{{
+#   define BKT_PATH_SIZE (23)
+    time_t now         = time(NULL);
+    struct tm *when    = localtime(&now);
+    char *pathToBucket = (char *)malloc(BKT_PATH_SIZE);
+    sprintf(pathToBucket, "bucket-%04d%02d%02d-%02d%02d%02d",
+            when->tm_year + 1900, when->tm_mon, when->tm_mday, 
+            when->tm_hour, when->tm_min, when->tm_sec);
+    FILE *f = fopen(pathToBucket, "wb");
+    if (f != NULL) {{
+        size_t written = fwrite(
+                buckets[0].ops, sizeof(opData_t), buckets[0].count, f);
+        fprintf(stderr, "wrote %lu bytes, %lu items, to %s\\n",
+                written, buckets[0].count, pathToBucket);
+    }}
+    fclose(f);
 }}
 /** END INSTRUMENTATION */
 """.format(pkgName, prefix, ucName)
@@ -995,7 +1029,7 @@ struct fuse_operations {0:s}OpTable = {{
         if instrumenting:
             ss.append('    struct timespec tEntry;')
             ss.append(
-                "    opData_t *myData = clockMeIn(&tEntry, %d);\n:" % opCode)
+                "    opData_t *myData = clockMeIn(&tEntry, %d);\n" % opCode)
 
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
@@ -1225,7 +1259,9 @@ struct fuse_operations {0:s}OpTable = {{
         # -- instrumentation at exit ------------------
         if instrumenting:
             ss.append('    clockMeOut(&tEntry, myData);')
-
+            if name == 'destroy':
+                ss.append('\n    writeBucket();')
+        
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:
             ss.append("    return status;")

@@ -1,11 +1,25 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-03
+    * destroy should write buckets[0] to disk using a unique file name  * DONE
+        - say "bucket-CCYYMMDD-HHMMSS" = 23 char with terminating null  * DONE
+            * but FIXME: this is not working
+        - latency needs to exclude the time needed to write this file
+        - that unique file name/path should be a command line option
+            with a sensible default
+        - create instrumented version of stdfs
+            * so if fusegen -I we get stdifs
+            * without -I we get stdfs
+        - step the minor version number when this works
+        - add build file at the top level (chmod) = autogen,            * DONE
+            config, make                                                * DONE
+
 2015-03-02
     * introduce a table of upper-cases opcode names for use on 
         the C side (eg FG_GETATTR instead of 12), to make the
         generated code more readable
-    * FIXME: xxxfs/bin/blk-31-4k gets the 'transport endpoint not
-        connected' message
+    * FIXME: xxxfs/bin/blk-31-4k gets the 'transport endpoint not       * FIXED
+        connected' message                                              * FIXED
     * more important: stdfs does not get mounted when bin/mountStdFS    * FIXED
         is invoked                                                      * FIXED
 
