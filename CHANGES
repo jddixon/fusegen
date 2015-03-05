@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.5.8
+    2015-03-05
+        * writeBucket() working                                     SLOC 1560
 v0.5.7
     2015-03-04
         * add build, writeBucket(), misc fixes                      SLOC 1535

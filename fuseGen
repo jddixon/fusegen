@@ -383,6 +383,17 @@ int main(int argc, char *argv[])
     // Set up logging; this should be conditional.
     myData->logfile = openLog();
 
+    // Strange warning here "initialization makes pointer from integer
+    // without a cast"
+    char *whereNow = get_current_dir_name();    // mallocs
+    if (whereNow == NULL) {{
+        fprintf(stderr, "get_current_dir_name failed\\n");
+        perror("can't get working directory");
+        abort();
+    }} else {{
+        myData->cwd = whereNow;
+    }}
+
     // Handle the argument list.  Any arguments whose names begin with "fg"
     // are assumed to be local and are not passed on to fuse.  The last two
     // arguments are the paths to the root directory and the mount point
@@ -526,6 +537,7 @@ struct {0:s}Data {{
     // XXX next line should be generated only if logging capability
     FILE *logfile;
     char *rootdir;
+    char *cwd;      // at the beginning of the run
 }};
 
 #define {2:s}_DATA ((struct {0:s}Data *) fuse_get_context()->private_data)
@@ -922,23 +934,36 @@ void clockMeOut(struct timespec *tEntry, opData_t *mySlot)
     mySlot->latency = latency;
 }}
 
-int writeBucket()
+int writeBucket() 
 {{
-#   define BKT_PATH_SIZE (23)
     time_t now         = time(NULL);
     struct tm *when    = localtime(&now);
-    char *pathToBucket = (char *)malloc(BKT_PATH_SIZE);
-    sprintf(pathToBucket, "bucket-%04d%02d%02d-%02d%02d%02d",
-            when->tm_year + 1900, when->tm_mon, when->tm_mday, 
-            when->tm_hour, when->tm_min, when->tm_sec);
-    FILE *f = fopen(pathToBucket, "wb");
+    char fullPath[PATH_MAX];
+    strcpy(fullPath, XXXFS_DATA->cwd);
+    strncat(fullPath, "/tmp/", PATH_MAX);
+    char *p = fullPath + strlen(fullPath);
+    snprintf(p, PATH_MAX, "/bucket-%04d%02d%02d-%02d%02d%02d",
+        when->tm_year + 1900, when->tm_mon + 1, when->tm_mday, 
+        when->tm_hour, when->tm_min, when->tm_sec);
+
+    // DEBUG
+    logMsg("data file is %s\\n", fullPath);
+    // END
+       
+    // any 'b' has no effect in Linux
+    FILE *f = fopen(fullPath, "w+");
     if (f != NULL) {{
         size_t written = fwrite(
                 buckets[0].ops, sizeof(opData_t), buckets[0].count, f);
-        fprintf(stderr, "wrote %lu bytes, %lu items, to %s\\n",
-                written, buckets[0].count, pathToBucket);
+        logMsg("wrote %lu bytes, %lu items, to %s\\n",
+                written, buckets[0].count, fullPath);
+        fflush(f);
+        fclose(f);
+    }} else {{
+        int myErr = errno;
+        logMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
+
     }}
-    fclose(f);
 }}
 /** END INSTRUMENTATION */
 """.format(pkgName, prefix, ucName)
@@ -1261,7 +1286,7 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append('    clockMeOut(&tEntry, myData);')
             if name == 'destroy':
                 ss.append('\n    writeBucket();')
-        
+
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:
             ss.append("    return status;")
