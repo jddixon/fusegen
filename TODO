@@ -1,22 +1,28 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-05
+    * python script to analyze data written by writebucket()
+    * FIX ME: 'write' is opcode 35 in write.inc, but that doesn't       * FIXED
+        match OP_NAMES, where opcode 35 is fallocate                    * FUXED
+    * testFuseFunc.py is out of sync with rest of code and fails
+
 2015-03-04
     * document setting up core dumping to /tmp/cores using rc.local
         and subsequent use of debugger
-    * FIX: running blk-31-4k gets a "fio: posix_fallocate fails: 
-        Software caused connection abort" and then "Transport endpoint
-        is not connected" because of this.
-        - urgently need to implement fallocate (introduced by v2.9.1)
-        - make sure that fuse.h corresponds to v2.9.1 include/fuse.h
+    * FIX: running blk-31-4k gets a "fio: posix_fallocate fails:        * FIXED
+        Software caused connection abort" and then "Transport endpoint  * FIXED
+        is not connected" because of this.                              * FIXED
+        - urgently need to implement fallocate (introduced v2.9.1)      * DONE
+        - make sure that fuse.h corresponds to v2.9.1 include/fuse.h    * YEP
     * fuseGen should
-        - create tmp/
-        - write an appropriate bin/blk-31-4k
+        - create tmp/                                                   * DONE
+        - write an appropriate bin/blk-31-4k; needs to be executable    * DONE
 
 2015-03-03
     * destroy should write buckets[0] to disk using a unique file name  * DONE
         - say "bucket-CCYYMMDD-HHMMSS" = 23 char with terminating null  * DONE
-            * but FIXME: this is not working
-        - latency needs to exclude the time needed to write this file
+            * but FIXME: this is not working                            * FIXED
+        - latency needs to exclude the time needed to write this file   * OK
         - that unique file name/path should be a command line option
             with a sensible default
         - create instrumented version of stdfs

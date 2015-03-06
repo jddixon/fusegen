@@ -41,3 +41,4 @@ echo This file should be aligned with fragments/optable
 ./diffEm ftruncate
 ./diffEm fgetattr
 
+./diffEm fallocate

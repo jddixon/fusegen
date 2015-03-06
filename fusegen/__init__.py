@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.5.8'
-__version_date__ = '2015-03-05'
+__version__      = '0.5.9'
+__version_date__ = '2015-03-06'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -28,6 +28,9 @@ OP_NAMES = [
     'fsync',    'setxattr', 'getxattr',     'listxattr',    'removexattr',
     'opendir',  'readdir',  'releasedir',   'fsyncdir',     'init',
     'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
+    # fusion 2.9.1
+    'fallocate',
+    # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
     # not yet implemented - fuse version 2.6
     'utimens',  'lock',     'bmap',
     # fusion 2.8
@@ -43,7 +46,7 @@ OP_SPECIAL  = 0x04      # messy handling
 FH_PARAM    = 0x08      # param is fi->fh instead of fpath
 FLAGS_PARAM = 0x10      # param is fi->flags instead of fi
 
-# Map FUSE op to syscall name and attributes.  This is for use in
+# Map FUSE op name to syscall name and attributes.  This is for use in
 # generating syscalls.
 OP_CALL_MAP = {
     'getattr'    : ('lstat',         SET_STATUS),
@@ -80,6 +83,8 @@ OP_CALL_MAP = {
     'create'     : ('creat',         SET_FD),       # call returns fd
     'ftruncate'  : ('ftruncate',     SET_STATUS | FH_PARAM),
     'fgetattr'   : ('fstat',         SET_STATUS | FH_PARAM),
+
+    'fallocate'  : ('posix_fallocate',  SET_STATUS),
 }
 LOG_ENTRY_PAT_MAP = {
         'buf'       : '0x%08x',
@@ -90,10 +95,11 @@ LOG_ENTRY_PAT_MAP = {
         'flags'     : '0x%08x',
         'fpath'     : '\\"%s\\"',
         'gid'       : '%d',
-        'mode'      : '0%03o',
+        'len'       : '%lld',
         'link'      : '\\"%s\\"',
         'list'      : '0x%08x',
         'mask'      : '0%o',
+        'mode'      : '0%03o',
         'name'      : '\\"%s\\"',
         'newpath'   : '\\"%s\\"',
         'newsize'   : '%lld',
@@ -276,12 +282,11 @@ class FuseFunc(object):
         with open(PATH_TO_FIRST_LINES, 'r') as f:
             line = f.readline()
             while line and line != '':
-                line = line[:-1]
-                lines.append(line)
-                # DEBUG
-                #print(line)
-                #
-                line = f.readline()
+                # simplified comments
+                if line[0] != '#':
+                    line = line[:-1]
+                    lines.append(line)
+                    line = f.readline()
 
         funcMap   = {}  # this maps prefixed names to FuseFunc objects
         opCodeMap = {}  # maps names to integer opCodes

@@ -1,5 +1,10 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.5.9
+    2015-03-06
+        * fallocate implemented                                     SLOC 1589
+        * generate bin/blk-31-4k                                    SLOC 1604
+        * fuseDecode decodes data files                             SLOC 1731
 v0.5.8
     2015-03-05
         * writeBucket() working                                     SLOC 1560

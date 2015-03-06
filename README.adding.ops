@@ -1,0 +1,7 @@
+First step is to write the C code for the op as stdfs/src/opName.inc.
+Generally this involves copying the .inc file for a similar operation
+and then editing it.
+
+Then add the function prototype without the package prefix
+ot fragments/prototypes.
+

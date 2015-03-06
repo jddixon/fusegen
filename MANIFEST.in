@@ -1,6 +1,6 @@
 include netDistrib.conf
-include CHANGES COPYING* LICENSE.md MANIFEST.in README* TODO
-include check* diff* countem fuseGen
+include CHANGES COPYING* LICENSE.md MANIFEST.in PACKAGES README* TODO
+include check* diff* countem diff* fragments/* fuseDecode fuseGen genEm
 include ghpDoc/*
 include PACKAGES
 include src/*

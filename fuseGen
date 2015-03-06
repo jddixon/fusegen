@@ -59,8 +59,8 @@ def setOpAttrs():
         # XXX THIS USED TO BE 'else'
         attrs |= LOGGING_ENTRY
 
-        if name in ['create', 'fgetattr', 'flush', 'fsync', 'fsyncdir',
-                'ftruncate',
+        if name in ['create', 'fallocate', 'fgetattr', 'flush',
+                'fsync', 'fsyncdir', 'ftruncate',
                 'opendir', 'open', 'readdir', 'read', 'releasedir',
                 'release', 'write',]:
             attrs |= LOGGING_FI
@@ -107,6 +107,22 @@ def makeFusePkg(args):
     ucName          = args.ucName
     verbose         = args.verbose
 
+    # make sure opCode <-> opName maps are consistent ---------------
+    funcMap, opCodeMap = FuseFunc.getFuncMap(prefix)
+    inconsistent = False
+    for ndx in range(len(OP_NAMES)):
+        name = OP_NAMES[ndx]
+        if name == 'utimens':       # NOT YET IMPLEMENTED
+            break
+        ndxFromName = opCodeMap[name]
+        if ndx != ndxFromName:
+            print("INCONSISTENCY: %s is OP_NAME %d, but opCodeMap has %d" % (
+                name, ndx, ndxFromName))
+            inconsistent = True 
+    if inconsistent:
+        print("aborting")
+        sys.exit(1)
+
     # if -force and pathToPkg exists, delete it ---------------------
     if force and os.path.exists(pathToPkg):
         shutil.rmtree(pathToPkg)
@@ -118,7 +134,7 @@ def makeFusePkg(args):
     rootDir         = os.path.join('workdir', 'rootdir')
     makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests',]
     otherSubDirs    = ['bin', 'config', 'ghpDoc', 'm4', 'workdir',
-                        mountPoint, rootDir, ]
+                        mountPoint, rootDir, 'tmp',]
     subDirs         = makeFileSubDirs + otherSubDirs
     for dir in subDirs:
         pathToSubDir = os.path.join(pathToPkg, dir)
@@ -201,6 +217,7 @@ AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_MALLOC
 
 AC_CHECK_FUNCS([fdatasync ftruncate mkdir mkfifo realpath rmdir strerror utime])
+AC_CHECK_FUNCS([posix_fallocate])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
@@ -262,6 +279,23 @@ install-dvi install-info install-ps install-pdf dvi pdf ps info :
     with open(pathToCmd, 'w') as f:
         f.write("cd %s\n" % pathToPkg)
         f.write("fusermount -uz workdir/mountPoint\n")
+    os.chmod(pathToCmd, 0o744)
+
+    # write bin/blk-31-4k
+    pathToCmd = os.path.join(pathToBin, 'blk-31-4k')
+    content = """echo "blk-31-4k: test size is being set to $1 MB"
+#
+cd ~/dev/c/{0:s}
+bin/mount{1:s}
+cd workdir/mountPoint
+fio --name=global --bs=4k --size=$1m \
+	--rw=randrw --rwmixread=75 \
+	--name=job1 --name=job2 --name=job3 --name=job4
+cd ../..
+bin/umount{1:s}
+""".format(pkgName, ucName)
+    with open(pathToCmd, 'w') as f:
+        f.write(content)
     os.chmod(pathToCmd, 0o744)
 
     # ===============================================================
@@ -520,6 +554,7 @@ int main(int argc, char *argv[])
 
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <fuse.h>
 #include <limits.h>
 #include <stdio.h>
@@ -571,7 +606,7 @@ typedef struct o_ {{
     uint32_t    opSec;
     uint32_t    opNsec;             // may not exceed BILLION
     uint32_t    latency;            // may not exceed BILLION
-    uint32_t    blockCount  : 24;   // number of blocks read or written
+    uint32_t    count       : 24;   // number of ??? read or written
     uint8_t     opCode      : 8;
 }} __attribute__((aligned(16), packed)) opData_t;
 
@@ -586,7 +621,7 @@ extern long      bucketSize;        // number of opData_t
 extern bucket_t *buckets;           // [BUCKET_COUNT];
 
 opData_t *clockMeIn(struct timespec *tEntry, int opCode);
-void clockMeOut(struct timespec *tEntry, opData_t *mySlot);
+void clockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count);
 
 // END INSTRUMENTATION ----------------------------------------------
 #endif
@@ -667,6 +702,8 @@ long bucketSize;
 #include "create.inc"
 #include "ftruncate.inc"
 #include "fgetattr.inc"
+
+#include "fallocate.inc"
 
 #include "optable.inc"
 #include "main.inc"
@@ -915,7 +952,7 @@ opData_t *clockMeIn(struct timespec *tEntry, int opcode)
     return mySlot;
 }}
 
-void clockMeOut(struct timespec *tEntry, opData_t *mySlot)
+void clockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
 {{
     struct timespec tExit;
     long inSec  = tEntry->tv_sec;
@@ -931,10 +968,13 @@ void clockMeOut(struct timespec *tEntry, opData_t *mySlot)
     long latency = outNsec - inNsec;
     assert(outSec >= inSec);
     assert(latency < BILLION);
+    mySlot->opSec   = inSec;
+    mySlot->opNsec  = inNsec;
     mySlot->latency = latency;
+    mySlot->count   = count;
 }}
 
-int writeBucket() 
+int writeBucket()
 {{
     time_t now         = time(NULL);
     struct tm *when    = localtime(&now);
@@ -943,13 +983,13 @@ int writeBucket()
     strncat(fullPath, "/tmp/", PATH_MAX);
     char *p = fullPath + strlen(fullPath);
     snprintf(p, PATH_MAX, "/bucket-%04d%02d%02d-%02d%02d%02d",
-        when->tm_year + 1900, when->tm_mon + 1, when->tm_mday, 
+        when->tm_year + 1900, when->tm_mon + 1, when->tm_mday,
         when->tm_hour, when->tm_min, when->tm_sec);
 
     // DEBUG
     logMsg("data file is %s\\n", fullPath);
     // END
-       
+
     // any 'b' has no effect in Linux
     FILE *f = fopen(fullPath, "w+");
     if (f != NULL) {{
@@ -1017,6 +1057,10 @@ struct fuse_operations {0:s}OpTable = {{
     .create       = {0:s}create,
     .ftruncate    = {0:s}ftruncate,
     .fgetattr     = {0:s}fgetattr
+
+#ifdef HAVE_POSIX_FALLOCATE
+    .fallocate    = {0:s}fallocate
+#endif
 }};
 """.format(prefix)
     opTableFile = os.path.join(pathToPkg, os.path.join('src', 'optable.inc'))
@@ -1029,8 +1073,6 @@ struct fuse_operations {0:s}OpTable = {{
 
     srcDir = os.path.join(pathToPkg, 'src')
     makedir_p(srcDir, 0o755)
-
-    funcMap, opCodeMap = FuseFunc.getFuncMap(prefix)
 
     # XXX does not catch 'main'
     for name in OP_NAMES:
@@ -1046,6 +1088,8 @@ struct fuse_operations {0:s}OpTable = {{
         ss.append("/** %s.inc */\n" % (name))
         if attrs & CHK_DEF_XATTR:
             ss.append("#ifdef HAVE_SYS_XATTR_H")
+        elif name == 'fallocate':
+            ss.append("#ifdef HAVE_POSIX_FALLOCATE")
 
         # -- first line, LBRACE -----------------------
         ss.append("%s\n{" % ff.firstLine())
@@ -1059,7 +1103,7 @@ struct fuse_operations {0:s}OpTable = {{
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
             ss.append('    int status = 0;')
-        if attrs & SYSCALL_RET_FD:
+        if (attrs & SYSCALL_RET_FD) or name == 'fallocate':
             ss.append('    int fd;')
         if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
             ss.append('    char fpath[PATH_MAX];')
@@ -1139,14 +1183,29 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append("    %sFullPath(flink, link);" % prefix)
         ss.append("")
 
-        # -- call FUSE ------------------------------------
+        # -- SYS CALL -------------------------------------
 
         sysCall = OP_CALL_MAP[name][0]
         if sysCall == '':
             if name != 'init':
                 ss.append("    // CURRENTLY A NO-OP\n")
         else:
-            if name == 'fsync':
+            if name == 'fallocate':
+                ss.append("""
+    if (mode) {
+        status = -1;
+        errno  = EOPNOTSUPP;
+    } else {
+        fd = open(fpath, O_WRONLY);
+        if fd == -1 {
+            status = -1;
+        } else {
+            status = posix_fallocate(fd, offset, len);
+            close(fd);
+        }
+    }
+""")
+            elif name == 'fsync':
                 ss.append(
 """    // freebsd
 #ifdef HAVE_FDATASYNC
@@ -1283,7 +1342,11 @@ struct fuse_operations {0:s}OpTable = {{
 
         # -- instrumentation at exit ------------------
         if instrumenting:
-            ss.append('    clockMeOut(&tEntry, myData);')
+            if name in ['readlink', 'read', 'write', 
+                    'setxattr', 'getxattr', 'listxattr',]:
+                ss.append('    clockMeOut(&tEntry, myData, size);')
+            else:
+                ss.append('    clockMeOut(&tEntry, myData, 0);')
             if name == 'destroy':
                 ss.append('\n    writeBucket();')
 
@@ -1293,7 +1356,7 @@ struct fuse_operations {0:s}OpTable = {{
         elif name == 'init':
             ss.append("    return %s_DATA;" % ucName)
         ss.append("}")
-        if attrs & CHK_DEF_XATTR:
+        if (attrs & CHK_DEF_XATTR) or (name == 'fallocate'):
             ss.append("#endif")
 
         out = "\n".join(ss) + "\n"

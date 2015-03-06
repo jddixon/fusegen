@@ -1,0 +1,95 @@
+#!/usr/bin/python3
+
+import os, struct, sys
+from argparse   import ArgumentParser
+from fusegen    import __version__, __version_date__, OP_NAMES
+
+def decode(chunk):
+  sec, ns, latency, b2, b1, b0, opCode = struct.unpack('IIIBBBB', chunk)
+  blkCount = (((b2<<8)|b1)<<8)|b0
+  return sec, ns, latency, blkCount, opCode
+
+
+def simple(args):
+    howMany = args.howMany
+    path    = args.pathToData
+    verbose = args.verbose
+
+    with open(path, 'rb') as f:
+        data = f.read()
+    byteCount   = len(data)
+    opCount     = byteCount/16
+    if verbose:
+        print("%d bytes, %d ops" % (byteCount, opCount))
+    lastSec     = 0
+    lastNsec    = 0
+    lastLatency = 0
+    for n in range(howMany):
+        flag  = ''                          # 'P' if concurrency detected
+        begin = n * 16
+        end   = begin + 16
+        chunk = data[begin:end]
+        sec, ns, latency, blkCount, opCode = decode(chunk)
+        if sec == lastSec and ns < lastNsec + lastLatency:
+            flag = 'P'
+        print ("%6d %9d %9d %8d %2d %-16s %s" % (
+            sec, ns, latency, blkCount, opCode, OP_NAMES[opCode], flag))
+        lastSec     = sec
+        lastNsec    = ns
+        lastLatency = latency
+
+def main():
+    DESC    = 'parse a fuseGenned data file'
+    parser  = ArgumentParser(description=DESC)
+
+    parser.add_argument('-D', '--pathToData', 
+        help = 'path to data file')
+
+    parser.add_argument('-j', '--justShow', action='store_true',
+        help='show options and exit')
+
+    parser.add_argument('-n', '--howMany', type=int, default=0,
+        help='how many data points to decode')
+
+    parser.add_argument('-v', '--verbose', action='store_true',
+        help='be chatty')
+
+    args = parser.parse_args()
+
+    # sanity checks -------------------------------------------------
+    if not os.path.exists(args.pathToData):
+        print("%s does not exist; aborting" % args.pathToData)
+        sys.exit(1)
+
+    # fixups --------------------------------------------------------
+    fileSize = os.path.getsize(args.pathToData)
+    itemCount = int(fileSize / 16)
+    if itemCount*16 != fileSize:
+        print("warning: file size is not a multiple of 16")
+    if args.howMany > itemCount or args.howMany == 0:
+        args.howMany = itemCount
+ 
+    # sanity checks -------------------------------------------------
+    if args.howMany <= 0:
+        print("%d is not a positive integer" % args.howMany)
+        sys.exit(1)
+
+    # complete setup ------------------------------------------------
+    appName = 'fuseDecode %s' % __version__
+
+    # maybe show options and such -----------------------------------
+    if args.verbose or args.justShow:
+        print ("%s %s" % (appName, __version_date__))
+
+    if args.verbose or args.justShow:
+        print('justShow             = ' + str(args.justShow))
+        print('howMany              = ' + str(args.howMany))
+        print('pathToData           = ' + str(args.pathToData))
+        print('verbose              = ' + str(args.verbose))
+
+    if not args.justShow:
+        simple(args)
+
+if __name__ == '__main__':
+    main()
+
