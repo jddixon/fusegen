@@ -1,4 +1,7 @@
 cd /home/jdd/dev/py/fusegen
 rm -rf build/
-pySloc countem checkIncs checkScaffolding diffEm diffSrc diffTop fragments/prototypes \
+pySloc countem \
+    checkIncs  checkScaffolding  diffEm  diffSrc  diffTop \
+    checkIncsI checkScaffoldingI diffEmI diffSrcI diffTopI \
+    fragments/prototypes \
     fuseDecode fuseGen genEm

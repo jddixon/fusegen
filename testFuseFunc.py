@@ -19,12 +19,9 @@ class TestFuseFunc (unittest.TestCase):
     # actual unit tests #############################################
    
     def testNameToFuncMap(self):
-        m = FuseFunc.getFuncMap('xxx_')
-        # main() is not an op name but it's in the map, unprefixed
-        self.assertEqual(len(m), len(OP_NAMES) + 1)
-
+        m,o = FuseFunc.getFuncMap('xxx_')   # funcMap, opCodeMap
         # for testing, build a new p2tMap from the data in funcMap
-        for name in m.keys():
+        for name in m:
             func   = m[name]
             params = func.params        # a list of 2-tuples
             myP2T  = {}    # maps parameter names to type as a string
@@ -42,8 +39,8 @@ class TestFuseFunc (unittest.TestCase):
                 self.assertEqual(t, T)
 
     def testFirstLine(self):
-        m = FuseFunc.getFuncMap('xxx_')
-        for name in m.keys():
+        m, o = FuseFunc.getFuncMap('xxx_')  # funcMap, opCodeMap
+        for name in m:
             func = m[name]
             line = func.firstLine()
             # DEBUG

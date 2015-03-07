@@ -1,65 +1,9 @@
 ~/dev/py/fusegen/TODO
 
-2015-03-05
-    * python script to analyze data written by writebucket()
-    * FIX ME: 'write' is opcode 35 in write.inc, but that doesn't       * FIXED
-        match OP_NAMES, where opcode 35 is fallocate                    * FUXED
-    * testFuseFunc.py is out of sync with rest of code and fails
+2015-03-07
+    * clean this file up
 
-2015-03-04
-    * document setting up core dumping to /tmp/cores using rc.local
-        and subsequent use of debugger
-    * FIX: running blk-31-4k gets a "fio: posix_fallocate fails:        * FIXED
-        Software caused connection abort" and then "Transport endpoint  * FIXED
-        is not connected" because of this.                              * FIXED
-        - urgently need to implement fallocate (introduced v2.9.1)      * DONE
-        - make sure that fuse.h corresponds to v2.9.1 include/fuse.h    * YEP
-    * fuseGen should
-        - create tmp/                                                   * DONE
-        - write an appropriate bin/blk-31-4k; needs to be executable    * DONE
-
-2015-03-03
-    * destroy should write buckets[0] to disk using a unique file name  * DONE
-        - say "bucket-CCYYMMDD-HHMMSS" = 23 char with terminating null  * DONE
-            * but FIXME: this is not working                            * FIXED
-        - latency needs to exclude the time needed to write this file   * OK
-        - that unique file name/path should be a command line option
-            with a sensible default
-        - create instrumented version of stdfs
-            * so if fusegen -I we get stdifs
-            * without -I we get stdfs
-        - step the minor version number when this works
-        - add build file at the top level (chmod) = autogen,            * DONE
-            config, make                                                * DONE
-
-2015-03-02
-    * introduce a table of upper-cases opcode names for use on 
-        the C side (eg FG_GETATTR instead of 12), to make the
-        generated code more readable
-    * FIXME: xxxfs/bin/blk-31-4k gets the 'transport endpoint not       * FIXED
-        connected' message                                              * FIXED
-    * more important: stdfs does not get mounted when bin/mountStdFS    * FIXED
-        is invoked                                                      * FIXED
-
-2015-02-22 (-18, rewritten)
-    * need a README.install which explains that this package should 
-        never be installed by root
-    * rework comments and replace install.sh accordingly
-        - rm src/install.sh                                             * DONE
-        - see man install
-        - model may be ~/extern/xen-api/scripts/install.sh
-
-2015-02-17
-    * URGENT: xxxfs executable must depend upon all *.inc
-    * need better checks on rootdir, mountPoint in main.inc ChkDir()
-2015-02-16
-    * need a README.filesystem.generation which describes how to run
-        fuseGen and thereby create the FUSE file system
-        - main point: run ./autogen.sh
-    * generated main.inc 
-        - must remove any fg* options from the argv passed to fuse 
-            (remembering to update argc)
-
+2015-03-06 (edited from -02-16)
     // FUSE VERSION 2.6 ADDITIONS
     * add utimens() - and deprecate utime()
     * add lock() 
@@ -71,6 +15,71 @@
     * add write_buf()
     * add read_buf()
     * add flock()
+
+2015-03-06
+    * problem: latency for at least one fsync exceeded 1 sec and
+        so overflowed field (seen once in perhaps two dozen runs)
+    * default path to package is /home/jdd/dev/c/PKG_NAME; need a 
+        way to override the path
+    * amplify README.md and ghpDoc/index.md
+    * generate logging information only if fuseGen -L
+        - which enables an --fgLogging switch
+
+2015-03-05
+    * python script to analyze data written by writebucket()            * DONE
+    * FIX ME: 'write' is opcode 35 in write.inc, but that doesn't       * FIXED
+        match OP_NAMES, where opcode 35 is fallocate                    * FUXED
+    * testFuseFunc.py is out of sync with rest of code and fails        * FIXED
+2015-03-04
+    * document setting up core dumping to /tmp/cores using rc.local
+        and subsequent use of debugger
+    * FIX: running blk-31-4k gets a "fio: posix_fallocate fails:        * FIXED
+        Software caused connection abort" and then "Transport endpoint  * FIXED
+        is not connected" because of this.                              * FIXED
+        - urgently need to implement fallocate (introduced v2.9.1)      * DONE
+        - make sure that fuse.h corresponds to v2.9.1 include/fuse.h    * YEP
+    * fuseGen should                                                    * DONE
+        - create tmp/                                                   * DONE
+        - write an appropriate bin/blk-31-4k; needs to be executable    * DONE
+2015-03-03
+    * destroy should write buckets[0] to disk using a unique file name  * DONE
+        - say "bucket-CCYYMMDD-HHMMSS" = 23 char with terminating null  * DONE
+            * but FIXME: this is not working                            * FIXED
+        - latency needs to exclude the time needed to write this file   * OK
+        - that unique file name/path should be a command line option    * SKIP
+            with a sensible default                                     * SKIP
+        - create instrumented version of stdfs                          * DONE
+            * so if fusegen -I we get dupe of stdifs                    * DONE
+            * without -I we get dupe of stdfs                           * DONE
+        - step the minor version number when this works                 * DONE
+        - add build file at the top level (chmod) = autogen,            * DONE
+            config, make                                                * DONE
+2015-03-02
+    * introduce a table of upper-cases opcode names for use on          * DONE
+        the C side (eg FG_GETATTR instead of 12), to make the           * DONE
+        generated code more readable                                    * DONE
+    * FIXME: xxxfs/bin/blk-31-4k gets the 'transport endpoint not       * FIXED
+        connected' message                                              * FIXED
+    * more important: stdfs does not get mounted when bin/mountStdFS    * FIXED
+        is invoked                                                      * FIXED
+2015-02-22 (-18, rewritten)
+    * need a README.install which explains that this package should 
+        never be installed by root
+    * rework comments and replace install.sh accordingly
+        - rm src/install.sh                                             * DONE
+        - see man install
+        - model may be ~/extern/xen-api/scripts/install.sh
+2015-02-17
+    * URGENT: xxxfs executable must depend upon all *.inc               * DONE
+    * need better checks on rootdir, mountPoint in main.inc ChkDir()
+2015-02-16
+    * need a README.filesystem.generation which describes how to run
+        fuseGen and thereby create the FUSE file system
+        - main point: run ./autogen.sh
+    * generated main.inc                                                * DONE
+        - must remove any fg* options from the argv passed to fuse      * DONE
+            (remembering to update argc)                                * DONE
+
 
 2015-02-15
     * need a test program that exercises each and every FUSE opcode

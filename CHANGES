@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.0
+    2015-03-07
+        * added opcodes.h, fixed testFuseFunc.py, created stdi_fs,
+            executable depends upon *.inc                           SLOC 1793 
 v0.5.9
     2015-03-06
         * fallocate implemented                                     SLOC 1589

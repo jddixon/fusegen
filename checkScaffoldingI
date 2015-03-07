@@ -1,0 +1,8 @@
+./diffTopI configure.ac
+#./diffTopI install-sh
+./diffTopI Makefile.am
+
+./diffSrcI Makefile.am
+./diffSrcI util.c
+./diffSrcI xxxfs.c
+./diffSrcI xxxfs.h

@@ -304,7 +304,7 @@ bin/umount{1:s}
 
     pathToSrc = os.path.join(pathToPkg, 'src')
 
-    # fuse_version.h ------------------------------------------------
+    # src/fuse_version.h --------------------------------------------
 
     fuseVersionFile = os.path.join(pathToSrc, 'fuse_version.h')
     content = """/** fuse_version.h */
@@ -324,7 +324,7 @@ bin/umount{1:s}
     makeAMFile = os.path.join(pathToSrc, 'Makefile.am')
     content = """
 bin_PROGRAMS = {0:s}
-{1:s}SOURCES = {0:s}.c fuse.h fuse_version.h {0:s}.h util.c
+{1:s}SOURCES = {0:s}.c fuse.h fuse_version.h opcodes.h {0:s}.h util.c $(wildcard *.inc)
 AM_CFLAGS = @FUSE_CFLAGS@
 LDADD = @FUSE_LIBS@
 """.format(pkgName, prefix)
@@ -332,7 +332,7 @@ LDADD = @FUSE_LIBS@
     with open(makeAMFile, 'w', 0o644) as f:
         f.write(content)
 
-    # generate main.inc ---------------------------------------------
+    # src/main.inc --------------------------------------------------
     content = """/** main.inc */
 
 void {0:s}Usage()
@@ -542,6 +542,15 @@ int main(int argc, char *argv[])
     with open(pathToMain, 'w') as f:
         f.write(content)
 
+    # src/opcodes.h -------------------------------------------------
+    pathToOpcodes = os.path.join(pathToSrc, 'opcodes.h')
+    with open(pathToOpcodes, 'w') as f:
+        f.write("/* opcodes.h */\n\n");
+        f.write("#ifndef _OPCODES_H_\n");
+        for ndx, name in enumerate(OP_NAMES):
+            f.write("#define FG_%-14s (%d)\n" % (name.upper(), ndx))
+        f.write("#endif\n");
+
     # package header file -------------------------------------------
     content = """/** {0:s}.h */
 
@@ -563,6 +572,8 @@ int main(int argc, char *argv[])
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+
+#include "opcodes.h"
 
 // prototypes
 int  {1:s}Error(char *);
@@ -1082,7 +1093,7 @@ struct fuse_operations {0:s}OpTable = {{
         if not name in funcMap:   # names at end are not yet implemented
             break
         ff = funcMap[name]    # FuseFunc for this name
-        opCode = opCodeMap[name]
+        opCode = "FG_%s" % name.upper()
         pathToInc = os.path.join(srcDir, "%s.inc" % name)
         ss = []
         ss.append("/** %s.inc */\n" % (name))
@@ -1098,7 +1109,7 @@ struct fuse_operations {0:s}OpTable = {{
         if instrumenting:
             ss.append('    struct timespec tEntry;')
             ss.append(
-                "    opData_t *myData = clockMeIn(&tEntry, %d);\n" % opCode)
+                "    opData_t *myData = clockMeIn(&tEntry, %s);\n" % opCode)
 
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:

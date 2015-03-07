@@ -1,0 +1,2 @@
+echo "src level $1:  standard vs generated"
+diff ~/dev/c/stdi_fs/src/$1 ~/dev/c/xxxfs/src/$1

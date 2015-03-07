@@ -1,0 +1,44 @@
+echo This file should be aligned with fragments/optable
+
+./diffEmI main
+./diffEmI optable
+
+# The actual ops follow.
+
+./diffEmI getattr
+./diffEmI readlink
+./diffEmI mknod
+./diffEmI mkdir
+./diffEmI unlink
+./diffEmI rmdir
+./diffEmI symlink
+./diffEmI rename
+./diffEmI link
+./diffEmI chmod
+./diffEmI chown
+./diffEmI truncate
+./diffEmI utime
+./diffEmI open
+./diffEmI read
+./diffEmI write
+./diffEmI statfs
+./diffEmI flush
+./diffEmI release
+./diffEmI fsync
+./diffEmI setxattr
+./diffEmI getxattr
+./diffEmI removexattr
+./diffEmI listxattr
+./diffEmI opendir
+./diffEmI readdir
+./diffEmI releasedir
+./diffEmI releasedir
+./diffEmI fsyncdir
+./diffEmI init
+./diffEmI destroy
+./diffEmI access
+./diffEmI create
+./diffEmI ftruncate
+./diffEmI fgetattr
+
+./diffEmI fallocate

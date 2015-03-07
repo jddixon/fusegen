@@ -1,0 +1,2 @@
+echo "top level $1:  standard vs generated"
+diff ~/dev/c/stdi_fs/$1 ~/dev/c/xxxfs/$1
