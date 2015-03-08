@@ -19,6 +19,7 @@
 2015-03-06
     * problem: latency for at least one fsync exceeded 1 sec and
         so overflowed field (seen once in perhaps two dozen runs)
+        - running on EC2 instance saw fsync latencies of 5-6 sec
     * default path to package is /home/jdd/dev/c/PKG_NAME; need a 
         way to override the path
     * amplify README.md and ghpDoc/index.md

@@ -163,7 +163,7 @@ def makeFusePkg(args):
 
     # install-sh removed from both lists 2015-02-22
     for x in ['autogen.sh', 'build', 'config.guess', 'config.sub', 'COPYING',
-            'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION',
+            'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION', 'COPYING.GNUBL',
             'README.licenses',]:
         copyFromSrc(x, x in ['autogen.sh', 'build', ])
     for x in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
