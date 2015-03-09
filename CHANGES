@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.1
+    2015-03-08
+        * licensing changes                                         SLOC 1793
 v0.6.0
     2015-03-07
         * added opcodes.h, fixed testFuseFunc.py, created stdi_fs,
