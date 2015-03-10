@@ -118,7 +118,7 @@ def makeFusePkg(args):
         if ndx != ndxFromName:
             print("INCONSISTENCY: %s is OP_NAME %d, but opCodeMap has %d" % (
                 name, ndx, ndxFromName))
-            inconsistent = True 
+            inconsistent = True
     if inconsistent:
         print("aborting")
         sys.exit(1)
@@ -415,7 +415,7 @@ int main(int argc, char *argv[])
         abort();
     }}
     // Set up logging; this should be conditional.
-    myData->logfile = openLog();
+    myData->logfile = {1:s}OpenLog();
 
     // Strange warning here "initialization makes pointer from integer
     // without a cast"
@@ -591,13 +591,13 @@ struct {0:s}Data {{
 // BEGIN LOGGING CODE -----------------------------------------------
 // This block generated only if including logging capability
 
-void logConn   (struct fuse_conn_info *conn);
-void logEntry  (const char *fmt, ...);
-void logFI     (struct fuse_file_info *fi);
-void logMsg    (const char *fmt, ...);
-void logStat   (struct stat *si);
-void logstatVFS(struct statvfs *sv);
-FILE *openLog  (void);
+void {1:s}LogConn   (struct fuse_conn_info *conn);
+void {1:s}LogEntry  (const char *fmt, ...);
+void {1:s}LogFI     (struct fuse_file_info *fi);
+void {1:s}LogMsg    (const char *fmt, ...);
+void {1:s}LogStat   (struct stat *si);
+void {1:s}LogstatVFS(struct statvfs *sv);
+FILE *{1:s}OpenLog  (void);
 
 // END LOGGING CODE -------------------------------------------------
 
@@ -631,8 +631,9 @@ typedef struct b_ {{
 extern long      bucketSize;        // number of opData_t
 extern bucket_t *buckets;           // [BUCKET_COUNT];
 
-opData_t *clockMeIn(struct timespec *tEntry, int opCode);
-void clockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count);
+opData_t *{1:s}ClockMeIn(struct timespec *tEntry, int opCode);
+void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count);
+int {1:s}WriteBucket();
 
 // END INSTRUMENTATION ----------------------------------------------
 #endif
@@ -733,30 +734,32 @@ long bucketSize;
 #include <sys/stat.h>
 #include "{0:s}.h"          // this header file should be last
 
-// Log errors to logfile and return -errno to caller.
+// Return -errno to caller, conditionally after logging -------------
 
 int {1:s}Error(char *msg)
 {{
     int errCode = -errno;
     /** BEGIN 'ONLY IF LOGGING' */
-    logMsg("    ERROR %s: %s\\n", msg, strerror(errno));
+    {1:s}LogMsg("    ERROR %s: %s\\n", msg, strerror(errno));
     /** END 'ONLY IF LOGGING' */
     return errCode;
 }}
 
+// Given a path relative to the mount point, return an absolute -----
+// path including the root directory
 void {1:s}FullPath(char fpath[PATH_MAX], const char *path)
 {{
     strcpy(fpath, {2:s}_DATA->rootdir);
     strncat(fpath, path, PATH_MAX);
     /** BEGIN 'ONLY IF LOGGING' */
-    logMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\", fpath = \\"%s\\"\\n",
+    {1:s}LogMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\", fpath = \\"%s\\"\\n",
            {2:s}_DATA->rootdir, path, fpath);
     /** END 'ONLY IF LOGGING' */
 }}
 
-/** BEGIN 'ONLY IF LOGGING' SECTION */
+// == LOGGING =======================================================
 
-FILE *openLog()
+FILE *{1:s}OpenLog()
 {{
     FILE *logfile;
 
@@ -770,14 +773,14 @@ FILE *openLog()
     return logfile;
 }}
 
-void logEntry(const char *format, ...)
+void {1:s}LogEntry(const char *format, ...)
 {{
     va_list ap;
     va_start(ap, format);
 
     vfprintf({2:s}_DATA->logfile, format, ap);
 }}
-void logMsg(const char *format, ...)
+void {1:s}LogMsg(const char *format, ...)
 {{
     va_list ap;
     va_start(ap, format);
@@ -821,8 +824,8 @@ static char *msgHeader(char *p, int *maxChar, char *name)
   bytesLeft -= n;   \\
   p += n;
 
-// from fuse.h
-void logContext(struct fuse_context *ctx)
+// struct is from fuse.h
+void {1:s}LogContext(struct fuse_context *ctx)
 {{
     char buffer[MAX_BUFFER+1];  // allow for null byte
     char *p = buffer;
@@ -841,11 +844,11 @@ void logContext(struct fuse_context *ctx)
     ADD_ULONG_FIELD(((struct xxxfsData *)ctx->private_data), logfile);
     ADD_FIELD(((struct xxxfsData *)ctx->private_data), rootdir, %s);
 
-    logMsg(buffer);
+    {1:s}LogMsg(buffer);
 }}
 
-// from fuse_common.h
-void logConn(struct fuse_conn_info *conn)
+// struct is from fuse_common.h
+void {1:s}LogConn(struct fuse_conn_info *conn)
 {{
     char buffer[MAX_BUFFER+1];  // allow for null byte
     char *p = buffer;
@@ -863,11 +866,11 @@ void logConn(struct fuse_conn_info *conn)
     ADD_INT_FIELD(conn, max_background);
     ADD_INT_FIELD(conn, congestion_threshold);
 
-    logMsg(buffer);
+    {1:s}LogMsg(buffer);
 }}
 
-// from fuse_common.h
-void logFI (struct fuse_file_info *fi)
+// struct is from fuse_common.h
+void {1:s}LogFI (struct fuse_file_info *fi)
 {{
     char buffer[MAX_BUFFER+1];  // allow for null byte
     char *p = buffer;
@@ -886,11 +889,11 @@ void logFI (struct fuse_file_info *fi)
     ADD_ULL_FIELD(fi, fh);
     ADD_ULL_FIELD(fi, lock_owner);
 
-    logMsg(buffer);
+    {1:s}LogMsg(buffer);
 }};
 
-// man struct stat
-void logStat(struct stat *ss)
+// for struct see man struct stat
+void {1:s}LogStat(struct stat *ss)
 {{
     char buffer[MAX_BUFFER+1];  // allow for null byte
     char *p = buffer;
@@ -912,11 +915,11 @@ void logStat(struct stat *ss)
     ADD_ULONG_FIELD(ss, st_mtime);
     ADD_ULONG_FIELD(ss, st_ctime);
 
-    logMsg(buffer);
+    {1:s}LogMsg(buffer);
 }}
 
-// man struct statvfs
-void logStatVFS(struct statvfs *sv)
+// for struct see man struct statvfs
+void {1:s}LogStatVFS(struct statvfs *sv)
 {{
     char buffer[MAX_BUFFER+1];  // allow for null byte
     char *p = buffer;
@@ -936,17 +939,15 @@ void logStatVFS(struct statvfs *sv)
     ADD_ULL_FIELD(sv, f_flag);
     ADD_FIELD(sv, f_namemax,    %ld);
 
-    logMsg(buffer);
+    {1:s}LogMsg(buffer);
 }}
 
-/** END 'ONLY IF LOGGING' SECTION */
-
-/** BEGIN INSTRUMENTATION */
+// == INSTRUMENTATION ===============================================
 
 // calloc BUCKET_COUNT of these
 bucket_t *buckets;
 
-opData_t *clockMeIn(struct timespec *tEntry, int opcode)
+opData_t *{1:s}ClockMeIn(struct timespec *tEntry, int opcode)
 {{
     int status = clock_gettime(CLOCK_MONOTONIC, tEntry);
     assert(status == 0);
@@ -963,7 +964,7 @@ opData_t *clockMeIn(struct timespec *tEntry, int opcode)
     return mySlot;
 }}
 
-void clockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
+void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
 {{
     struct timespec tExit;
     long inSec  = tEntry->tv_sec;
@@ -985,7 +986,7 @@ void clockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
     mySlot->count   = count;
 }}
 
-int writeBucket()
+int {1:s}WriteBucket()
 {{
     time_t now         = time(NULL);
     struct tm *when    = localtime(&now);
@@ -998,7 +999,7 @@ int writeBucket()
         when->tm_hour, when->tm_min, when->tm_sec);
 
     // DEBUG
-    logMsg("data file is %s\\n", fullPath);
+    {1:s}LogMsg("data file is %s\\n", fullPath);
     // END
 
     // any 'b' has no effect in Linux
@@ -1006,17 +1007,16 @@ int writeBucket()
     if (f != NULL) {{
         size_t written = fwrite(
                 buckets[0].ops, sizeof(opData_t), buckets[0].count, f);
-        logMsg("wrote %lu bytes, %lu items, to %s\\n",
+        {1:s}LogMsg("wrote %lu bytes, %lu items, to %s\\n",
                 written, buckets[0].count, fullPath);
         fflush(f);
         fclose(f);
     }} else {{
         int myErr = errno;
-        logMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
+        {1:s}LogMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
 
     }}
 }}
-/** END INSTRUMENTATION */
 """.format(pkgName, prefix, ucName)
 
     utilCFile = os.path.join(pathToSrc, "util.c")
@@ -1107,10 +1107,10 @@ struct fuse_operations {0:s}OpTable = {{
 
         # -- instrumenation ---------------------------
         if instrumenting:
-            ss.append('    struct timespec tEntry;')
-            ss.append(
-                "    opData_t *myData = clockMeIn(&tEntry, %s);\n" % opCode)
-
+            content = """    struct timespec tEntry;
+    opData_t *myData = {1:s}ClockMeIn(&tEntry, {2:s});
+""".format(name, prefix, opCode)
+            ss.append(content)
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
             ss.append('    int status = 0;')
@@ -1134,19 +1134,19 @@ struct fuse_operations {0:s}OpTable = {{
 
         # -- log on entry -----------------------------
         if name == 'init':
-            ss.append("    logEntry(\"\\n%sinit()\\n\");" % prefix)
-            ss.append('    logConn(conn);')
-            ss.append('    logContext(fuse_get_context());')
+            ss.append("    %sLogEntry(\"\\n%sinit()\\n\");" % (prefix, prefix))
+            ss.append('    %sLogConn(conn);' % prefix)
+            ss.append('    %sLogContext(fuse_get_context());' % prefix)
         elif attrs & LOGGING_ENTRY:
 
             if attrs & DOUBLE_FULL_PATH:
                 part0 = "\"\\n%s%s" % (prefix, name)
                 part1 = '(path=\\"%s\\", newpath=\\"%s\\")\\n",'
-                s = "    logEntry(" + part0 + part1
+                s = ("    %sLogEntry(" % prefix) + part0 + part1
                 ss.append(s)
                 ss.append("            path, newpath);")
             else:
-                logE = ['    logEntry(\"\\n%s%s(' % (prefix, name) ]
+                logE = ['    %sLogEntry(\"\\n%s%s(' % (prefix, prefix, name) ]
                 for ndx, param in enumerate(ff.params):
                     if ndx > 0:
                         logE.append(', ')
@@ -1183,7 +1183,7 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append('    dp = (DIR *) (uintptr_t) fi->fh;')
 
         if name != 'opendir' and name != 'readdir' and attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
-            ss.append('    logFI(fi);')
+            ss.append('    %sLogFI(fi);' % prefix)
 
         # -- set up absolute paths ------------------------
         if attrs & FULL_PATH:
@@ -1234,21 +1234,21 @@ struct fuse_operations {0:s}OpTable = {{
     if (S_ISREG(mode)) {{
         status = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
         if (status < 0)
-            status = {0:s}Error(\"{0:s}mknod open\");
+            status = {1:s}Error(\"{1:s}mknod open\");
         else {{
             status = close(status);
             if (status < 0)
-                status = {0:s}Error(\"{0:s}mknod close\");
+                status = {1:s}Error(\"{1:s}mknod close\");
         }}
     }} else if (S_ISFIFO(mode)) {{
         status = mkfifo(fpath, mode);
         if (status < 0)
-            status = {0:s}Error(\"{0:s}mknod mkfifo\");
+            status = {1:s}Error(\"{1:s}mknod mkfifo\");
     }} else {{
         status = mknod(fpath, mode, dev);
         if (status < 0)
-            status = {0:s}Error(\"{0:s}mknod mknod\");
-    }}""".format(prefix) )
+            status = {1:s}Error(\"{1:s}mknod mknod\");
+    }}""".format(name, prefix) )
 
             elif name == 'open':
                 ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
@@ -1256,17 +1256,17 @@ struct fuse_operations {0:s}OpTable = {{
                 content = """
     entry = readdir(dp);
     if (entry == 0) {{
-        status = {0:s}Error("{0:s}readdir readdir");
+        status = {1:s}Error("{1:s}readdir readdir");
         return status;
     }}
     do {{
-        logMsg("calling filler(%s)\\n", entry->d_name);
+        {1:s}LogMsg("calling filler(%s)\\n", entry->d_name);
         if (filler(buf, entry->d_name, NULL, 0) != 0) {{
-            logMsg("    ERROR {0:s}readdir filler:  buffer full");
+            {1:s}LogMsg("    ERROR {1:s}readdir filler:  buffer full");
             return -ENOMEM;
         }}
     }} while ((entry = readdir(dp)) != NULL);
-""".format(prefix)
+""".format(name,prefix)
                 ss.append(content)
 
             elif name == 'readlink':
@@ -1327,39 +1327,42 @@ struct fuse_operations {0:s}OpTable = {{
                 ss.append('    }')
         if name in ['getxattr',]:
             ss.append('    else')
-            ss.append('        logMsg("    value=\\"%s\\"\\n", value);')
+            start = '        %sLogMsg(' % prefix
+            ss.append(start + '"    value=\\"%s\\"\\n", value);' )
 
         if name == 'listxattr':
+            start = '    %sLogMsg("    ' % prefix
             ss.append(
-              '    logMsg("    returned attributes (length %d):\\n", status);')
+                  start + 'returned attributes (length %d):\\n", status);')
             ss.append(
               '    for (ptr = list; ptr < list + status; ptr += strlen(ptr)+1)')
-            ss.append('        logMsg("    \\"%s\\"\\n", ptr);')
+            start = '        %sLogMsg' % prefix
+            ss.append( start + '("    \\"%s\\"\\n", ptr);')
 
         # -- logging stat -----------------------------
         if attrs & LOGGING_STAT:
-            ss.append("    logStat(%s);\n"    % ff.params[1][1])
+            ss.append("    %sLogStat(%s);\n"    % (prefix, ff.params[1][1]))
         elif attrs & LOGGING_STATVFS:
-            ss.append("    logStatVFS(%s);\n" % ff.params[1][1])
+            ss.append("    %sLogStatVFS(%s);\n" % (prefix, ff.params[1][1]))
 
         if attrs & SET_FH_FROM_FD:
             ss.append('    fi->fh = fd;')
-            ss.append('    logFI(fi);')
+            ss.append('    %sLogFI(fi);' % prefix)
         elif name=='opendir':
             ss.append('    fi->fh = (intptr_t) dp;')
-            ss.append('    logFI(fi);')
+            ss.append('    %sLogFI(fi);' % prefix)
         elif name=='readdir':
-            ss.append('    logFI(fi);')
+            ss.append('    %sLogFI(fi);' % prefix)
 
         # -- instrumentation at exit ------------------
         if instrumenting:
-            if name in ['readlink', 'read', 'write', 
+            if name in ['readlink', 'read', 'write',
                     'setxattr', 'getxattr', 'listxattr',]:
-                ss.append('    clockMeOut(&tEntry, myData, size);')
+                ss.append('    %sClockMeOut(&tEntry, myData, size);' % prefix)
             else:
-                ss.append('    clockMeOut(&tEntry, myData, 0);')
+                ss.append('    %sClockMeOut(&tEntry, myData, %s);' % (prefix, opCode))
             if name == 'destroy':
-                ss.append('\n    writeBucket();')
+                ss.append('\n    %sWriteBucket();' % prefix)
 
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:

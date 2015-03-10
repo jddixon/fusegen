@@ -1,5 +1,11 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.3
+    2015-03-10
+        * regularized naming of functions, variables                SLOC 1798
+v0.6.2
+    2015-03-09
+        * add gustav_ctries.c, majek_siphash.c (SLOC excludes *.c)  SLOC 1793
 v0.6.1
     2015-03-08
         * licensing changes                                         SLOC 1793

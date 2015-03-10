@@ -3,6 +3,7 @@
 ./diffTop Makefile.am
 
 ./diffSrc Makefile.am
+./diffSrc opcodes.h
 ./diffSrc util.c
 ./diffSrc xxxfs.c
 ./diffSrc xxxfs.h

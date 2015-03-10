@@ -1,5 +1,12 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-10
+    * util.c functions need unique names -- that is, add prefixes to
+        - clockMeIn/Out()
+        - writeBucket()
+        - log*()
+    * should add PREFIX_closeLog()
+
 2015-03-07
     * clean this file up
 
