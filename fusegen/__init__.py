@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.6.3'
-__version_date__ = '2015-03-10'
+__version__      = '0.6.4'
+__version_date__ = '2015-03-11'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -28,11 +28,13 @@ OP_NAMES = [
     'fsync',    'setxattr', 'getxattr',     'listxattr',    'removexattr',
     'opendir',  'readdir',  'releasedir',   'fsyncdir',     'init',
     'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
+    # fuse version 2.6
+    'utimens',  
     # fusion 2.9.1
     'fallocate',
     # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
     # not yet implemented - fuse version 2.6
-    'utimens',  'lock',     'bmap',
+    'lock',     'bmap',
     # fusion 2.8
     'ioctl',        'poll',
     # fusion 2.9
@@ -84,6 +86,7 @@ OP_CALL_MAP = {
     'ftruncate'  : ('ftruncate',     SET_STATUS | FH_PARAM),
     'fgetattr'   : ('fstat',         SET_STATUS | FH_PARAM),
 
+    'utimens'    : ('utimensat',     SET_STATUS),
     'fallocate'  : ('posix_fallocate',  SET_STATUS),
 }
 LOG_ENTRY_PAT_MAP = {

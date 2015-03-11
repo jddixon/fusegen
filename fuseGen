@@ -34,7 +34,7 @@ def setOpAttrs():
         if name in ['symlink',]:
             attrs |= HAS_LINK_FILE
 
-        if name == 'getdir':
+        if name in ['getdir', 'utime',]:
             attrs |= DEPRECATED
 
         if name != 'init' and name != 'destroy':
@@ -112,7 +112,7 @@ def makeFusePkg(args):
     inconsistent = False
     for ndx in range(len(OP_NAMES)):
         name = OP_NAMES[ndx]
-        if name == 'utimens':       # NOT YET IMPLEMENTED
+        if not name in opCodeMap:
             break
         ndxFromName = opCodeMap[name]
         if ndx != ndxFromName:
@@ -216,7 +216,7 @@ AC_FUNC_CHOWN
 AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_MALLOC
 
-AC_CHECK_FUNCS([fdatasync ftruncate mkdir mkfifo realpath rmdir strerror utime])
+AC_CHECK_FUNCS([fdatasync ftruncate mkdir mkfifo realpath rmdir strerror utimensat])
 AC_CHECK_FUNCS([posix_fallocate])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
@@ -557,6 +557,12 @@ int main(int argc, char *argv[])
 #ifndef _{2:s}_H_
 #define _{2:s}_H_
 
+#ifdef linux
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE (700)
+#endif
+#endif
+
 // IF INSTRUMENTING CODE ------------------------
 #include <pthread.h>        // should be first
 // END INSTRUMENTING CODE -----------------------
@@ -573,6 +579,7 @@ int main(int argc, char *argv[])
 #include <unistd.h>
 #include <sys/types.h>
 
+#include "config.h"
 #include "opcodes.h"
 
 // prototypes
@@ -687,7 +694,11 @@ long bucketSize;
 #include "chmod.inc"
 #include "chown.inc"
 #include "truncate.inc"
+
+#ifndef HAVE_UTIMENSAT
 #include "utime.inc"
+#endif
+
 #include "open.inc"
 #include "read.inc"
 #include "write.inc"
@@ -715,6 +726,9 @@ long bucketSize;
 #include "ftruncate.inc"
 #include "fgetattr.inc"
 
+#ifdef HAVE_UTIMENSAT
+#include "utimens.inc"
+#endif
 #include "fallocate.inc"
 
 #include "optable.inc"
@@ -1042,7 +1056,9 @@ struct fuse_operations {0:s}OpTable = {{
     .chmod        = {0:s}chmod,
     .chown        = {0:s}chown,
     .truncate     = {0:s}truncate,
+#ifndef HAVE_UTIMENSAT
     .utime        = {0:s}utime,
+#endif
     .open         = {0:s}open,
     .read         = {0:s}read,
     .write        = {0:s}write,
@@ -1069,8 +1085,12 @@ struct fuse_operations {0:s}OpTable = {{
     .ftruncate    = {0:s}ftruncate,
     .fgetattr     = {0:s}fgetattr
 
+#ifdef HAVE_UTIMENSAT
+    , .utimens      = {0:s}utimens
+#endif
+
 #ifdef HAVE_POSIX_FALLOCATE
-    .fallocate    = {0:s}fallocate
+    , .fallocate    = {0:s}fallocate
 #endif
 }};
 """.format(prefix)
@@ -1099,6 +1119,8 @@ struct fuse_operations {0:s}OpTable = {{
         ss.append("/** %s.inc */\n" % (name))
         if attrs & CHK_DEF_XATTR:
             ss.append("#ifdef HAVE_SYS_XATTR_H")
+        elif name == 'utimens':
+            ss.append("#ifdef HAVE_UTIMENSAT")
         elif name == 'fallocate':
             ss.append("#ifdef HAVE_POSIX_FALLOCATE")
 
@@ -1208,7 +1230,7 @@ struct fuse_operations {0:s}OpTable = {{
         errno  = EOPNOTSUPP;
     } else {
         fd = open(fpath, O_WRONLY);
-        if fd == -1 {
+        if (fd == -1) {
             status = -1;
         } else {
             status = posix_fallocate(fd, offset, len);
@@ -1273,6 +1295,9 @@ struct fuse_operations {0:s}OpTable = {{
                 ss.append("    status = readlink(fpath, link, size - 1);")
             elif name == 'releasedir':
                 ss.append("    status = closedir((DIR *) (uintptr_t) fi->fh);")
+            elif name == 'utimens':
+                ss.append(
+                "    status = utimensat(0, fpath, tv, AT_SYMLINK_NOFOLLOW);")
             elif attrs & HAS_LINK_FILE:
                 ss.append("    status = %s(path, flink);" % sysCall)
             elif attrs & DOUBLE_FULL_PATH:
@@ -1370,7 +1395,7 @@ struct fuse_operations {0:s}OpTable = {{
         elif name == 'init':
             ss.append("    return %s_DATA;" % ucName)
         ss.append("}")
-        if (attrs & CHK_DEF_XATTR) or (name == 'fallocate'):
+        if (attrs & CHK_DEF_XATTR) or (name == 'fallocate') or (name=='utimens'):
             ss.append("#endif")
 
         out = "\n".join(ss) + "\n"
