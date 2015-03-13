@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.6.4'
-__version_date__ = '2015-03-11'
+__version__      = '0.6.5'
+__version_date__ = '2015-03-12'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -29,12 +29,12 @@ OP_NAMES = [
     'opendir',  'readdir',  'releasedir',   'fsyncdir',     'init',
     'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
     # fuse version 2.6
-    'utimens',  
+    'utimens',  'lock',
     # fusion 2.9.1
     'fallocate',
     # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
     # not yet implemented - fuse version 2.6
-    'lock',     'bmap',
+    'bmap',
     # fusion 2.8
     'ioctl',        'poll',
     # fusion 2.9
@@ -87,10 +87,12 @@ OP_CALL_MAP = {
     'fgetattr'   : ('fstat',         SET_STATUS | FH_PARAM),
 
     'utimens'    : ('utimensat',     SET_STATUS),
+    'lock'       : ('ulockmgr_op',      SET_STATUS),
     'fallocate'  : ('posix_fallocate',  SET_STATUS),
 }
 LOG_ENTRY_PAT_MAP = {
         'buf'       : '0x%08x',
+        'cmd'       : '%d',
         'datasync'  : '%d',
         'dev'       : '%lld',
         'fi'        : '0x%08x',
@@ -101,6 +103,7 @@ LOG_ENTRY_PAT_MAP = {
         'len'       : '%lld',
         'link'      : '\\"%s\\"',
         'list'      : '0x%08x',
+        'lock'      : '0x%08x',
         'mask'      : '0%o',
         'mode'      : '0%03o',
         'name'      : '\\"%s\\"',
@@ -298,5 +301,12 @@ class FuseFunc(object):
             name, ff = FuseFunc.parseProto(line, prefix)
             funcMap[name]   = ff
             opCodeMap[name] = ndx
+            # DEBUG
+            print("FuseFunc.getFuncMap: %-13s => %2d" % (name, ndx))
+            # END
 
+        # DEBUG
+        if 'lock' in funcMap:       print("lock is in the map")
+        else:                       print("lock is NOT in the map")
+        # END
         return funcMap, opCodeMap

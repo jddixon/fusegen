@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.5
+    2015-03-12
+        * 
 v0.6.4
     2015-03-11
         * add utimens, deprecate utime, fix fallocate               SLOC 1826

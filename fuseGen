@@ -43,7 +43,8 @@ def setOpAttrs():
         if name in ['rename','link',]:
             attrs |= DOUBLE_FULL_PATH
 
-        if name not in ['symlink',
+        # this is a NEGATIVE check: list those ops which do NOT use
+        if name not in ['lock', 'symlink',
                         'read', 'write', 'flush', 'release', 'fsync',
                         'readdir', 'releasedir','fsyncdir', 'init',
                         'destroy', 'ftruncate', 'fgetattr']:
@@ -61,6 +62,7 @@ def setOpAttrs():
 
         if name in ['create', 'fallocate', 'fgetattr', 'flush',
                 'fsync', 'fsyncdir', 'ftruncate',
+                'lock',
                 'opendir', 'open', 'readdir', 'read', 'releasedir',
                 'release', 'write',]:
             attrs |= LOGGING_FI
@@ -109,6 +111,10 @@ def makeFusePkg(args):
 
     # make sure opCode <-> opName maps are consistent ---------------
     funcMap, opCodeMap = FuseFunc.getFuncMap(prefix)
+    # DEBUG
+    if 'lock' in funcMap:       print("lock is in the main map")
+    else:                       print("lock is NOT in the main map")
+    # END
     inconsistent = False
     for ndx in range(len(OP_NAMES)):
         name = OP_NAMES[ndx]
@@ -123,12 +129,20 @@ def makeFusePkg(args):
         print("aborting")
         sys.exit(1)
 
-    # if -force and pathToPkg exists, delete it ---------------------
+    # ===============================================================
+    # CREATE DIRECTORIES 
+    # ===============================================================
+    
+    # if -force and pathToPkg exists, delete it -- unless there is a .git/
     if force and os.path.exists(pathToPkg):
-        shutil.rmtree(pathToPkg)
+        pathToDotGit = os.path.join(pathToPkg, ".git")
+        if os.path.exists(pathToDotGit):
+            print("'%s' exists; cannot proceed" % pathToDotGit)
+            sys.exit(0)
+        else:
+            shutil.rmtree(pathToPkg)
 
-    # create directories --------------------------------------------
-    os.mkdir(pathToPkg, 0o755)
+    makedir_p(pathToPkg, 0o755)
 
     mountPoint      = os.path.join('workdir', 'mountPoint')
     rootDir         = os.path.join('workdir', 'rootdir')
@@ -199,6 +213,7 @@ AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/statvfs.h unistd.h utim
 
 # FUSE development environment
 PKG_CHECK_MODULES(FUSE, fuse)
+FUSE_LIBS="$FUSE_LIBS -lulockmgr"
 
 # Necessary typedefs and structures
 AC_TYPE_MODE_T
@@ -575,9 +590,11 @@ int main(int argc, char *argv[])
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
-#include <unistd.h>
+#include <sys/file.h>       // for flock()
 #include <sys/types.h>
+#include <time.h>
+#include <ulockmgr.h>
+#include <unistd.h>
 
 #include "config.h"
 #include "opcodes.h"
@@ -729,6 +746,7 @@ long bucketSize;
 #ifdef HAVE_UTIMENSAT
 #include "utimens.inc"
 #endif
+#include "lock.inc"
 #include "fallocate.inc"
 
 #include "optable.inc"
@@ -1089,6 +1107,8 @@ struct fuse_operations {0:s}OpTable = {{
     , .utimens      = {0:s}utimens
 #endif
 
+    , .lock         = {0:s}lock
+
 #ifdef HAVE_POSIX_FALLOCATE
     , .fallocate    = {0:s}fallocate
 #endif
@@ -1111,6 +1131,9 @@ struct fuse_operations {0:s}OpTable = {{
         if attrs & DEPRECATED:
             continue
         if not name in funcMap:   # names at end are not yet implemented
+            # DEBUG
+            print("%s is NOT IN funcMap" % name)
+            # END
             break
         ff = funcMap[name]    # FuseFunc for this name
         opCode = "FG_%s" % name.upper()
@@ -1138,7 +1161,7 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append('    int status = 0;')
         if (attrs & SYSCALL_RET_FD) or name == 'fallocate':
             ss.append('    int fd;')
-        if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
+        if attrs & (FULL_PATH | DOUBLE_FULL_PATH) :
             ss.append('    char fpath[PATH_MAX];')
         if attrs & DOUBLE_FULL_PATH:
             ss.append('    char fnewpath[PATH_MAX];')
@@ -1247,6 +1270,9 @@ struct fuse_operations {0:s}OpTable = {{
     else
 #endif
         status = fsync(fi->fh);""")
+
+            elif name == 'lock':
+                ss.append('    status = ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner, sizeof(fi->lock_owner));')
 
             elif name == 'mknod':
                 # in python format specs {} must be doubled :-(
