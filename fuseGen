@@ -44,7 +44,8 @@ def setOpAttrs():
             attrs |= DOUBLE_FULL_PATH
 
         # this is a NEGATIVE check: list those ops which do NOT use
-        if name not in ['lock', 'symlink',
+        if name not in ['flock', 'lock', 
+                        'symlink',
                         'read', 'write', 'flush', 'release', 'fsync',
                         'readdir', 'releasedir','fsyncdir', 'init',
                         'destroy', 'ftruncate', 'fgetattr']:
@@ -70,7 +71,8 @@ def setOpAttrs():
         if name in ['create', 'open',  ]:
             attrs |= SET_FH_FROM_FD
 
-        if name in ['fgetattr', 'fsync', 'opendir', 'read', 'releasedir', 'release', 'ftruncate', 'write']:
+        if name in ['fgetattr', 'flock', 'fsync', 'opendir', 
+                'read', 'releasedir', 'release', 'ftruncate', 'write']:
             attrs |= SYSCALL_FI_PARAM1
 
         if name in ['getattr', 'fgetattr',]:
@@ -1261,6 +1263,8 @@ struct fuse_operations {0:s}OpTable = {{
         }
     }
 """)
+            elif name == 'flock':
+                ss.append('    status = flock(fi->fh, op);')
             elif name == 'fsync':
                 ss.append(
 """    // freebsd

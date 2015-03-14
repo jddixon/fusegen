@@ -1,5 +1,15 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-13
+    * for advice on bmap etc see 
+        http://www.cs.hmc.edu/~geoff/classes/hmc.cs135.201001/homework/\
+            fuse/fuse_doc.html
+    * http://stackoverflow.com/questions/2894824/linux-how-do-i-know-the-
+        block-map-of-the-given-file-and-or-the-free-space-map
+    * http://www.quora.com/Is-there-any-Linux-tool-to-see-on-disk-block-layout-of-my-files
+    * http://smackerelofopinion.blogspot.com/2010/01/using-fiemap-ioctl-to-get-file-extents.html
+        - the last is possibly most relevant
+
 2015-03-11
     * log doesn't know how to print tv[2] when logging utimens
     * most of the logs are a waste of time and space
@@ -17,7 +27,7 @@
 2015-03-06 (edited from -02-16)
     // FUSE VERSION 2.6 ADDITIONS
     * add utimens() - and deprecate utime()                             * DONE
-    * add lock() 
+    * add lock()                                                        * DONE
     * add bmap()
     // FUSE VERSION 2.8 ADDITIONS
     * add ioctl()
@@ -25,7 +35,7 @@
     // FUSE VERSION 2.9 ADDITIONS
     * add write_buf()
     * add read_buf()
-    * add flock()
+    * add flock()                                                       * DONE
 
 2015-03-06
     * problem: latency for at least one fsync exceeded 1 sec and

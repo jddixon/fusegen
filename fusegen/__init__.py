@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.6.5'
-__version_date__ = '2015-03-12'
+__version__      = '0.6.6'
+__version_date__ = '2015-03-14'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -30,6 +30,8 @@ OP_NAMES = [
     'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
     # fuse version 2.6
     'utimens',  'lock',
+    # fusion 2.9
+    'flock', 
     # fusion 2.9.1
     'fallocate',
     # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
@@ -38,7 +40,7 @@ OP_NAMES = [
     # fusion 2.8
     'ioctl',        'poll',
     # fusion 2.9
-    'write_buf','read_buf', 'flock',
+    'write_buf','read_buf', 
     ]
 
 
@@ -88,6 +90,7 @@ OP_CALL_MAP = {
 
     'utimens'    : ('utimensat',     SET_STATUS),
     'lock'       : ('ulockmgr_op',      SET_STATUS),
+    'flock'      : ('flock',            SET_STATUS),
     'fallocate'  : ('posix_fallocate',  SET_STATUS),
 }
 LOG_ENTRY_PAT_MAP = {
@@ -110,6 +113,7 @@ LOG_ENTRY_PAT_MAP = {
         'newpath'   : '\\"%s\\"',
         'newsize'   : '%lld',
         'offset'    : '%lld',
+        'op'        : '%d',
         'path'      : '\\"%s\\"',
         'rootdir'   : '\\"%s\\"',
         'size'      : '%d',             # or should this be lld ?
