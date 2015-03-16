@@ -13,8 +13,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.6.6'
-__version_date__ = '2015-03-14'
+__version__      = '0.6.7'
+__version_date__ = '2015-03-15'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
@@ -29,14 +29,13 @@ OP_NAMES = [
     'opendir',  'readdir',  'releasedir',   'fsyncdir',     'init',
     'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
     # fuse version 2.6
-    'utimens',  'lock',
+    'utimens',  'bmap',     'lock',
     # fusion 2.9
     'flock', 
     # fusion 2.9.1
     'fallocate',
     # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
-    # not yet implemented - fuse version 2.6
-    'bmap',
+    # NOT YET IMPLEMENTED 
     # fusion 2.8
     'ioctl',        'poll',
     # fusion 2.9
@@ -88,12 +87,14 @@ OP_CALL_MAP = {
     'ftruncate'  : ('ftruncate',     SET_STATUS | FH_PARAM),
     'fgetattr'   : ('fstat',         SET_STATUS | FH_PARAM),
 
-    'utimens'    : ('utimensat',     SET_STATUS),
+    'utimens'    : ('utimensat',        SET_STATUS),
+    'bmap'       : ('_bmap',            SET_STATUS),
     'lock'       : ('ulockmgr_op',      SET_STATUS),
     'flock'      : ('flock',            SET_STATUS),
     'fallocate'  : ('posix_fallocate',  SET_STATUS),
 }
 LOG_ENTRY_PAT_MAP = {
+        'blocksize' : '0x%08x',
         'buf'       : '0x%08x',
         'cmd'       : '%d',
         'datasync'  : '%d',
@@ -103,6 +104,7 @@ LOG_ENTRY_PAT_MAP = {
         'flags'     : '0x%08x',
         'fpath'     : '\\"%s\\"',
         'gid'       : '%d',
+        'idx'       : '0x016x',
         'len'       : '%lld',
         'link'      : '\\"%s\\"',
         'list'      : '0x%08x',
@@ -119,6 +121,7 @@ LOG_ENTRY_PAT_MAP = {
         'size'      : '%d',             # or should this be lld ?
         'statbuf'   : '0x%08x',
         'statv'     : '0x%08x',
+        'tv[2]'     : '0x%08x',
         'ubuf'      : '0x%08x',
         'uid'       : '%d',
         'userdata'  : '0x%08x',

@@ -686,6 +686,8 @@ int {1:s}WriteBucket();
 #endif
 
 #include <getopt.h>             // for getopt_long
+#include <linux/fs.h>           // for bmap
+#include <linux/fiemap.h>       // for bmap
 #include "{0:s}.h"              // this should be the last header file
 
 // defaults for local (=fuseGen) command line arguments
@@ -1150,7 +1152,7 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append("#ifdef HAVE_POSIX_FALLOCATE")
 
         # -- first line, LBRACE -----------------------
-        ss.append("%s\n{" % ff.firstLine())
+        ss.append("static %s\n{" % ff.firstLine())
 
         # -- instrumenation ---------------------------
         if instrumenting:

@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.7
+    2015-03-15
+        * begin work on bmap                                        SLOC 1864
 v0.6.6
     2015-03-14
         * add flock                                                 SLOC 1858

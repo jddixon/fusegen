@@ -1,5 +1,14 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-15
+    * opcode functions should be static                                 * DONE
+
+2015-03-14
+    * src/xxxfs -h segfaults complaining that 'h' is an invalid 
+        option, whether or not the rootdir and mountPoint args 
+        are present
+    * refine myGetExtents.c, makeGetExt
+
 2015-03-13
     * for advice on bmap etc see 
         http://www.cs.hmc.edu/~geoff/classes/hmc.cs135.201001/homework/\
@@ -11,7 +20,7 @@
         - the last is possibly most relevant
 
 2015-03-11
-    * log doesn't know how to print tv[2] when logging utimens
+    * log doesn't know how to print tv[2] when logging utimens          * FIXED
     * most of the logs are a waste of time and space
 
 2015-03-10
