@@ -5,10 +5,16 @@ from argparse   import ArgumentParser
 from fusegen    import __version__, __version_date__, OP_NAMES
 
 def decode(chunk):
-  sec, ns, latency, b2, b1, b0, opCode = struct.unpack('IIIBBBB', chunk)
-  blkCount = (((b2<<8)|b1)<<8)|b0
-  return sec, ns, latency, blkCount, opCode
+    sec, ns, lateNsec, b0, b1, b2, opCode = struct.unpack('IIIBBBB', chunk)
+    # DEBUG
+    #print("%3d %3d %3d %3d" % (b0, b1, b2, opCode))
+    # END
+    lateSec    = 0x3f & b0             # low-order 7 bits
+    lowBit     = (b0 >> 7) & 1         # high-order bit from that byte
+    higherBits = (b1 + (b2 << 8)) << 1
+    byteCount  = higherBits | lowBit
 
+    return sec, ns, lateSec, lateNsec, byteCount, opCode
 
 def simple(args):
     howMany = args.howMany
@@ -21,22 +27,25 @@ def simple(args):
     opCount     = byteCount/16
     if verbose:
         print("%d bytes, %d ops" % (byteCount, opCount))
-    lastSec     = 0
-    lastNsec    = 0
-    lastLatency = 0
+    lastSec      = 0
+    lastNsec     = 0
+    lastLateSec  = 0
+    lastLateNsec = 0
     for n in range(howMany):
         flag  = ''                          # 'P' if concurrency detected
         begin = n * 16
         end   = begin + 16
         chunk = data[begin:end]
-        sec, ns, latency, blkCount, opCode = decode(chunk)
-        if sec == lastSec and ns < lastNsec + lastLatency:
+        sec, ns, lateSec, lateNsec, byteCount, opCode = decode(chunk)
+        if sec == lastSec and ns < lastNsec + lastLateNsec:
             flag = 'P'
-        print ("%6d %9d %9d %8d %2d %-16s %s" % (
-            sec, ns, latency, blkCount, opCode, OP_NAMES[opCode], flag))
-        lastSec     = sec
-        lastNsec    = ns
-        lastLatency = latency
+        print ("%6d %9d %2d %9d %8d %2d %-16s %s" % (
+            sec, ns, lateSec, lateNsec, 
+            byteCount, opCode, OP_NAMES[opCode], flag))
+        lastSec       = sec
+        lastNsec      = ns
+        lastLateSec   = lateSec
+        lastLateNsec  = lateNsec
 
 def main():
     DESC    = 'parse a fuseGenned data file'

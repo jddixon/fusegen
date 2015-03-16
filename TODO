@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-16 (edited from -15)
+    * set opData_t count field to 17 bits, corresponding to FUSE		* DONE
+        maxRead, maxWrite (128 KB)		                                * DONE
+    * see -03-06: allow 7 bits for latency seconds,		                * DONE
 2015-03-15
     * opcode functions should be static                                 * DONE
 

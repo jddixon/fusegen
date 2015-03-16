@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.8
+    2015-03-16
+        * opData_t: maxRead/Write limit 128KB, 2^7 sec latency      SLOC 1873
+        * prevent segfaults by dynamically reallocating op table    SLOC 1894
 v0.6.7
     2015-03-15
         * begin work on bmap                                        SLOC 1864

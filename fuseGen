@@ -492,11 +492,10 @@ int main(int argc, char *argv[])
         }}
     }}
     // number of slots in a bucket
-    bucketSize = 1024 * fgMBPerJob * fgJobCount / fgBlockSize;
-    // ... with a slop factor
-    bucketSize      = (129 * bucketSize + 127)/128;
+    slotsPerBucket = 1024 * fgMBPerJob * fgJobCount / fgBlockSize;
+
     buckets         = (bucket_t*)calloc(BUCKET_COUNT, sizeof(bucket_t));
-    buckets[0].ops  = (opData_t*)calloc(bucketSize, sizeof(opData_t));
+    buckets[0].ops  = (opData_t*)calloc(slotsPerBucket, sizeof(opData_t));
     status = pthread_mutex_init(&buckets[0].lock, NULL);
     if (status)
         perror("initializing bucket lock");
@@ -508,10 +507,10 @@ int main(int argc, char *argv[])
         fprintf(stderr, "fgBlockSize := %ld\\n", fgBlockSize);
         fprintf(stderr, "fgJobCount  := %ld\\n", fgJobCount);
         fprintf(stderr, "fgMBPerJob  := %ld\\n", fgMBPerJob);
-        fprintf(stderr, "opData_ per bucket: %ld\\n", bucketSize);
+        fprintf(stderr, "opData_ per bucket: %ld\\n", slotsPerBucket);
         fprintf(stderr, "  sizeof(opData_t)  %ld\\n",  sizeof(opData_t));
         fprintf(stderr, "  so size of buffer %ld bytes\\n",
-            bucketSize * sizeof(opData_t));
+            slotsPerBucket * sizeof(opData_t));
 
         fprintf(stderr, "\\nafter processing the %d local arguments\\n",
             localArgs);
@@ -624,6 +623,7 @@ void {1:s}LogMsg    (const char *fmt, ...);
 void {1:s}LogStat   (struct stat *si);
 void {1:s}LogstatVFS(struct statvfs *sv);
 FILE *{1:s}OpenLog  (void);
+int  {1:s}FlushLog  (void);
 
 // END LOGGING CODE -------------------------------------------------
 
@@ -642,9 +642,10 @@ extern int  fgVerbose;
 typedef struct o_ {{
     uint32_t    opSec;
     uint32_t    opNsec;             // may not exceed BILLION
-    uint32_t    latency;            // may not exceed BILLION
-    uint32_t    count       : 24;   // number of ??? read or written
-    uint8_t     opCode      : 8;
+    uint32_t    lateNsec;           // ns of latency; may not exceed BILLION
+    unsigned    lateSec     :  7;   // sec of latency
+    unsigned    count       : 17;   // number of bytes read or written; 128K max
+    unsigned    opCode      :  8;
 }} __attribute__((aligned(16), packed)) opData_t;
 
 typedef struct b_ {{
@@ -654,10 +655,11 @@ typedef struct b_ {{
     opData_t        *ops;           // [BUCKET_SIZE];
 }} bucket_t;
 
-extern long      bucketSize;        // number of opData_t
+extern long     slotsPerBucket;     // number of opData_t
+extern long     maxBucketSize;
 extern bucket_t *buckets;           // [BUCKET_COUNT];
 
-opData_t *{1:s}ClockMeIn(struct timespec *tEntry, int opCode);
+opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opCode);
 void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count);
 int {1:s}WriteBucket();
 
@@ -696,7 +698,7 @@ long fgJobCount  = 4L;
 long fgMBPerJob  = 512L;
 int  fgVerbose   = 0;
 
-long bucketSize;
+long slotsPerBucket;
 
 ///////////////////////////////////////////////////////////
 //
@@ -807,6 +809,11 @@ FILE *{1:s}OpenLog()
     }}
     setvbuf(logfile, NULL, _IOLBF, 0);
     return logfile;
+}}
+
+int  {1:s}FlushLog  (void)
+{{
+    return fflush({2:s}_DATA->logfile);
 }}
 
 void {1:s}LogEntry(const char *format, ...)
@@ -983,20 +990,36 @@ void {1:s}LogStatVFS(struct statvfs *sv)
 // calloc BUCKET_COUNT of these
 bucket_t *buckets;
 
-opData_t *{1:s}ClockMeIn(struct timespec *tEntry, int opcode)
+opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
 {{
     int status = clock_gettime(CLOCK_MONOTONIC, tEntry);
     assert(status == 0);
-    // int bktNdx = ((long) tEntry->tv_sec) % BUCKET_COUNT;
-    // bucket_t *myBucket = &buckets[bktNdx];
     bucket_t *myBucket = &buckets[0];   // should be bktNdx
+    int doubled = 0; 
+    
     status = pthread_mutex_lock(&myBucket->lock);
     assert(status == 0);
     int myCount = myBucket->count++;
+    if(myCount >= slotsPerBucket) {{
+        opData_t *p;
+        slotsPerBucket *= 2;
+        doubled++;
+        p = realloc(buckets[0].ops, 
+                slotsPerBucket*sizeof(opData_t));
+        assert(p != NULL);
+        buckets[0].ops = p;
+    }}
     status = pthread_mutex_unlock(&myBucket->lock);
+
+    // DEBUG
+    if (doubled) {{
+        {1:s}LogMsg("slotsPerBucket doubled to %d\\n", slotsPerBucket);
+        {1:s}FlushLog(); 
+    }}
+    // END
     assert(status == 0);
     opData_t *mySlot = &myBucket->ops[myCount];
-    mySlot->opCode = (uint8_t) opcode;
+    mySlot->opCode = opcode;
     return mySlot;
 }}
 
@@ -1007,19 +1030,20 @@ void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
     long inNsec = tEntry->tv_nsec;
     int status = clock_gettime(CLOCK_MONOTONIC, &tExit);
     assert(status == 0);
-    long outSec  = tExit.tv_sec;
+    long lateSec  = tExit.tv_sec - inSec;
     long outNsec = tExit.tv_nsec;
     if (inNsec > outNsec) {{
         outNsec += BILLION;
-        outSec  --;
+        lateSec  --;
     }}
-    long latency = outNsec - inNsec;
-    assert(outSec >= inSec);
-    assert(latency < BILLION);
-    mySlot->opSec   = inSec;
-    mySlot->opNsec  = inNsec;
-    mySlot->latency = latency;
-    mySlot->count   = count;
+    long lateNsec    = outNsec - inNsec;
+    assert(lateSec   >= 0);
+    assert(lateNsec  < BILLION);
+    mySlot->opSec    = inSec;
+    mySlot->opNsec   = inNsec;
+    mySlot->lateNsec = lateNsec;
+    mySlot->lateSec  = lateSec;
+    mySlot->count    = count;
 }}
 
 int {1:s}WriteBucket()
@@ -1417,7 +1441,7 @@ struct fuse_operations {0:s}OpTable = {{
                     'setxattr', 'getxattr', 'listxattr',]:
                 ss.append('    %sClockMeOut(&tEntry, myData, size);' % prefix)
             else:
-                ss.append('    %sClockMeOut(&tEntry, myData, %s);' % (prefix, opCode))
+                ss.append('    %sClockMeOut(&tEntry, myData, %s);' % (prefix,0))
             if name == 'destroy':
                 ss.append('\n    %sWriteBucket();' % prefix)
 
