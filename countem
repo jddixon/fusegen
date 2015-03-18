@@ -4,4 +4,6 @@ pySloc countem \
     checkIncs  checkScaffolding  diffEm  diffSrc  diffTop \
     checkIncsI checkScaffoldingI diffEmI diffSrcI diffTopI \
     fragments/prototypes \
-    fuseDecode fuseGen genEm
+    fuseDecode fuseGen genEm \
+    MANIFEST.in \
+    README.md

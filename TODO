@@ -1,12 +1,25 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-18 (part edited from -16)
+    * document fuseGen command line
+        - genEm as sample command line
+        - tree output                                                   * DONE
+        - explain build and what it outputs
+        - note u/mountXXXFS
+        - explain effect of run
+    * document fuseDecode command line
+    * add to README top 20 or so lines from fuseDecode ouuput,          * DONE
+        explain
+
+2015-03-16
+    * put fuseDecode output from a small run on github                  * DONE
+
 2015-03-16 (edited from -15)
     * set opData_t count field to 17 bits, corresponding to FUSE		* DONE
         maxRead, maxWrite (128 KB)		                                * DONE
-    * see -03-06: allow 7 bits for latency seconds,		                * DONE
+    * see -03-06: allow 7 bits for latency seconds		                * DONE
 2015-03-15
     * opcode functions should be static                                 * DONE
-
 2015-03-14
     * src/xxxfs -h segfaults complaining that 'h' is an invalid 
         option, whether or not the rootdir and mountPoint args 
@@ -24,23 +37,13 @@
         - the last is possibly most relevant
 
 2015-03-11
-    * log doesn't know how to print tv[2] when logging utimens          * FIXED
     * most of the logs are a waste of time and space
 
 2015-03-10
-    * util.c functions need unique names -- that is, add prefixes to    * DONE
-        - clockMeIn/Out()                                               * DONE
-        - writeBucket()                                                 * DONE
-        - log*()                                                        * DONE
     * add PREFIX_closeLog()
-
-2015-03-07
-    * clean this file up                                                * DONE
 
 2015-03-06 (edited from -02-16)
     // FUSE VERSION 2.6 ADDITIONS
-    * add utimens() - and deprecate utime()                             * DONE
-    * add lock()                                                        * DONE
     * add bmap()
     // FUSE VERSION 2.8 ADDITIONS
     * add ioctl()
@@ -48,7 +51,6 @@
     // FUSE VERSION 2.9 ADDITIONS
     * add write_buf()
     * add read_buf()
-    * add flock()                                                       * DONE
 
 2015-03-06
     * problem: latency for at least one fsync exceeded 1 sec and

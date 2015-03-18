@@ -17,6 +17,10 @@ def decode(chunk):
     return sec, ns, lateSec, lateNsec, byteCount, opCode
 
 def simple(args):
+    # column headers
+    print("==== op time === == latency == = byte = == opcode ==     = flags =")
+    print("  sec   nanosec  sec  nanosec   count   op   name")
+
     howMany = args.howMany
     path    = args.pathToData
     verbose = args.verbose
@@ -39,7 +43,7 @@ def simple(args):
         sec, ns, lateSec, lateNsec, byteCount, opCode = decode(chunk)
         if sec == lastSec and ns < lastNsec + lastLateNsec:
             flag = 'P'
-        print ("%6d %9d %2d %9d %8d %2d %-16s %s" % (
+        print ("%6d %9d %2d %9d %7d   %2d %-16s %s" % (
             sec, ns, lateSec, lateNsec, 
             byteCount, opCode, OP_NAMES[opCode], flag))
         lastSec       = sec
