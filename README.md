@@ -1,8 +1,14 @@
 # fusegen
 
-Tools for generating and monitoring a skeletal Linux FUSE user-space file system.
+Tools for generating and monitoring a Linux FUSE user-space file system.
 
 ## fuseGen
+
+FuseGen is a Python 3 script which generates a FUSE file system.  These
+are a mix of Autotools configuration files and ANSI C source code.  The
+C files constitute a pass-through FUSE file system.  This means that FUSE
+operations are logged and statistics gathered, and then the commands are
+passed through to the local file system for execution.  
 
 ### FuseGen Command Line
 
@@ -29,13 +35,31 @@ Tools for generating and monitoring a skeletal Linux FUSE user-space file system
 	  -V MYVERSION, --myVersion MYVERSION
 	                        version in X.Y.Z format
 
+This is the command line at the time of writing; when you unpack 
+fusegen you should type `fuseGen -h` to see the current set of 
+supported arguments.
+
 ### Typical FuseGen Command Line: genEm
 
+When fusegen is unpacked, the distribution directory contains a file
+`genEm`.  As it stands this creates the `xxxfs` file system.  That is,
+it writes a number of files to a subdirectory of your development 
+directory.  
 
 	cd ~/dev/py/fusegen
 	./fuseGen -fIvP xxxfs
 
+In this case, the package name is **xxxfs** (because the follows the **-P**), 
+and that will be the name
+of the development directory.  If the directory already exists, it is
+overwritten (**-f**).  Instrumentation code will be generated (**-I**)
+
 ### File System Created
+
+`genEm` creates a number of files and directories.   What you see below
+is a snapshot taken shortly after initialization (in fact, after running
+the **build** command but without the object files and executables
+generated my `make`).
 
 	/home/jdd/dev/c/xxxfs
 	├── aclocal.m4
@@ -141,15 +165,103 @@ Tools for generating and monitoring a skeletal Linux FUSE user-space file system
 	│       └── job4.4.0
 	└── xxxfs.log
 
+For easy customization there is a `.inc` file for each FUSE command.
+
 ### The build Command
 
+The `build` command completes the creation of the file system.  It runs
+`autogen.sh`, which installs many of the standard Autotools files, and 
+then creates the `configure` script from the instructions in `configure.ac`.
+Finaly it runs make, which compiles the object files and then links the 
+file system, the `xxxfs` executable.
+ 
 	./autogen.sh
 	./configure
 	make
 
+It may be desirable to change the generated system to some degree.  
+Usually limited changes are accomplished by editing `configure.ac`
+and/or `Makefile.ac` and then rerunning build.  This will have no 
+effect on `src/*.inc` and in that sense is safe.
+
 ### bin/ Commands
 
+The `bin/` subdirectory contains scripts for
+
+* mounting the file system (`mountXXXFS` in this case)
+* running a simple FIO benchmark (`blk-31-4k`)
+* and dismounting the file system (`umountXXXFS`)
+
+## Putting It All Together: Running an Application
+
+The script `blk-31-4k`, found in the default `bin/` directory, is used
+to collect statistics on a short **fio** run.  FIO is an open source tool
+for measuring the performance of a file system.  
+
+	echo "blk-31-4k: test size is being set to $1 MB"
+	#
+	cd ~/dev/c/xxxfs
+	bin/mountXXXFS
+	cd workdir/mountPoint
+	fio --name=global --bs=4k --size=$1m 	--rw=randrw --rwmixread=75 	--name=job1 --name=job2 --name=job3 --name=job4
+	cd ../..
+	bin/umountXXXFS
+
+This particular script runs four jobs simultaneously.  Each job reads 
+and/or writes the same amount of data to the disk.  On the command line
+the script has a single argument, the number of megabytes to be read from
+and/or written to the disk.  For this test the mount point and the root
+directory are both subdirecties of `workdir`.  The script changes to the
+directory above that, then mounts the FUSE file system (`bin/mountXXXFS`).
+It then runs the FIO jobs in the `mountPoint` subdirectory.  When the FIO
+jobs terminate, the script changes back to the distribution directory and
+unmounts the file system.
+
+Running this script has two major effects:
+
+* it writes its log to the file `xxxfs.log`
+* it writes run statistics to a file under `tmp/`
+
+If full logging is turned on, the log file can be very large.
+
+## FuseGen Statistics File
+
+The statistics file has a name like `bucket-20150316-150838`.  The first
+set of numbers in the file name represents the date in `CCYYMMDD` format; the 
+second set is the start time of the run, local time, as `HHMMSS`.  We use
+a 24-hour clock, so in this case the run started at 15:08:38, just 
+after 3 pm local time.
+
+	typedef struct o_ {
+	    uint32_t    opSec;
+	    uint32_t    opNsec;             // may not exceed BILLION
+	    uint32_t    lateNsec;           // ns of latency; may not exceed BILLION
+	    unsigned    lateSec     :  7;   // sec of latency
+	    unsigned    count       : 17;   // bytes read or written; 128K max
+	    unsigned    opCode      :  8;
+	} __attribute__((aligned(16), packed)) opData_t;
+
+Each call on the FUSE file system is recorded to the statistics file as
+a 16-byte object laid out as specified above.  
+
+The time of the call is recorded as a 128-bit pair, `opSec` and 
+`opNsec`.  This is a Linux CLOCK_MONOTONIC time representing an absolute
+elapsed time; it is generally **not** the same as the system's (guess at)
+the local time.
+
+When the system call is complete, the latency is calculated.  This has the
+same 32-bit nanosecond part, but only 7 bits are reserved for the seconds
+of latency.  That is, latencies greater than 128 seconds will not be recorded
+correctly.
+
+Finally 8 bits are reserved for the FUSE opcode.  There are currently 
+fewer than four dozen opcodes so this number of bits is likely to be 
+sufficient for some time.
+
 ## FuseDecode
+
+FuseDecode is a utility for converting FuseGen statistics files to a 
+human-readable format.
 
 ### FuseDecode Command Line
 
