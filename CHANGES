@@ -1,9 +1,10 @@
 ~/dev/py/fusegen/CHANGES
 
 v0.6.9
+    2015-03-19
+        * elaboration of README.md                                  SLOC 2073
     2015-03-18
         * add skeletal README.md                                    SLOC 2073
-
 v0.6.8
     2015-03-16
         * opData_t: maxRead/Write limit 128KB, 2^7 sec latency      SLOC 1873

@@ -1,15 +1,22 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-19
+    * urgently need a switch to set the path to the development
+        directory (/home/jdd/dev/c is currently wired in).
+
 2015-03-18 (part edited from -16)
     * document fuseGen command line
-        - genEm as sample command line
+        - genEm as sample command line                                  * DONE
         - tree output                                                   * DONE
         - explain build and what it outputs
         - note u/mountXXXFS
         - explain effect of run
-    * document fuseDecode command line
+        - blk
+    * document fuseDecode command line                                  * DONE
     * add to README top 20 or so lines from fuseDecode ouuput,          * DONE
         explain
+    * explanation of runData tarball added to README.md,
+        - plus a link allowing you to download it
 
 2015-03-16
     * put fuseDecode output from a small run on github                  * DONE

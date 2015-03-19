@@ -193,3 +193,7 @@ Tools for generating and monitoring a skeletal Linux FUSE user-space file system
 	369886 171986430  0     70618       0   27 releasedir       
 	369886 172007454  0     53362       0   25 opendir          P
 	369886 172099167  0     49953       0   26 readdir          
+
+## On-line Documentation
+
+More information on the **fusegen** project can be found [here](https://jddixon.github.io/fusegen)
