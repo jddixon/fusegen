@@ -4,9 +4,10 @@ Tools for generating and monitoring a Linux FUSE user-space file system.
 
 ## fuseGen
 
-FuseGen is a Python 3 script which generates a FUSE file system.  These
-are a mix of Autotools configuration files and ANSI C source code.  The
-C files constitute a pass-through FUSE file system.  This means that FUSE
+FuseGen is a Python 3 script which generates the basis of a FUSE file system 
+in the form 
+of a mix of Autotools configuration files and ANSI C source code.  The
+C files constitute a **pass-through** FUSE file system.  This means that FUSE
 operations are logged and statistics gathered, and then the commands are
 passed through to the local file system for execution.  
 
@@ -305,3 +306,6 @@ human-readable format.
 	369886 171986430  0     70618       0   27 releasedir       
 	369886 172007454  0     53362       0   25 opendir          P
 	369886 172099167  0     49953       0   26 readdir          
+
+Output from a typical run of the `blk-31-4k` script is available 
+[here](runData-20150316-135941.gz)

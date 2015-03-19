@@ -3,6 +3,9 @@
 2015-03-19
     * urgently need a switch to set the path to the development
         directory (/home/jdd/dev/c is currently wired in).
+    * ghpDoc/index.md 
+        - fix grammatical error second sentence
+        - needs a link to FIO (github?)
 
 2015-03-18 (part edited from -16)
     * document fuseGen command line
@@ -17,6 +20,7 @@
         explain
     * explanation of runData tarball added to README.md,
         - plus a link allowing you to download it
+            * FIX THE LINK 
 
 2015-03-16
     * put fuseDecode output from a small run on github                  * DONE
