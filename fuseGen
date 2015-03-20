@@ -13,7 +13,7 @@ RETURNS_STATUS      = 0x00000002
 CHECK_ERR_AND_FLIP  = 0x00000004
 FULL_PATH           = 0x00000008
 DOUBLE_FULL_PATH    = 0x00000010
-LOGGING_ENTRY       = 0x00000020
+#
 LOGGING_STAT        = 0x00000040
 LOGGING_STATVFS     = 0x00000080
 HAS_LINK_FILE       = 0x00000100
@@ -58,9 +58,6 @@ def setOpAttrs():
         if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
             attrs |= CHK_DEF_XATTR
 
-        # XXX THIS USED TO BE 'else'
-        attrs |= LOGGING_ENTRY
-
         if name in ['create', 'fallocate', 'fgetattr', 'flush',
                 'fsync', 'fsyncdir', 'ftruncate',
                 'lock',
@@ -79,7 +76,6 @@ def setOpAttrs():
             attrs |= LOGGING_STAT
         elif name == 'statfs':
             attrs |= LOGGING_STATVFS
-
         if name in ['create', 'open',]:
             attrs |= SYSCALL_RET_FD
 
@@ -102,6 +98,7 @@ def makeFusePkg(args):
     instrumenting   = args.instrumenting
     force           = args.force
     lcName          = args.lcName
+    logging         = args.logging
     myDate          = args.myDate
     myVersion       = args.myVersion
     pathToPkg       = args.pathToPkg    # target package directory
@@ -431,9 +428,15 @@ int main(int argc, char *argv[])
         perror("main calloc failed");
         abort();
     }}
-    // Set up logging; this should be conditional.
-    myData->logfile = {1:s}OpenLog();
+""".format(pkgName, prefix)                         # BAZ
 
+    if logging:
+        content += """\
+    // Set up logging
+    myData->logfile = {1:s}OpenLog();
+"""
+
+    content += """\
     // Strange warning here "initialization makes pointer from integer
     // without a cast"
     char *whereNow = get_current_dir_name();    // mallocs
@@ -552,7 +555,7 @@ int main(int argc, char *argv[])
     status = fuse_main(argc, argv, &{1:s}OpTable, myData);
     return status;
 }}
-""".format(pkgName, prefix)
+""".format(pkgName, prefix)                         # BAZ
 
     pathToMain = os.path.join(pathToSrc, 'main.inc')
     with open(pathToMain, 'w') as f:
@@ -579,10 +582,14 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-// IF INSTRUMENTING CODE ------------------------
-#include <pthread.h>        // should be first
-// END INSTRUMENTING CODE -----------------------
+""".format(pkgName, prefix, ucName)     # FOO
 
+    if instrumenting:
+        content += """\
+#include <pthread.h>        // should be first
+"""
+
+    content += """\
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -613,8 +620,10 @@ struct {0:s}Data {{
 
 #define {2:s}_DATA ((struct {0:s}Data *) fuse_get_context()->private_data)
 
-// BEGIN LOGGING CODE -----------------------------------------------
-// This block generated only if including logging capability
+""".format(pkgName, prefix, ucName)     # FOO
+
+    if logging:
+        content += """\
 
 void {1:s}LogConn   (struct fuse_conn_info *conn);
 void {1:s}LogEntry  (const char *fmt, ...);
@@ -624,9 +633,10 @@ void {1:s}LogStat   (struct stat *si);
 void {1:s}LogstatVFS(struct statvfs *sv);
 FILE *{1:s}OpenLog  (void);
 int  {1:s}FlushLog  (void);
+""".format(pkgName, prefix, ucName)     # FOO
 
-// END LOGGING CODE -------------------------------------------------
-
+    if instrumenting:
+        content += """
 // BEGIN INSTRUMENTATION --------------------------------------------
 
 // from the command line
@@ -664,9 +674,11 @@ void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count);
 int {1:s}WriteBucket();
 
 // END INSTRUMENTATION ----------------------------------------------
-#endif
-""".format(pkgName, prefix, ucName)
+""".format(pkgName, prefix, ucName)     # FOO
 
+    content += """\
+#endif
+"""
     headerFile = os.path.join(pathToSrc, "%s.h" % pkgName)
     with open(headerFile, 'w') as f:
         f.write(content)
@@ -777,9 +789,14 @@ long slotsPerBucket;
 int {1:s}Error(char *msg)
 {{
     int errCode = -errno;
-    /** BEGIN 'ONLY IF LOGGING' */
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    if logging:
+        content += """\
     {1:s}LogMsg("    ERROR %s: %s\\n", msg, strerror(errno));
-    /** END 'ONLY IF LOGGING' */
+""".format(pkgName, prefix, ucName)     # GEEP
+   
+    content += """\
     return errCode;
 }}
 
@@ -789,12 +806,20 @@ void {1:s}FullPath(char fpath[PATH_MAX], const char *path)
 {{
     strcpy(fpath, {2:s}_DATA->rootdir);
     strncat(fpath, path, PATH_MAX);
-    /** BEGIN 'ONLY IF LOGGING' */
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    if logging:
+        content += """\
     {1:s}LogMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\", fpath = \\"%s\\"\\n",
            {2:s}_DATA->rootdir, path, fpath);
-    /** END 'ONLY IF LOGGING' */
-}}
+""".format(pkgName, prefix, ucName)     # GEEP
 
+    content += """\
+}
+"""
+
+    if logging:
+        content2 = """\
 // == LOGGING =======================================================
 
 FILE *{1:s}OpenLog()
@@ -984,6 +1009,11 @@ void {1:s}LogStatVFS(struct statvfs *sv)
 
     {1:s}LogMsg(buffer);
 }}
+""".format(pkgName, prefix, ucName)     # GEEP
+        content += content2
+
+    if instrumenting:
+        content3 = """\
 
 // == INSTRUMENTATION ===============================================
 
@@ -1011,12 +1041,19 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
     }}
     status = pthread_mutex_unlock(&myBucket->lock);
 
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    if logging:
+        content3 += """\
     // DEBUG
     if (doubled) {{
         {1:s}LogMsg("slotsPerBucket doubled to %d\\n", slotsPerBucket);
         {1:s}FlushLog(); 
     }}
     // END
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    content3 += """\
     assert(status == 0);
     opData_t *mySlot = &myBucket->ops[myCount];
     mySlot->opCode = opcode;
@@ -1058,26 +1095,47 @@ int {1:s}WriteBucket()
         when->tm_year + 1900, when->tm_mon + 1, when->tm_mday,
         when->tm_hour, when->tm_min, when->tm_sec);
 
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    if logging:
+        content3 += """\
     // DEBUG
     {1:s}LogMsg("data file is %s\\n", fullPath);
     // END
 
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    content3 += """\
     // any 'b' has no effect in Linux
     FILE *f = fopen(fullPath, "w+");
     if (f != NULL) {{
         size_t written = fwrite(
                 buckets[0].ops, sizeof(opData_t), buckets[0].count, f);
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    if logging:
+        content3 += """\
         {1:s}LogMsg("wrote %lu bytes, %lu items, to %s\\n",
                 written, buckets[0].count, fullPath);
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    content3 += """\
         fflush(f);
         fclose(f);
     }} else {{
         int myErr = errno;
-        {1:s}LogMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
+""".format(pkgName, prefix, ucName)     # GEEP
 
+    if logging:
+        content3 += """\
+        {1:s}LogMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
+""".format(pkgName, prefix, ucName)     # GEEP
+
+    content3 += """\
     }}
 }}
-""".format(pkgName, prefix, ucName)
+""".format(pkgName, prefix, ucName)     # GEEP
+    content += content3
 
     utilCFile = os.path.join(pathToSrc, "util.c")
     with open(utilCFile, 'w') as f:
@@ -1206,56 +1264,56 @@ struct fuse_operations {0:s}OpTable = {{
         ss.append("")
 
         # -- log on entry -----------------------------
-        if name == 'init':
-            ss.append("    %sLogEntry(\"\\n%sinit()\\n\");" % (prefix, prefix))
-            ss.append('    %sLogConn(conn);' % prefix)
-            ss.append('    %sLogContext(fuse_get_context());' % prefix)
-        elif attrs & LOGGING_ENTRY:
-
-            if attrs & DOUBLE_FULL_PATH:
-                part0 = "\"\\n%s%s" % (prefix, name)
-                part1 = '(path=\\"%s\\", newpath=\\"%s\\")\\n",'
-                s = ("    %sLogEntry(" % prefix) + part0 + part1
-                ss.append(s)
-                ss.append("            path, newpath);")
+        if logging:
+            if name == 'init':
+                ss.append("    %sLogEntry(\"\\n%sinit()\\n\");" % (prefix, prefix))
+                ss.append('    %sLogConn(conn);' % prefix)
+                ss.append('    %sLogContext(fuse_get_context());' % prefix)
             else:
-                logE = ['    %sLogEntry(\"\\n%s%s(' % (prefix, prefix, name) ]
-                for ndx, param in enumerate(ff.params):
-                    if ndx > 0:
-                        logE.append(', ')
-                    pName = param[1]
-                    if pName == 'size':
-                        if name in ['read', 'write', ]:
-                            pat = '%lld'
+                if attrs & DOUBLE_FULL_PATH:
+                    part0 = "\"\\n%s%s" % (prefix, name)
+                    part1 = '(path=\\"%s\\", newpath=\\"%s\\")\\n",'
+                    s = ("    %sLogEntry(" % prefix) + part0 + part1
+                    ss.append(s)
+                    ss.append("            path, newpath);")
+                else:
+                    logE = ['    %sLogEntry(\"\\n%s%s(' % (prefix, prefix, name) ]
+                    for ndx, param in enumerate(ff.params):
+                        if ndx > 0:
+                            logE.append(', ')
+                        pName = param[1]
+                        if pName == 'size':
+                            if name in ['read', 'write', ]:
+                                pat = '%lld'
+                            else:
+                                pat = '%d'
+                        elif pName == 'value':
+                            if name in ['getxattr',]:
+                                pat = '0x%08x'
+                            else:
+                                pat = '\\"%s\\"'
+                        elif pName in LOG_ENTRY_PAT_MAP:
+                            pat  = LOG_ENTRY_PAT_MAP[pName]
                         else:
-                            pat = '%d'
-                    elif pName == 'value':
-                        if name in ['getxattr',]:
-                            pat = '0x%08x'
-                        else:
-                            pat = '\\"%s\\"'
-                    elif pName in LOG_ENTRY_PAT_MAP:
-                        pat  = LOG_ENTRY_PAT_MAP[pName]
-                    else:
-                        pat = 'UNKNOWN PAT FOR \'%s\'' % pName
-                    logE.append( '%s=%s' % (pName, pat))
-                logE.append(")\\n\",")
-                ss.append( ''.join(logE))
-
-                # now add a parameter list on the next line
-                logEP = ['             ']
-                for ndx, param in enumerate(ff.params):
-                    if ndx > 0:
-                        logEP.append(', ')
-                    pName = param[1]
-                    logEP.append(pName)
-                logEP.append(');')
-                ss.append(''.join(logEP))
+                            pat = 'UNKNOWN PAT FOR \'%s\'' % pName
+                        logE.append( '%s=%s' % (pName, pat))
+                    logE.append(")\\n\",")
+                    ss.append( ''.join(logE))
+    
+                    # now add a parameter list on the next line
+                    logEP = ['             ']
+                    for ndx, param in enumerate(ff.params):
+                        if ndx > 0:
+                            logEP.append(', ')
+                        pName = param[1]
+                        logEP.append(pName)
+                    logEP.append(');')
+                    ss.append(''.join(logEP))
 
         if name == 'readdir':
             ss.append('    dp = (DIR *) (uintptr_t) fi->fh;')
 
-        if name != 'opendir' and name != 'readdir' and attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
+        if logging and name != 'opendir' and name != 'readdir' and attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
             ss.append('    %sLogFI(fi);' % prefix)
 
         # -- set up absolute paths ------------------------
@@ -1338,13 +1396,25 @@ struct fuse_operations {0:s}OpTable = {{
         return status;
     }}
     do {{
+""".format(name,prefix)                         # BLIP
+                if logging:
+                    content += """\
         {1:s}LogMsg("calling filler(%s)\\n", entry->d_name);
+""".format(name,prefix)                         # BLIP
+
+                content += """\
         if (filler(buf, entry->d_name, NULL, 0) != 0) {{
+""".format(name,prefix)                         # BLIP
+                if logging:
+                    content += """\
             {1:s}LogMsg("    ERROR {1:s}readdir filler:  buffer full");
+""".format(name,prefix)                         # BLIP
+
+                content += """\
             return -ENOMEM;
-        }}
-    }} while ((entry = readdir(dp)) != NULL);
-""".format(name,prefix)
+        }
+    } while ((entry = readdir(dp)) != NULL);
+"""
                 ss.append(content)
 
             elif name == 'readlink':
@@ -1406,12 +1476,12 @@ struct fuse_operations {0:s}OpTable = {{
                 ss.append('        link[status] = \'\\0\';')
                 ss.append('        status = 0;')
                 ss.append('    }')
-        if name in ['getxattr',]:
+        if logging and name in ['getxattr',]:
             ss.append('    else')
             start = '        %sLogMsg(' % prefix
             ss.append(start + '"    value=\\"%s\\"\\n", value);' )
 
-        if name == 'listxattr':
+        if logging and name == 'listxattr':
             start = '    %sLogMsg("    ' % prefix
             ss.append(
                   start + 'returned attributes (length %d):\\n", status);')
@@ -1421,18 +1491,21 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append( start + '("    \\"%s\\"\\n", ptr);')
 
         # -- logging stat -----------------------------
-        if attrs & LOGGING_STAT:
-            ss.append("    %sLogStat(%s);\n"    % (prefix, ff.params[1][1]))
-        elif attrs & LOGGING_STATVFS:
-            ss.append("    %sLogStatVFS(%s);\n" % (prefix, ff.params[1][1]))
+        if logging:
+            if (attrs & LOGGING_STAT):
+                ss.append("    %sLogStat(%s);\n"    % (prefix, ff.params[1][1]))
+            elif attrs & LOGGING_STATVFS:
+                ss.append("    %sLogStatVFS(%s);\n" % (prefix, ff.params[1][1]))
 
         if attrs & SET_FH_FROM_FD:
             ss.append('    fi->fh = fd;')
-            ss.append('    %sLogFI(fi);' % prefix)
+            if logging:
+                ss.append('    %sLogFI(fi);' % prefix)
         elif name=='opendir':
             ss.append('    fi->fh = (intptr_t) dp;')
-            ss.append('    %sLogFI(fi);' % prefix)
-        elif name=='readdir':
+            if logging:
+                ss.append('    %sLogFI(fi);' % prefix)
+        elif logging and name=='readdir':
             ss.append('    %sLogFI(fi);' % prefix)
 
         # -- instrumentation at exit ------------------
@@ -1472,17 +1545,23 @@ def main():
     parser.add_argument('-D', '--myDate', default=myDate,
         help='date in YYYY-MM-DD format')
 
+    parser.add_argument('-d', '--devDir', default='/home/jdd/dev/c',
+        help='development directory, where C projects live')
+
     parser.add_argument('-E', '--emailAddr', default='jddixon at gmail dot com',
         help='contact email address')
-
-    parser.add_argument('-I', '--instrumenting', action='store_true',
-        help='generate instrumentation code')
 
     parser.add_argument('-f', '--force', action='store_true',
         help='if utility already exists, overwrite it')
 
+    parser.add_argument('-I', '--instrumenting', action='store_true',
+        help='generate instrumentation code')
+
     parser.add_argument('-j', '--justShow', action='store_true',
         help='show options and exit')
+
+    parser.add_argument('-L', '--logging', action='store_true',
+        help='generate logging code')
 
     parser.add_argument('-P', '--pkgName',
         help='utility package name')
@@ -1510,7 +1589,7 @@ def main():
     if args.testing:
         args.pathToPkg = os.path.join('tmp', args.pkgName)
     else:
-        args.pathToPkg = os.path.join('/home/jdd/dev/c', args.pkgName)
+        args.pathToPkg = os.path.join(args.devDir, args.pkgName)
 
     # complete setup ------------------------------------------------
     appName = 'fuseGen %s' % __version__
@@ -1521,9 +1600,11 @@ def main():
 
     if args.verbose or args.justShow:
         print('acPrereq             = ' + str(args.acPrereq))
+        print('devDir               = ' + str(args.devDir))
         print('emailAddr            = ' + str(args.emailAddr))
         print('instrumenting        = ' + str(args.instrumenting))
         print('force                = ' + str(args.force))
+        print('logging              = ' + str(args.logging))
         print('myDate               = ' + str(args.myDate))
         print('myVersion            = ' + str(args.myVersion))
         print('pathToPkg            = ' + str(args.pathToPkg))

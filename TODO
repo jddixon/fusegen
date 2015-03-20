@@ -1,26 +1,34 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-20
+    * verify that code generation remains correct if -I switch absent
+
+2015-03-20 (edited from -06)
+    IMPLEMENTATION OF -L IS IN PROGRESS
+    * generate logging information only if fuseGen -L
+        - which enables an --fgTracing and possibly other
+            logging switches
 2015-03-19
-    * urgently need a switch to set the path to the development
-        directory (/home/jdd/dev/c is currently wired in).
-    * ghpDoc/index.md 
-        - fix grammatical error second sentence
-        - needs a link to FIO (github?)
+    * urgently need a -d/--devDir switch to set the path to the         * DONE
+        development directory (/home/jdd/dev/c is currently wired in)   * DONE
+
+    * ghpDoc/index.md                                                   * DONE
+        - fix grammatical error second sentence                         * DONE
+        - needs a link to FIO (github?)                                 * DONE
 
 2015-03-18 (part edited from -16)
     * document fuseGen command line
         - genEm as sample command line                                  * DONE
         - tree output                                                   * DONE
-        - explain build and what it outputs
-        - note u/mountXXXFS
-        - explain effect of run
-        - blk
+        - explain build and what it outputs                             * DONE
+        - note u/mountXXXFS                                             * DONE
+        - explain effect of run                                         * DONE
+        - blk                                                           * DOEN
     * document fuseDecode command line                                  * DONE
     * add to README top 20 or so lines from fuseDecode ouuput,          * DONE
-        explain
-    * explanation of runData tarball added to README.md,
-        - plus a link allowing you to download it
-            * FIX THE LINK 
+        explain                                                         * DONE
+    * explanation of runData tarball added to README.md,                * DONE
+        - plus a link allowing you to download it                       * DONE
 
 2015-03-16
     * put fuseDecode output from a small run on github                  * DONE
@@ -48,7 +56,7 @@
         - the last is possibly most relevant
 
 2015-03-11
-    * most of the logs are a waste of time and space
+    * most of the logs are a waste of time and space                    * YUP
 
 2015-03-10
     * add PREFIX_closeLog()
@@ -64,14 +72,12 @@
     * add read_buf()
 
 2015-03-06
-    * problem: latency for at least one fsync exceeded 1 sec and
-        so overflowed field (seen once in perhaps two dozen runs)
-        - running on EC2 instance saw fsync latencies of 5-6 sec
-    * default path to package is /home/jdd/dev/c/PKG_NAME; need a 
-        way to override the path
-    * amplify README.md and ghpDoc/index.md
-    * generate logging information only if fuseGen -L
-        - which enables an --fgLogging switch
+    * problem: latency for at least one fsync exceeded 1 sec and        * FIXED
+        so overflowed field (seen once in perhaps two dozen runs)       * FIXED
+        - running on EC2 instance saw fsync latencies of 5-6 sec        * FIXED
+    * default path to package is /home/jdd/dev/c/PKG_NAME; need a       * FIXED
+        way to override the path                                        * FIXED
+    * amplify README.md and ghpDoc/index.md                             * DONE
 2015-03-04
     * document setting up core dumping to /tmp/cores using rc.local
         and subsequent use of debugger
@@ -84,9 +90,10 @@
 2015-02-17
     * need better checks on rootdir, mountPoint in main.inc ChkDir()
 2015-02-16
-    * need a README.filesystem.generation which describes how to run
-        fuseGen and thereby create the FUSE file system
-        - main point: run ./autogen.sh
+    * need a README.filesystem.generation which describes how to run    * DONE
+        fuseGen and thereby create the FUSE file system                 * DONE
+        - main point: run ./autogen.sh                                  * DONE
+        - THIS WAS INCORPORATED IN README.me, ghpDoc/index.md           * DONE
 
 2015-02-15
     * need a test program that exercises each and every FUSE opcode

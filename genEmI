@@ -1,0 +1,3 @@
+echo "generating file system xxxfs with instrumentation but no logging"
+cd ~/dev/py/fusegen
+./fuseGen -fIvP xxxfs
