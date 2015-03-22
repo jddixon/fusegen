@@ -1,3 +1,3 @@
-echo "generating file system xxxfs with logging but no instrumentation"
+echo "generating file system xxxfsL with logging but no instrumentation"
 cd ~/dev/py/fusegen
-./fuseGen -fLvP xxxfs
+./fuseGen -fLvP xxxfsL

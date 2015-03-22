@@ -1,0 +1,3 @@
+echo "generating file system xxxfsIL with instrumentation and logging"
+cd ~/dev/py/fusegen
+./fuseGen -fILvP xxxfsIL

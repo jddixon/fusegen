@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.10
+    2015-03-21
+        * genEm, genEmI, genEmL, genEmIL build correctly            SLOC 2230
 v0.6.9
     2015-03-19
         * elaboration of README.md                                  SLOC 2073

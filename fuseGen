@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
         content += """\
     // Set up logging
     myData->logfile = {1:s}OpenLog();
-"""
+""".format(pkgName, prefix)                         # BAZ
 
     content += """\
     // Strange warning here "initialization makes pointer from integer
@@ -494,6 +494,12 @@ int main(int argc, char *argv[])
             break;
         }}
     }}
+    int i;
+
+""".format(pkgName, prefix, ucName)     # FOO
+
+    if instrumenting:
+        content += """\
     // number of slots in a bucket
     slotsPerBucket = 1024 * fgMBPerJob * fgJobCount / fgBlockSize;
 
@@ -503,8 +509,6 @@ int main(int argc, char *argv[])
     if (status)
         perror("initializing bucket lock");
     assert(status == 0);
-
-    int i;
 
     if (fgVerbose) {{
         fprintf(stderr, "fgBlockSize := %ld\\n", fgBlockSize);
@@ -520,6 +524,10 @@ int main(int argc, char *argv[])
         for (i = 0; i < argc; i++)
             fprintf(stderr, "  %d: %s\\n", i, argv[i]);
     }}
+""".format(pkgName, prefix, ucName)     # FOO
+
+    content += """\
+
 
     int n = argc - localArgs;
     if (n > 0)
@@ -909,8 +917,8 @@ void {1:s}LogContext(struct fuse_context *ctx)
 
     ADD_ULONG_FIELD(ctx, private_data);
     // two fields defined locally
-    ADD_ULONG_FIELD(((struct xxxfsData *)ctx->private_data), logfile);
-    ADD_FIELD(((struct xxxfsData *)ctx->private_data), rootdir, %s);
+    ADD_ULONG_FIELD(((struct {0:s}Data *)ctx->private_data), logfile);
+    ADD_FIELD(((struct {0:s}Data *)ctx->private_data), rootdir, %s);
 
     {1:s}LogMsg(buffer);
 }}
@@ -1012,6 +1020,7 @@ void {1:s}LogStatVFS(struct statvfs *sv)
 """.format(pkgName, prefix, ucName)     # GEEP
         content += content2
 
+    content3 = ''
     if instrumenting:
         content3 = """\
 
@@ -1043,8 +1052,8 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
 
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    if logging:
-        content3 += """\
+        if logging:
+            content3 += """\
     // DEBUG
     if (doubled) {{
         {1:s}LogMsg("slotsPerBucket doubled to %d\\n", slotsPerBucket);
@@ -1053,7 +1062,7 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
     // END
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    content3 += """\
+        content3 += """\
     assert(status == 0);
     opData_t *mySlot = &myBucket->ops[myCount];
     mySlot->opCode = opcode;
@@ -1088,7 +1097,7 @@ int {1:s}WriteBucket()
     time_t now         = time(NULL);
     struct tm *when    = localtime(&now);
     char fullPath[PATH_MAX];
-    strcpy(fullPath, XXXFS_DATA->cwd);
+    strcpy(fullPath, {2:s}_DATA->cwd);
     strncat(fullPath, "/tmp/", PATH_MAX);
     char *p = fullPath + strlen(fullPath);
     snprintf(p, PATH_MAX, "/bucket-%04d%02d%02d-%02d%02d%02d",
@@ -1097,15 +1106,15 @@ int {1:s}WriteBucket()
 
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    if logging:
-        content3 += """\
+        if logging:
+            content3 += """\
     // DEBUG
     {1:s}LogMsg("data file is %s\\n", fullPath);
     // END
 
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    content3 += """\
+        content3 += """\
     // any 'b' has no effect in Linux
     FILE *f = fopen(fullPath, "w+");
     if (f != NULL) {{
@@ -1113,25 +1122,25 @@ int {1:s}WriteBucket()
                 buckets[0].ops, sizeof(opData_t), buckets[0].count, f);
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    if logging:
-        content3 += """\
+        if logging:
+            content3 += """\
         {1:s}LogMsg("wrote %lu bytes, %lu items, to %s\\n",
                 written, buckets[0].count, fullPath);
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    content3 += """\
+        content3 += """\
         fflush(f);
         fclose(f);
     }} else {{
         int myErr = errno;
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    if logging:
-        content3 += """\
+        if logging:
+            content3 += """\
         {1:s}LogMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
 """.format(pkgName, prefix, ucName)     # GEEP
 
-    content3 += """\
+        content3 += """\
     }}
 }}
 """.format(pkgName, prefix, ucName)     # GEEP
