@@ -1,11 +1,18 @@
 ~/dev/py/fusegen/TODO
 
-2015-03-20
-    * verify that code generation remains correct if -I switch absent
+2015-03-22
+    * move makeFusePkg from fuseGen to fusegen/__init__.py              * DONE
+    * testFuseGeneration.py
+        - outer layer generates different file systems                  * DONE
+        - doTestFuseGeneration exercises a given file system using
+            Python code
+
+2015-03-20                                                              * DONE
+    * verify that code generation remains correct if -I switch absent   * DONE
 
 2015-03-20 (edited from -06)
     IMPLEMENTATION OF -L IS IN PROGRESS
-    * generate logging information only if fuseGen -L
+    * generate logging information only if fuseGen -L                   * DONE
         - which enables an --fgTracing and possibly other
             logging switches
 2015-03-19

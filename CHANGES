@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.11
+    2015-03-22
+        * initial work on testFuseGeneration.py                     SLOC 2312
 v0.6.10
     2015-03-21
         * genEm, genEmI, genEmL, genEmIL build correctly            SLOC 2230
