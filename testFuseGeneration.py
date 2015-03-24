@@ -2,7 +2,7 @@
 
 # fusegen/testFuseGeneration.py
 
-import base64, hashlib, os, time, unittest
+import base64, hashlib, os, sys, time, unittest
 from argparse import Namespace
 from rnglib         import SimpleRNG
 from fusegen        import invokeShell, makeFusePkg, SH
@@ -17,16 +17,16 @@ class TestFuseGeneration (unittest.TestCase):
     # FUNCTIONS TO MODIFY IN-MEMORY DATA STRUCTURE AND DISK IMAGE
     # XXX STUB XXX
 
-    # FUNCTIONS TO DETERMINE EQUALITY OF IN-MEMORY DATA STRUCTURE 
+    # FUNCTIONS TO DETERMINE EQUALITY OF IN-MEMORY DATA STRUCTURE
     # AND DISK IMAGE (either under mountPoint or rootDir)
     # XXX STUB XXX
-    
+
     def fiddleWithFiles(self, pkgName, pathToPkg, umountCmd):
         """ Enter with the file system mounted """
         workDir     = os.path.join(pathToPkg, 'workdir')
         mountPoint  = os.path.join(workDir,     'mountPoint')
-        rootDir     = os.path.join(workDir,     'rootDir')
-      
+        rootDir     = os.path.join(workDir,     'rootdir')
+
         # Devise a directory structure, say M files wide, N directories deep.
         # The files are of random-ish length, populated with random-ish data.
         sampleName      = self.rng.nextFileName(16)
@@ -35,23 +35,35 @@ class TestFuseGeneration (unittest.TestCase):
         # directories) at each level, and 16 <= file length <= 128
         self.rng.nextDataDir(pathToDir=pathToSample,
                 depth=4, width=5,maxLen=128,minLen=16)
-        tree1 = MerkleTree.createFromSerialization(pathToSample)
+        # DEBUG
+        print("creating tree1") ; sys.stdout.flush()
+        # END
+        tree1 = MerkleTree.createFromFileSystem(pathToSample)
+        self.assertTrue(tree1 is not None)
 
-        # If this succeeds, we have written the directory structure on the 
+        # If this succeeds, we have written the directory structure on the
         # mount point.
 
         # Delete some files, modifying in-memory data structure accordingly
         # Shorten some files, modifying in-memory data structure accordingly
         # Lengthen some files, modifying in-memory data structure accordingly
-        
+
         # Unmount the file system
-        chatter = invokeSHell(SH, umountCmd)
+        chatter = invokeShell(umountCmd)
 
         # Verify that the expected directory structure appears below
         # the root directory.
-        pathViaRoot = os.path.join(rootDir, sampleName) 
-        tree2 = MerkleTree.createFromSerialization(pathViaRoot)
-        self.assertEqual(tree1.equal(tree2), True)
+        pathViaRoot = os.path.join(rootDir, sampleName)
+        # DEBUG
+        print("creating tree2") ; sys.stdout.flush()
+        # END
+        tree2 = MerkleTree.createFromFileSystem(pathViaRoot)
+        self.assertTrue(tree2 is not None)
+        self.assertEqual(tree1.equals(tree2), True)
+        # DEBUG
+        print("directory trees are equal") ; sys.stdout.flush()
+        # END
+        return chatter
 
     def exerciseFileSystem(self, pkgName, pathToPkg):
         dirNow  = os.getcwd()
@@ -60,7 +72,7 @@ class TestFuseGeneration (unittest.TestCase):
 
         mountCmd  = [SH, os.path.join(pathToBin, 'mount%s' % pkgName.upper()),]
         umountCmd = [SH, os.path.join(pathToBin, 'umount%s' % pkgName.upper()),]
-        
+
         chatter = ''
         try:
             chatter = invokeShell(mountCmd)
@@ -68,18 +80,28 @@ class TestFuseGeneration (unittest.TestCase):
         except Exception as e:
             print(e)
 
-        try:
-            invokeShell(umountCmd)
-        except:
+        else:
+            # XXX STUB XXX
             pass
 
-        if chatter and chatter != '':
-            print(chatter)
-        os.chdir(dirNow)
+        finally:
+            """ unmount the file system, ignoring any exceptions """
+            # DEBUG
+            print ("enter finally block") ; sys.stdout.flush()
+            # END
+            try:
+                invokeShell(umountCmd)
+            except:
+                pass
 
-        # DEBUG
-        print("after fiddling with files we are back in %s" % dirNow)
-        # END
+            if chatter and chatter != '':
+                print(chatter)
+            os.chdir(dirNow)
+
+            # DEBUG
+            print("after fiddling with files we are back in %s" % dirNow)
+            sys.stdout.flush()
+            # END
 
 
     def doBaseTest(self, logging=False, instrumenting=False):
@@ -92,7 +114,7 @@ class TestFuseGeneration (unittest.TestCase):
         if instrumenting:   pkgName += 'I'
         if logging:         pkgName += 'L'
         pathToPkg   = os.path.join(devDir, pkgName)
-        
+
         cmds = Namespace()
         setattr(cmds,'acPrereq',      '2.6.9')
         setattr(cmds,'devDir',        devDir)
@@ -132,7 +154,7 @@ class TestFuseGeneration (unittest.TestCase):
         # DEBUG
         print("we are back in %s" % dirNow)
         # END
-        
+
         # run test verifying that the file system works as expected
         self.exerciseFileSystem(pkgName, pathToPkg)
 

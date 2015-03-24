@@ -1,8 +1,10 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-24
+    * testFuseGen needs try/except/else/finally
 2015-03-23
-    * FIX: testFuseGen writes random directory but merkletree has 
-        bad first line
+    * FIX: testFuseGen writes random directory but merkletree has       * FIXED
+        bad first line                                                  * FIXED
 2015-03-22
     * move makeFusePkg from fuseGen to fusegen/__init__.py              * DONE
     * testFuseGeneration.py
