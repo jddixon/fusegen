@@ -6,45 +6,73 @@ import base64, hashlib, os, time, unittest
 from argparse import Namespace
 from rnglib         import SimpleRNG
 from fusegen        import invokeShell, makeFusePkg, SH
+from merkletree     import *
 
-class TestPKCS7Padding (unittest.TestCase):
+class TestFuseGeneration (unittest.TestCase):
     def setUp(self):
         self.rng = SimpleRNG( time.time() )
     def tearDown(self):
         pass
 
-    def fiddleWithFiles(self, pkgName, pathToPkg):
+    # FUNCTIONS TO MODIFY IN-MEMORY DATA STRUCTURE AND DISK IMAGE
+    # XXX STUB XXX
+
+    # FUNCTIONS TO DETERMINE EQUALITY OF IN-MEMORY DATA STRUCTURE 
+    # AND DISK IMAGE (either under mountPoint or rootDir)
+    # XXX STUB XXX
+    
+    def fiddleWithFiles(self, pkgName, pathToPkg, umountCmd):
+        """ Enter with the file system mounted """
         workDir     = os.path.join(pathToPkg, 'workdir')
         mountPoint  = os.path.join(workDir,     'mountPoint')
         rootDir     = os.path.join(workDir,     'rootDir')
-       
+      
         # Devise a directory structure, say M files wide, N directories deep.
         # The files are of random-ish length, populated with random-ish data.
-        # XXX STUB XXX
+        sampleName      = self.rng.nextFileName(16)
+        pathToSample    = os.path.join(mountPoint, sampleName)
+        # builds a directory tree with a depth of 4, 5 files (including
+        # directories) at each level, and 16 <= file length <= 128
+        self.rng.nextDataDir(pathToDir=pathToSample,
+                depth=4, width=5,maxLen=128,minLen=16)
+        tree1 = MerkleTree.createFromSerialization(pathToSample)
 
-        # Run the file system executable, which mounts the file system.
-        # XXX STUB XXX
+        # If this succeeds, we have written the directory structure on the 
+        # mount point.
 
-        # If this succeeds, write the directory structure on the 
-        # mount point, reporting any non-fatal problems.
-        # XXX STUB XXX
-
+        # Delete some files, modifying in-memory data structure accordingly
+        # Shorten some files, modifying in-memory data structure accordingly
+        # Lengthen some files, modifying in-memory data structure accordingly
+        
         # Unmount the file system
-        # XXX STUB XXX
+        chatter = invokeSHell(SH, umountCmd)
 
         # Verify that the expected directory structure appears below
         # the root directory.
-        # XXX STUB XXX
+        pathViaRoot = os.path.join(rootDir, sampleName) 
+        tree2 = MerkleTree.createFromSerialization(pathViaRoot)
+        self.assertEqual(tree1.equal(tree2), True)
 
     def exerciseFileSystem(self, pkgName, pathToPkg):
         dirNow  = os.getcwd()
         os.chdir(pathToPkg)
-        cmd     = [SH, os.path.join(pathToPkg, 'build'),]
+        pathToBin = os.path.join(pathToPkg, 'bin')
+
+        mountCmd  = [SH, os.path.join(pathToBin, 'mount%s' % pkgName.upper()),]
+        umountCmd = [SH, os.path.join(pathToBin, 'umount%s' % pkgName.upper()),]
+        
         chatter = ''
         try:
-            self.fiddleWithfiles(pkgName, pathToPkg)
+            chatter = invokeShell(mountCmd)
+            chatter += self.fiddleWithFiles(pkgName, pathToPkg, umountCmd)
         except Exception as e:
             print(e)
+
+        try:
+            invokeShell(umountCmd)
+        except:
+            pass
+
         if chatter and chatter != '':
             print(chatter)
         os.chdir(dirNow)
@@ -65,28 +93,28 @@ class TestPKCS7Padding (unittest.TestCase):
         if logging:         pkgName += 'L'
         pathToPkg   = os.path.join(devDir, pkgName)
         
-        ns = Namespace()
-        setattr(ns,'acPrereq',      '2.6.9')
-        setattr(ns,'devDir',        devDir)
-        setattr(ns, 'emailAddr',    'jddixon at gmail dot com')
-        setattr(ns,'force',         True)
-        setattr(ns,'instrumenting', instrumenting)
-        setattr(ns,'logging',       logging)
-        setattr(ns,'myDate',        "%04d-%02d-%02d" % time.gmtime()[:3])
-        setattr(ns,'myVersion',    '1.2.3')
-        setattr(ns,'pathToPkg',     pathToPkg)
-        setattr(ns,'pkgName',       pkgName)
-        setattr(ns,'lcName',        pkgName.lower())
-        setattr(ns,'ucName',        pkgName.upper())
-        setattr(ns,'testing',       False)
-        setattr(ns,'verbose',       False)
+        cmds = Namespace()
+        setattr(cmds,'acPrereq',      '2.6.9')
+        setattr(cmds,'devDir',        devDir)
+        setattr(cmds, 'emailAddr',    'jddixon at gmail dot com')
+        setattr(cmds,'force',         True)
+        setattr(cmds,'instrumenting', instrumenting)
+        setattr(cmds,'logging',       logging)
+        setattr(cmds,'myDate',        "%04d-%02d-%02d" % time.gmtime()[:3])
+        setattr(cmds,'myVersion',    '1.2.3')
+        setattr(cmds,'pathToPkg',     pathToPkg)
+        setattr(cmds,'pkgName',       pkgName)
+        setattr(cmds,'lcName',        pkgName.lower())
+        setattr(cmds,'ucName',        pkgName.upper())
+        setattr(cmds,'testing',       False)
+        setattr(cmds,'verbose',       False)
 
         # DEBUG
-        print(ns);
+        print(cmds);
         # END
 
         # create the target file system
-        makeFusePkg(ns)
+        makeFusePkg(cmds)
 
         # invoke the build command
         dirNow  = os.getcwd()
@@ -106,7 +134,7 @@ class TestPKCS7Padding (unittest.TestCase):
         # END
         
         # run test verifying that the file system works as expected
-        # XXX STUB XXX
+        self.exerciseFileSystem(pkgName, pathToPkg)
 
     def doInstrumentedTest(self):
         self.doBaseTest(instrumenting=True)
@@ -117,7 +145,7 @@ class TestPKCS7Padding (unittest.TestCase):
     def doTestLoggingAndInstrumented(self):
         self.doBaseTest(logging=True, instrumenting=True)
 
-    def testPadding (self):
+    def testFuseGeneration (self):
         self.doBaseTest()
         #self.doInstrumentedTest()
         #self.doLoggingTest()

@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.12
+    2015-03-23
+        * testFuseGeneration writes random directory                SLOC 2331
 v0.6.11
     2015-03-22
         * initial work on testFuseGeneration.py                     SLOC 2312

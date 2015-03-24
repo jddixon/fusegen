@@ -1,11 +1,23 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-23
+    * FIX: testFuseGen writes random directory but merkletree has 
+        bad first line
 2015-03-22
     * move makeFusePkg from fuseGen to fusegen/__init__.py              * DONE
     * testFuseGeneration.py
         - outer layer generates different file systems                  * DONE
         - doTestFuseGeneration exercises a given file system using
             Python code
+            * build M-wide x N-deep in-memory directory structure 
+                - randomly named files, random content
+            * instantiate below mount point
+            * delete some files both on disk and in-memory
+            * shorten some files, both on disk and in memory
+            * lengthen some files, both on disk and in memory
+            * shut down (umount) test file system
+            * verify that in-memory directory structure matches that
+                under rootdir
 
 2015-03-20                                                              * DONE
     * verify that code generation remains correct if -I switch absent   * DONE
