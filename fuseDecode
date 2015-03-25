@@ -16,7 +16,42 @@ def decode(chunk):
 
     return sec, ns, lateSec, lateNsec, byteCount, opCode
 
-def simple(args):
+def doCounts(args):
+    """ generate a table showing how often each opcode ws invoked """
+    howMany = args.howMany
+    path    = args.pathToData
+    verbose = args.verbose
+
+    with open(path, 'rb') as f:
+        data = f.read()
+    byteCount   = len(data)
+    opCount     = byteCount/16
+    if verbose:
+        print("%d bytes, %d ops" % (byteCount, opCount))
+
+    table = [0]*len(OP_NAMES)
+    for n in range(howMany):
+        begin = n * 16
+        end   = begin + 16
+        chunk = data[begin:end]
+        sec, ns, lateSec, lateNsec, byteCount, opCode = decode(chunk)
+        table[opCode] += 1
+
+    myMap = {}
+    for n, name in enumerate(OP_NAMES):
+        myMap[name] = (n, table[n])
+
+    # header line
+    nonZ = 0    # index of opcodes with non-zero count
+    print("ndx opCode name                count")
+    for name in sorted(OP_NAMES):
+        n, count = myMap[name]
+        if count > 0:
+            print("%3d  %4d  %-16s   %6d" % (nonZ, n, name, count))
+            nonZ += 1
+
+
+def simpleDump(args):
     # column headers
     print("==== op time === == latency == = byte = == opcode ==     = flags =")
     print("  sec   nanosec  sec  nanosec   count   op   name")
@@ -51,6 +86,14 @@ def simple(args):
         lastLateSec   = lateSec
         lastLateNsec  = lateNsec
 
+def doRun(args):
+    counting = args.stats
+    if counting:
+        doCounts(args)
+    else:
+        simpleDump(args)
+    
+
 def main():
     DESC    = 'parse a fuseGenned data file'
     parser  = ArgumentParser(description=DESC)
@@ -63,6 +106,9 @@ def main():
 
     parser.add_argument('-n', '--howMany', type=int, default=0,
         help='how many data points to decode')
+
+    parser.add_argument('-S', '--stats', action='store_true',
+        help='be chatty')
 
     parser.add_argument('-v', '--verbose', action='store_true',
         help='be chatty')
@@ -98,10 +144,11 @@ def main():
         print('justShow             = ' + str(args.justShow))
         print('howMany              = ' + str(args.howMany))
         print('pathToData           = ' + str(args.pathToData))
+        print('stats                = ' + str(args.stats))
         print('verbose              = ' + str(args.verbose))
 
     if not args.justShow:
-        simple(args)
+        doRun(args)
 
 if __name__ == '__main__':
     main()

@@ -169,9 +169,9 @@ class TestFuseGeneration (unittest.TestCase):
 
     def testFuseGeneration (self):
         self.doBaseTest()
-        #self.doInstrumentedTest()
-        #self.doLoggingTest()
-        #self.doTestLoggingAndInstrumented()
+        self.doInstrumentedTest()
+        self.doLoggingTest()
+        self.doTestLoggingAndInstrumented()
 
 if __name__ == '__main__':
     unittest.main()

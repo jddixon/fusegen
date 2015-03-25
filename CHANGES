@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.14
+    2015-03-25
+        * add -S/--stats fuseDecode option: opcodes used, counts    SLOC 2383
+        * testFuseGeneration four way test                          SLOC 2383
 v0.6.13
     2015-03-24
         * testFuseGeneration: trees match                           SLOC 2343
