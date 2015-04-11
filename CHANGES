@@ -1,5 +1,11 @@
 ~/dev/py/fusegen/CHANGES
+SLOC are python + generic + bash
 
+v0.6.15
+    2015-04-11
+        * simplified handling of ops not yet implemented
+        * add -z option to fuseDecode, to select zero-count ops
+        * dropped README.md from countem (253 sloc)                 SLOC 2159
 v0.6.14
     2015-03-25
         * add -S/--stats fuseDecode option: opcodes used, counts    SLOC 2383

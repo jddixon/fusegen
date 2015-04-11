@@ -2,7 +2,8 @@
 
 import os, struct, sys
 from argparse   import ArgumentParser
-from fusegen    import __version__, __version_date__, OP_NAMES
+# XXX we want to drop OP_NAMES
+from fusegen    import __version__, __version_date__, OP_NAMES, FuseFunc
 
 def decode(chunk):
     sec, ns, lateNsec, b0, b1, b2, opCode = struct.unpack('IIIBBBB', chunk)
@@ -21,6 +22,7 @@ def doCounts(args):
     howMany = args.howMany
     path    = args.pathToData
     verbose = args.verbose
+    zeroes  = args.zeroes
 
     with open(path, 'rb') as f:
         data = f.read()
@@ -28,6 +30,10 @@ def doCounts(args):
     opCount     = byteCount/16
     if verbose:
         print("%d bytes, %d ops" % (byteCount, opCount))
+
+    junk, opCodeMap = FuseFunc.getFuncMap()
+
+    # XXX WORKING HERE XXX
 
     table = [0]*len(OP_NAMES)
     for n in range(howMany):
@@ -46,7 +52,7 @@ def doCounts(args):
     print("ndx opCode name                count")
     for name in sorted(OP_NAMES):
         n, count = myMap[name]
-        if count > 0:
+        if (zeroes and count == 0) or ((not zeroes) and count > 0):
             print("%3d  %4d  %-16s   %6d" % (nonZ, n, name, count))
             nonZ += 1
 
@@ -113,6 +119,9 @@ def main():
     parser.add_argument('-v', '--verbose', action='store_true',
         help='be chatty')
 
+    parser.add_argument('-z', '--zeroes', action='store_true',
+        help='list only zero-count opcodes')
+
     args = parser.parse_args()
 
     # sanity checks -------------------------------------------------
@@ -146,6 +155,7 @@ def main():
         print('pathToData           = ' + str(args.pathToData))
         print('stats                = ' + str(args.stats))
         print('verbose              = ' + str(args.verbose))
+        print('zeroes               = ' + str(args.zeroes))
 
     if not args.justShow:
         doRun(args)

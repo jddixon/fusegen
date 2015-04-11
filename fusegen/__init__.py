@@ -4,19 +4,16 @@ import errno, os, re, shutil, subprocess, sys
 
 __all__ = [ '__version__', '__version_date__',
             'BIN', 'SH',
-            #'LOG_ENTRY_PAT_MAP', 'OP_NAMES', 'PATH_TO_FIRST_LINES',
-            #'SET_STATUS', 'SET_FD', 'OP_SPECIAL', 'FH_PARAM', 'FLAGS_PARAM',
-            #'OP_CALL_MAP',
+            'DEPRECATED',   'NOT_IMPLEMENTED', 
             # functions
             'checkDate', 'checkPkgName', 'checkPgmNames', 'checkVersion',
             'invokeShell', 'makeFusePkg',
-            # classes
-            #'FuseFunc',
+            'opNames',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.6.14'
-__version_date__ = '2015-03-25'
+__version__      = '0.6.15'
+__version_date__ = '2015-04-11'
 
 BASH    = '/bin/bash'
 SH      = '/bin/sh'
@@ -42,11 +39,20 @@ OP_NAMES = [
     # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
     # NOT YET IMPLEMENTED 
     # fusion 2.8
-    'ioctl',        'poll',
+    #'ioctl',        'poll',
     # fusion 2.9
-    'write_buf','read_buf', 
+    #'write_buf','read_buf', 
     ]
 
+def opNames():
+    """ 
+    Return a copy of the list of op names, possibly including deprecated
+    functions but excluding any which are not implemented.
+    """
+    x = []
+    for name in opNames:
+        x.append(name)
+    return x
 
 SET_STATUS  = 0x01      # sets the status variable
 SET_FD      = 0x02      # sets an fd variable
@@ -350,6 +356,7 @@ SET_FH_FROM_FD      = 0x00000800
 SYSCALL_FI_PARAM1   = 0x00001000
 
 CHK_DEF_XATTR       = 0x10000000
+NOT_IMPLEMENTED     = 0x80000000
 
 def setOpAttrs():
     """
@@ -358,53 +365,55 @@ def setOpAttrs():
     opAttrs = {}
     for name in OP_NAMES:
         attrs = 0
-        if name in ['symlink',]:
-            attrs |= HAS_LINK_FILE
-
         if name in ['getdir', 'utime',]:
             attrs |= DEPRECATED
-
-        if name != 'init' and name != 'destroy':
-            attrs |= RETURNS_STATUS
-
-        if name in ['rename','link',]:
-            attrs |= DOUBLE_FULL_PATH
-
-        # this is a NEGATIVE check: list those ops which do NOT use
-        if name not in ['flock', 'lock', 
-                        'symlink',
-                        'read', 'write', 'flush', 'release', 'fsync',
-                        'readdir', 'releasedir','fsyncdir', 'init',
-                        'destroy', 'ftruncate', 'fgetattr']:
-            attrs |= FULL_PATH
-
-        if name not in [ 'destroy', 'flush', 'fsyncdir',
-                'init', 'mknod', 'readdir', ]:
-            attrs |= CHECK_ERR_AND_FLIP
-
-        if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
-            attrs |= CHK_DEF_XATTR
-
-        if name in ['create', 'fallocate', 'fgetattr', 'flush',
-                'fsync', 'fsyncdir', 'ftruncate',
-                'lock',
-                'opendir', 'open', 'readdir', 'read', 'releasedir',
-                'release', 'write',]:
-            attrs |= LOGGING_FI
-
-        if name in ['create', 'open',  ]:
-            attrs |= SET_FH_FROM_FD
-
-        if name in ['fgetattr', 'flock', 'fsync', 'opendir', 
-                'read', 'releasedir', 'release', 'ftruncate', 'write']:
-            attrs |= SYSCALL_FI_PARAM1
-
-        if name in ['getattr', 'fgetattr',]:
-            attrs |= LOGGING_STAT
-        elif name == 'statfs':
-            attrs |= LOGGING_STATVFS
-        if name in ['create', 'open',]:
-            attrs |= SYSCALL_RET_FD
+        elif name in ['ioctl','poll','write_buf','read_buf',]:
+            attrs |= NOT_IMPLEMENTED
+        else:
+            if name in ['symlink',]:
+                attrs |= HAS_LINK_FILE
+    
+            if name != 'init' and name != 'destroy':
+                attrs |= RETURNS_STATUS
+    
+            if name in ['rename','link',]:
+                attrs |= DOUBLE_FULL_PATH
+    
+            # this is a NEGATIVE check: list those ops which do NOT use
+            if name not in ['flock', 'lock', 
+                            'symlink',
+                            'read', 'write', 'flush', 'release', 'fsync',
+                            'readdir', 'releasedir','fsyncdir', 'init',
+                            'destroy', 'ftruncate', 'fgetattr']:
+                attrs |= FULL_PATH
+    
+            if name not in [ 'destroy', 'flush', 'fsyncdir',
+                    'init', 'mknod', 'readdir', ]:
+                attrs |= CHECK_ERR_AND_FLIP
+    
+            if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
+                attrs |= CHK_DEF_XATTR
+    
+            if name in ['create', 'fallocate', 'fgetattr', 'flush',
+                    'fsync', 'fsyncdir', 'ftruncate',
+                    'lock',
+                    'opendir', 'open', 'readdir', 'read', 'releasedir',
+                    'release', 'write',]:
+                attrs |= LOGGING_FI
+    
+            if name in ['create', 'open',  ]:
+                attrs |= SET_FH_FROM_FD
+    
+            if name in ['fgetattr', 'flock', 'fsync', 'opendir', 
+                    'read', 'releasedir', 'release', 'ftruncate', 'write']:
+                attrs |= SYSCALL_FI_PARAM1
+    
+            if name in ['getattr', 'fgetattr',]:
+                attrs |= LOGGING_STAT
+            elif name == 'statfs':
+                attrs |= LOGGING_STATVFS
+            if name in ['create', 'open',]:
+                attrs |= SYSCALL_RET_FD
 
         opAttrs[name] = attrs
     return opAttrs
@@ -1550,7 +1559,7 @@ struct fuse_operations {0:s}OpTable = {{
     # XXX does not catch 'main'
     for name in OP_NAMES:
         attrs = opAttrs[name]
-        if attrs & DEPRECATED:
+        if (attrs & DEPRECATED) or (attrs & NOT_IMPLEMENTED):
             continue
         if not name in funcMap:   # names at end are not yet implemented
             # DEBUG

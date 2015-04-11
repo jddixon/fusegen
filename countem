@@ -1,9 +1,11 @@
 cd /home/jdd/dev/py/fusegen
 rm -rf build/
-pySloc countem \
-    checkIncs  checkScaffolding  diffEm  diffSrc  diffTop \
-    checkIncsI checkScaffoldingI diffEmI diffSrcI diffTopI \
+pySloc -v countem \
+    bash:checkIncs  bash:checkScaffolding  \
+    bash:checkIncsI bash:checkScaffoldingI \
+    bash:diffEm  bash:diffSrc  bash:diffTop \
+    bash:diffEmI bash:diffSrcI bash:diffTopI \
     fragments/prototypes \
-    fuseDecode fuseGen genEm \
-    MANIFEST.in \
-    README.md
+    py:fuseDecode py:fuseGen \
+    bash:genEm bash:genEmI bash:genEmIL bash:genEmL\
+    MANIFEST.in 

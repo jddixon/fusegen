@@ -1,5 +1,15 @@
 ~/dev/py/fusegen/TODO
 
+2015-03-25
+    * reduce OP_NAMES to a single list which contains deprecated        * DONE
+        ops but no unimplemented ops                                    * DONE
+    * bmap must be in the list                                          * DONE
+    * export a copy of this list, not the list itself
+    * also export a map: name => (ndx, attr) where name is the OP_NAME,
+        ndx is its index in the list above, and attr is a copy of the
+        value used to write the *.inc and other source files
+    * and export DEPRECATED and NOT_IMPLEMENTED
+
 2015-03-24
     * testFuseGen needs try/except/else/finally
 2015-03-23
@@ -11,9 +21,9 @@
         - outer layer generates different file systems                  * DONE
         - doTestFuseGeneration exercises a given file system using
             Python code
-            * build M-wide x N-deep in-memory directory structure 
-                - randomly named files, random content
-            * instantiate below mount point
+            * build M-wide x N-deep in-memory directory structure       * DONE
+                - randomly named files, random content                  * DONE
+            * instantiate below mount point                             * DONE
             * delete some files both on disk and in-memory
             * shorten some files, both on disk and in memory
             * lengthen some files, both on disk and in memory
