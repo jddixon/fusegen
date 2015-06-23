@@ -5,6 +5,7 @@ pySloc -v countem \
     bash:checkIncsI bash:checkScaffoldingI \
     bash:diffEm  bash:diffSrc  bash:diffTop \
     bash:diffEmI bash:diffSrcI bash:diffTopI \
+    bash:installit \
     fragments/prototypes \
     py:fuseDecode py:fuseGen \
     bash:genEm bash:genEmI bash:genEmIL bash:genEmL\
