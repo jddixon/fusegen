@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/TODO
 
+2015-04-15
+    * consider modifying fuseGen to use format with named args,
+        like '{foo}{bar}".format(foo=foo, bar=bar)
+
 2015-03-25
     * reduce OP_NAMES to a single list which contains deprecated        * DONE
         ops but no unimplemented ops                                    * DONE
