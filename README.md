@@ -310,6 +310,10 @@ human-readable format.
 Output from a typical run of the `blk-31-4k` script is available 
 [here](runData-20150316-135941.gz)
 
+## Project Status 
+
+A good beta.  Tests succeed.
+
 ## On-line Documentation
 
 More information on the **fusegen** project can be found [here](https://jddixon.github.io/fusegen)

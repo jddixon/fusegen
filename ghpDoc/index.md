@@ -1,25 +1,15 @@
-# fusegen
+<h1 class="libTop">fusegen</h1>
 
-Tools for generating and monitoring a Linux 
-[FUSE](http://fuse.sourceforge.net) user-space file system.
+Tools for generating and monitoring a Linux FUSE user-space file system.
 
 ## fuseGen
 
 FuseGen is a Python 3 script which generates the basis of a FUSE file system 
 in the form 
-of a mixture of 
-[Autotools](http://en.wikipedia.org/wiki/GNU_build_system)
-configuration files and 
-[ANSI C](http://en.wikipedia.org/wiki/ANSI_C) 
-source code.  The
+of a mix of Autotools configuration files and ANSI C source code.  The
 C files constitute a **pass-through** FUSE file system.  This means that FUSE
 operations are logged and statistics gathered, and then the commands are
 passed through to the local file system for execution.  
-
-The resulting system can then be used as-is for studying FUSE or 
-generating statistics on the input/output patterns of particular software.
-Alternatively FuseGen's python code can be customized to generate different
-C code, or the generated C code can be customized.
 
 ### FuseGen Command Line
 
@@ -206,8 +196,7 @@ The `bin/` subdirectory contains scripts for
 ## Putting It All Together: Running an Application
 
 The script `blk-31-4k`, found in the default `bin/` directory, is used
-to collect statistics on a short **fio** run.  FIO is an 
-[open source](https://github.com/axbose/fio) tool
+to collect statistics on a short **fio** run.  FIO is an open source tool
 for measuring the performance of a file system.  
 
 	echo "blk-31-4k: test size is being set to $1 MB"
@@ -320,3 +309,8 @@ human-readable format.
 
 Output from a typical run of the `blk-31-4k` script is available 
 [here](runData-20150316-135941.gz)
+
+## Project Status 
+
+A good beta.  Tests succeed.
+

@@ -1,11 +1,11 @@
 cd /home/jdd/dev/py/fusegen
 rm -rf build/
-pySloc -v countem \
-    bash:checkIncs  bash:checkScaffolding  \
-    bash:checkIncsI bash:checkScaffoldingI \
+pySloc $@ -v \
+    bash:checkIncs  bash:checkScaffolding   \
+    bash:checkIncsI bash:checkScaffoldingI  \
+    bash:countem    bash:installit          \
     bash:diffEm  bash:diffSrc  bash:diffTop \
-    bash:diffEmI bash:diffSrcI bash:diffTopI \
-    bash:installit \
+    bash:diffEmI bash:diffSrcI bash:diffTopI\
     fragments/prototypes \
     py:fuseDecode py:fuseGen \
     bash:genEm bash:genEmI bash:genEmIL bash:genEmL\
