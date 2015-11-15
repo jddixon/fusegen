@@ -4,12 +4,12 @@ Tools for generating and monitoring a Linux FUSE user-space file system.
 
 ## fuseGen
 
-FuseGen is a Python 3 script which generates the basis of a FUSE file system 
-in the form 
+FuseGen is a Python 3 script which generates the basis of a FUSE file system
+in the form
 of a mix of Autotools configuration files and ANSI C source code.  The
 C files constitute a **pass-through** FUSE file system.  This means that FUSE
 operations are logged and statistics gathered, and then the commands are
-passed through to the local file system for execution.  
+passed through to the local file system for execution.
 
 ### FuseGen Command Line
 
@@ -36,21 +36,21 @@ passed through to the local file system for execution.
 	  -V MYVERSION, --myVersion MYVERSION
 	                        version in X.Y.Z format
 
-This is the command line at the time of writing; when you unpack 
-fusegen you should type `fuseGen -h` to see the current set of 
+This is the command line at the time of writing; when you unpack
+fusegen you should type `fuseGen -h` to see the current set of
 supported arguments.
 
 ### Typical FuseGen Command Line: genEm
 
 When fusegen is unpacked, the distribution directory contains a file
 `genEm`.  As it stands this creates the `xxxfs` file system.  That is,
-it writes a number of files to a subdirectory of your development 
-directory.  
+it writes a number of files to a subdirectory of your development
+directory.
 
 	cd ~/dev/py/fusegen
 	./fuseGen -fIvP xxxfs
 
-In this case, the package name is **xxxfs** (because the follows the **-P**), 
+In this case, the package name is **xxxfs** (because the follows the **-P**),
 and that will be the name
 of the development directory.  If the directory already exists, it is
 overwritten (**-f**).  Instrumentation code will be generated (**-I**)
@@ -171,18 +171,18 @@ For easy customization there is a `.inc` file for each FUSE command.
 ### The build Command
 
 The `build` command completes the creation of the file system.  It runs
-`autogen.sh`, which installs many of the standard Autotools files, and 
+`autogen.sh`, which installs many of the standard Autotools files, and
 then creates the `configure` script from the instructions in `configure.ac`.
-Finaly it runs make, which compiles the object files and then links the 
+Finaly it runs make, which compiles the object files and then links the
 file system, the `xxxfs` executable.
- 
+
 	./autogen.sh
 	./configure
 	make
 
-It may be desirable to change the generated system to some degree.  
+It may be desirable to change the generated system to some degree.
 Usually limited changes are accomplished by editing `configure.ac`
-and/or `Makefile.ac` and then rerunning build.  This will have no 
+and/or `Makefile.ac` and then rerunning build.  This will have no
 effect on `src/*.inc` and in that sense is safe.
 
 ### bin/ Commands
@@ -197,7 +197,7 @@ The `bin/` subdirectory contains scripts for
 
 The script `blk-31-4k`, found in the default `bin/` directory, is used
 to collect statistics on a short **fio** run.  FIO is an open source tool
-for measuring the performance of a file system.  
+for measuring the performance of a file system.
 
 	echo "blk-31-4k: test size is being set to $1 MB"
 	#
@@ -208,7 +208,7 @@ for measuring the performance of a file system.
 	cd ../..
 	bin/umountXXXFS
 
-This particular script runs four jobs simultaneously.  Each job reads 
+This particular script runs four jobs simultaneously.  Each job reads
 and/or writes the same amount of data to the disk.  On the command line
 the script has a single argument, the number of megabytes to be read from
 and/or written to the disk.  For this test the mount point and the root
@@ -228,9 +228,9 @@ If full logging is turned on, the log file can be very large.
 ## FuseGen Statistics File
 
 The statistics file has a name like `bucket-20150316-150838`.  The first
-set of numbers in the file name represents the date in `CCYYMMDD` format; the 
+set of numbers in the file name represents the date in `CCYYMMDD` format; the
 second set is the start time of the run, local time, as `HHMMSS`.  We use
-a 24-hour clock, so in this case the run started at 15:08:38, just 
+a 24-hour clock, so in this case the run started at 15:08:38, just
 after 3 pm local time.
 
 	typedef struct o_ {
@@ -243,9 +243,9 @@ after 3 pm local time.
 	} __attribute__((aligned(16), packed)) opData_t;
 
 Each call on the FUSE file system is recorded to the statistics file as
-a 16-byte object laid out as specified above.  
+a 16-byte object laid out as specified above.
 
-The time of the call is recorded as a 128-bit pair, `opSec` and 
+The time of the call is recorded as a 128-bit pair, `opSec` and
 `opNsec`.  This is a Linux CLOCK_MONOTONIC time representing an absolute
 elapsed time; it is generally **not** the same as the system's (guess at)
 the local time.
@@ -255,13 +255,13 @@ same 32-bit nanosecond part, but only 7 bits are reserved for the seconds
 of latency.  That is, latencies greater than 128 seconds will not be recorded
 correctly.
 
-Finally 8 bits are reserved for the FUSE opcode.  There are currently 
-fewer than four dozen opcodes so this number of bits is likely to be 
+Finally 8 bits are reserved for the FUSE opcode.  There are currently
+fewer than four dozen opcodes so this number of bits is likely to be
 sufficient for some time.
 
 ## FuseDecode
 
-FuseDecode is a utility for converting FuseGen statistics files to a 
+FuseDecode is a utility for converting FuseGen statistics files to a
 human-readable format.
 
 ### FuseDecode Command Line
@@ -283,34 +283,34 @@ human-readable format.
 
 	==== op time === == latency == = byte = == opcode ==     = flags =
 	  sec   nanosec  sec  nanosec   count   op   name
-	369886 170431079  0     74955       0   29 init             
-	369886 170592946  0     91116       0    0 getattr          
+	369886 170431079  0     74955       0   29 init
+	369886 170592946  0     91116       0    0 getattr
 	369886 170601627  0     58834       0   25 opendir          P
-	369886 170728424  0     68768       0   26 readdir          
-	369886 170849263  0     60370       0    0 getattr          
+	369886 170728424  0     68768       0   26 readdir
+	369886 170849263  0     60370       0    0 getattr
 	369886 170851394  0     80361       0    0 getattr          P
-	369886 170937891  0     22188       0   31 access           
-	369886 170972000  0     52993       0    0 getattr          
-	369886 171057175  0     28741       0    0 getattr          
-	369886 171112174  0     21897       0    0 getattr          
-	369886 171181270  0     26367       0    0 getattr          
-	369886 171243684  0     22415       0    0 getattr          
-	369886 171301507  0     41395       0    0 getattr          
-	369886 171378102  0     24336       0    0 getattr          
-	369886 171483916  0     21530       0   27 releasedir       
-	369886 171505940  0     30953       0   25 opendir          
-	369886 171587944  0     47520       0   26 readdir          
-	369886 171748142  0     16430       0   27 releasedir       
-	369886 171768149  0     25347       0   25 opendir          
-	369886 171832503  0     46673       0   26 readdir          
-	369886 171986430  0     70618       0   27 releasedir       
+	369886 170937891  0     22188       0   31 access
+	369886 170972000  0     52993       0    0 getattr
+	369886 171057175  0     28741       0    0 getattr
+	369886 171112174  0     21897       0    0 getattr
+	369886 171181270  0     26367       0    0 getattr
+	369886 171243684  0     22415       0    0 getattr
+	369886 171301507  0     41395       0    0 getattr
+	369886 171378102  0     24336       0    0 getattr
+	369886 171483916  0     21530       0   27 releasedir
+	369886 171505940  0     30953       0   25 opendir
+	369886 171587944  0     47520       0   26 readdir
+	369886 171748142  0     16430       0   27 releasedir
+	369886 171768149  0     25347       0   25 opendir
+	369886 171832503  0     46673       0   26 readdir
+	369886 171986430  0     70618       0   27 releasedir
 	369886 172007454  0     53362       0   25 opendir          P
-	369886 172099167  0     49953       0   26 readdir          
+	369886 172099167  0     49953       0   26 readdir
 
-Output from a typical run of the `blk-31-4k` script is available 
+Output from a typical run of the `blk-31-4k` script is available
 [here](runData-20150316-135941.gz)
 
-## Project Status 
+## Project Status
 
 A good beta.  Tests succeed.
 

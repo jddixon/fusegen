@@ -12,8 +12,8 @@ __all__ = [ '__version__', '__version_date__',
        ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.6.17'
-__version_date__ = '2015-09-02'
+__version__      = '0.6.18'
+__version_date__ = '2015-11-14'
 
 BASH    = '/bin/bash'
 SH      = '/bin/sh'
