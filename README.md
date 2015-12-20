@@ -317,4 +317,4 @@ A good beta.  Tests succeed.
 ## On-line Documentation
 
 More information on the **fusegen** project can be found
-[here](://jddixon.github.io/fusegen)
+[here](https://jddixon.github.io/fusegen)
