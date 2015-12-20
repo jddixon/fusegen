@@ -1,5 +1,9 @@
 ~/dev/py/fusegen/TODO
 
+2015-12-20
+    * error observed on ./test.all : 'MerkleTree' object has no         * FIXED
+        attribute 'equals'                                              * FIXED
+
 2015-04-15
     * consider modifying fuseGen to use format with named args,
         like '{foo}{bar}".format(foo=foo, bar=bar)
