@@ -1,6 +1,9 @@
 ~/dev/py/fusegen/CHANGES
 SLOC are python + generic + bash
 
+v0.6.20
+    2016-01-27
+        * minor edits                                               SLOC 4268
 v0.6.19
     2015-12-20
         * fix dead links                                            SLOC 4268
@@ -201,5 +204,6 @@ v0.1.0
 v0.0.0
     2015-01-17
         * first version                                             SLOC  237
+
 
 
