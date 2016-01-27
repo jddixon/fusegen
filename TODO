@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/TODO
 
+2016-01-02
+    * checkForDead returns Unicode decode error on README.md, index.md
+        
 2015-12-20
     * error observed on ./test.all : 'MerkleTree' object has no         * FIXED
         attribute 'equals'                                              * FIXED
