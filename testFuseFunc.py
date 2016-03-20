@@ -2,29 +2,33 @@
 
 # testFuseFunc.py
 
-import os, sys, unittest
+import os
+import sys
+import unittest
 
 #from rnglib        import SimpleRNG
-from fusegen        import FuseFunc, OP_NAMES, PATH_TO_FIRST_LINES
+from fusegen import FuseFunc, OP_NAMES, PATH_TO_FIRST_LINES
+
 
 class TestFuseFunc (unittest.TestCase):
 
     def setUp(self):
         pass
+
     def tearDown(self):
         pass
 
     # utility functions #############################################
-    
+
     # actual unit tests #############################################
-   
+
     def testNameToFuncMap(self):
-        m,o = FuseFunc.getFuncMap('xxx_')   # funcMap, opCodeMap
+        m, o = FuseFunc.getFuncMap('xxx_')   # funcMap, opCodeMap
         # for testing, build a new p2tMap from the data in funcMap
         for name in m:
-            func   = m[name]
+            func = m[name]
             params = func.params        # a list of 2-tuples
-            myP2T  = {}    # maps parameter names to type as a string
+            myP2T = {}    # maps parameter names to type as a string
             p2tMap = func.p2tMap
             for p in params:
                 pType = p[0]
@@ -52,6 +56,3 @@ class TestFuseFunc (unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
-
-

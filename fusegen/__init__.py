@@ -1,51 +1,57 @@
 # fusegen/__init__.py
 
-import errno, os, re, shutil, subprocess, sys
+import errno
+import os
+import re
+import shutil
+import subprocess
+import sys
 
-__all__ = [ '__version__', '__version_date__',
-            'BIN', 'SH',
-            'DEPRECATED',   'NOT_IMPLEMENTED', 
-            # functions
-            'checkDate', 'checkPkgName', 'checkPgmNames', 'checkVersion',
-            'invokeShell', 'makeFusePkg',
-            'opNames',
-       ]
+__all__ = ['__version__', '__version_date__',
+           'BIN', 'SH',
+           'DEPRECATED', 'NOT_IMPLEMENTED',
+           # functions
+           'checkDate', 'checkPkgName', 'checkPgmNames', 'checkVersion',
+           'invokeShell', 'makeFusePkg',
+           'opNames',
+           ]
 
 # -- exported constants ---------------------------------------------
-__version__      = '0.6.21'
+__version__ = '0.6.21'
 __version_date__ = '2016-02-24'
 
-BASH    = '/bin/bash'
-SH      = '/bin/sh'
+BASH = '/bin/bash'
+SH = '/bin/sh'
 
 # path to text file of quasi-prototypes
 PATH_TO_FIRST_LINES = 'fragments/prototypes'
 
 # a table of FUSE function names
 OP_NAMES = [
-    'getattr',  'readlink', 'getdir',       'mknod',        'mkdir',
-    'unlink',   'rmdir',    'symlink',      'rename',       'link',
-    'chmod',    'chown',    'truncate',     'utime',        'open',
-    'read',     'write',    'statfs',       'flush',        'release',
-    'fsync',    'setxattr', 'getxattr',     'listxattr',    'removexattr',
-    'opendir',  'readdir',  'releasedir',   'fsyncdir',     'init',
-    'destroy',  'access',   'create',       'ftruncate',    'fgetattr',
+    'getattr', 'readlink', 'getdir', 'mknod', 'mkdir',
+    'unlink', 'rmdir', 'symlink', 'rename', 'link',
+    'chmod', 'chown', 'truncate', 'utime', 'open',
+    'read', 'write', 'statfs', 'flush', 'release',
+    'fsync', 'setxattr', 'getxattr', 'listxattr', 'removexattr',
+    'opendir', 'readdir', 'releasedir', 'fsyncdir', 'init',
+    'destroy', 'access', 'create', 'ftruncate', 'fgetattr',
     # fuse version 2.6
-    'utimens',  'bmap',     'lock',
+    'utimens', 'bmap', 'lock',
     # fusion 2.9
-    'flock', 
+    'flock',
     # fusion 2.9.1
     'fallocate',
     # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
-    # NOT YET IMPLEMENTED 
+    # NOT YET IMPLEMENTED
     # fusion 2.8
     #'ioctl',        'poll',
     # fusion 2.9
-    #'write_buf','read_buf', 
-    ]
+    #'write_buf','read_buf',
+]
+
 
 def opNames():
-    """ 
+    """
     Return a copy of the list of op names, possibly including deprecated
     functions but excluding any which are not implemented.
     """
@@ -54,99 +60,101 @@ def opNames():
         x.append(name)
     return x
 
-SET_STATUS  = 0x01      # sets the status variable
-SET_FD      = 0x02      # sets an fd variable
-OP_SPECIAL  = 0x04      # messy handling
-FH_PARAM    = 0x08      # param is fi->fh instead of fpath
+SET_STATUS = 0x01      # sets the status variable
+SET_FD = 0x02      # sets an fd variable
+OP_SPECIAL = 0x04      # messy handling
+FH_PARAM = 0x08      # param is fi->fh instead of fpath
 FLAGS_PARAM = 0x10      # param is fi->flags instead of fi
 
 # Map FUSE op name to syscall name and attributes.  This is for use in
 # generating syscalls.
 OP_CALL_MAP = {
-    'getattr'    : ('lstat',         SET_STATUS),
-    'readlink'   : ('readlink',      SET_STATUS | OP_SPECIAL),  # size - 1
-    'mknod'      : ('mknod',         SET_STATUS | OP_SPECIAL),  # v messy
-    'mkdir'      : ('mkdir',         SET_STATUS),
-    'unlink'     : ('unlink',        SET_STATUS),
-    'rmdir'      : ('rmdir',         SET_STATUS),
-    'symlink'    : ('symlink',       SET_STATUS),
-    'rename'     : ('rename',        SET_STATUS),
-    'link'       : ('link',          SET_STATUS),
-    'chmod'      : ('chmod',         SET_STATUS),
-    'chown'      : ('chown',         SET_STATUS),
-    'truncate'   : ('truncate',      SET_STATUS),
-    'utime'      : ('utime',         SET_STATUS),
-    'open'       : ('open',          SET_FD | FLAGS_PARAM),
-    'read'       : ('pread',         SET_STATUS | FH_PARAM),
-    'write'      : ('pwrite',        SET_STATUS | FH_PARAM),
-    'statfs'     : ('statvfs',       SET_STATUS),
-    'flush'      : ('',              SET_STATUS),     # a no-op ??
-    'release'    : ('close',         SET_STATUS | FH_PARAM),
-    'fsync'      : ('fsync',         SET_STATUS | OP_SPECIAL), # may be fdatasync
-    'setxattr'   : ('lsetxattr',     SET_STATUS),
-    'getxattr'   : ('lgetxattr',     SET_STATUS),
-    'listxattr'  : ('llistxattr',    SET_STATUS),
-    'removexattr': ('lremovexattr',  SET_STATUS),
-    'opendir'    : ('opendir',       SET_STATUS),
-    'readdir'    : ('lreaddir',      OP_SPECIAL),  # loops
-    'releasedir' : ('closedir',      OP_SPECIAL),  # must cast fi->fh
-    'fsyncdir'   : ('',              SET_STATUS),  # a no-op ??
-    'init'       : ('',              OP_SPECIAL),  # kukemal
-    'destroy'    : ('',              SET_STATUS),
-    'access'     : ('access',        SET_STATUS),
-    'create'     : ('creat',         SET_FD),       # call returns fd
-    'ftruncate'  : ('ftruncate',     SET_STATUS | FH_PARAM),
-    'fgetattr'   : ('fstat',         SET_STATUS | FH_PARAM),
+    'getattr': ('lstat', SET_STATUS),
+    'readlink': ('readlink', SET_STATUS | OP_SPECIAL),  # size - 1
+    'mknod': ('mknod', SET_STATUS | OP_SPECIAL),  # v messy
+    'mkdir': ('mkdir', SET_STATUS),
+    'unlink': ('unlink', SET_STATUS),
+    'rmdir': ('rmdir', SET_STATUS),
+    'symlink': ('symlink', SET_STATUS),
+    'rename': ('rename', SET_STATUS),
+    'link': ('link', SET_STATUS),
+    'chmod': ('chmod', SET_STATUS),
+    'chown': ('chown', SET_STATUS),
+    'truncate': ('truncate', SET_STATUS),
+    'utime': ('utime', SET_STATUS),
+    'open': ('open', SET_FD | FLAGS_PARAM),
+    'read': ('pread', SET_STATUS | FH_PARAM),
+    'write': ('pwrite', SET_STATUS | FH_PARAM),
+    'statfs': ('statvfs', SET_STATUS),
+    'flush': ('', SET_STATUS),     # a no-op ??
+    'release': ('close', SET_STATUS | FH_PARAM),
+    'fsync': ('fsync', SET_STATUS | OP_SPECIAL),  # may be fdatasync
+    'setxattr': ('lsetxattr', SET_STATUS),
+    'getxattr': ('lgetxattr', SET_STATUS),
+    'listxattr': ('llistxattr', SET_STATUS),
+    'removexattr': ('lremovexattr', SET_STATUS),
+    'opendir': ('opendir', SET_STATUS),
+    'readdir': ('lreaddir', OP_SPECIAL),  # loops
+    'releasedir': ('closedir', OP_SPECIAL),  # must cast fi->fh
+    'fsyncdir': ('', SET_STATUS),  # a no-op ??
+    'init': ('', OP_SPECIAL),  # kukemal
+    'destroy': ('', SET_STATUS),
+    'access': ('access', SET_STATUS),
+    'create': ('creat', SET_FD),       # call returns fd
+    'ftruncate': ('ftruncate', SET_STATUS | FH_PARAM),
+    'fgetattr': ('fstat', SET_STATUS | FH_PARAM),
 
-    'utimens'    : ('utimensat',        SET_STATUS),
-    'bmap'       : ('_bmap',            SET_STATUS),
-    'lock'       : ('ulockmgr_op',      SET_STATUS),
-    'flock'      : ('flock',            SET_STATUS),
-    'fallocate'  : ('posix_fallocate',  SET_STATUS),
+    'utimens': ('utimensat', SET_STATUS),
+    'bmap': ('_bmap', SET_STATUS),
+    'lock': ('ulockmgr_op', SET_STATUS),
+    'flock': ('flock', SET_STATUS),
+    'fallocate': ('posix_fallocate', SET_STATUS),
 }
 LOG_ENTRY_PAT_MAP = {
-        'blocksize' : '0x%08x',
-        'buf'       : '0x%08x',
-        'cmd'       : '%d',
-        'datasync'  : '%d',
-        'dev'       : '%lld',
-        'fi'        : '0x%08x',
-        'filler'    : '0x%08x',
-        'flags'     : '0x%08x',
-        'fpath'     : '\\"%s\\"',
-        'gid'       : '%d',
-        'idx'       : '0x016x',
-        'len'       : '%lld',
-        'link'      : '\\"%s\\"',
-        'list'      : '0x%08x',
-        'lock'      : '0x%08x',
-        'mask'      : '0%o',
-        'mode'      : '0%03o',
-        'name'      : '\\"%s\\"',
-        'newpath'   : '\\"%s\\"',
-        'newsize'   : '%lld',
-        'offset'    : '%lld',
-        'op'        : '%d',
-        'path'      : '\\"%s\\"',
-        'rootdir'   : '\\"%s\\"',
-        'size'      : '%d',             # or should this be lld ?
-        'statbuf'   : '0x%08x',
-        'statv'     : '0x%08x',
-        'tv[2]'     : '0x%08x',
-        'ubuf'      : '0x%08x',
-        'uid'       : '%d',
-        'userdata'  : '0x%08x',
-        'value'     : '\\"%s\\"',
-        }
+    'blocksize': '0x%08x',
+    'buf': '0x%08x',
+    'cmd': '%d',
+    'datasync': '%d',
+    'dev': '%lld',
+    'fi': '0x%08x',
+    'filler': '0x%08x',
+    'flags': '0x%08x',
+    'fpath': '\\"%s\\"',
+    'gid': '%d',
+    'idx': '0x016x',
+    'len': '%lld',
+    'link': '\\"%s\\"',
+    'list': '0x%08x',
+    'lock': '0x%08x',
+    'mask': '0%o',
+    'mode': '0%03o',
+    'name': '\\"%s\\"',
+    'newpath': '\\"%s\\"',
+    'newsize': '%lld',
+    'offset': '%lld',
+    'op': '%d',
+    'path': '\\"%s\\"',
+    'rootdir': '\\"%s\\"',
+    'size': '%d',             # or should this be lld ?
+    'statbuf': '0x%08x',
+    'statv': '0x%08x',
+    'tv[2]': '0x%08x',
+    'ubuf': '0x%08x',
+    'uid': '%d',
+    'userdata': '0x%08x',
+    'value': '\\"%s\\"',
+}
 PAT_MAP = {
-        'buf'       : '0x%08x',         #  XXX ?
-        'fi'        : '0x%08x',
-        'statbuf'   : '0x%08x',
-        'ubuf'      : '%s',
-        }
+    'buf': '0x%08x',  # XXX ?
+    'fi': '0x%08x',
+    'statbuf': '0x%08x',
+    'ubuf': '%s',
+}
 
 # -- functions ------------------------------------------------------
 PKG_DATE_RE = re.compile(r'^[\d]{4}-\d\d-\d\d$')
+
+
 def checkDate(s):
     if not s:
         print("date must not be empty")
@@ -154,11 +162,13 @@ def checkDate(s):
     else:
         s = s.strip()
         m = PKG_DATE_RE.match(s)
-        if m == None:
+        if m is None:
             print(("'%s' is not a valid YYYY-MM-DD date" % s))
             sys.exit(1)
 
 PKG_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
+
+
 def checkPkgName(s):
     if not s:
         print("you must provide a package name")
@@ -166,11 +176,13 @@ def checkPkgName(s):
     else:
         s = s.strip()
         m = PKG_NAME_RE.match(s)
-        if m == None:
+        if m is None:
             print("'%s' is not a valid package name" % s)
             sys.exit(1)
 
 PGM_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
+
+
 def checkPgmNames(ss):
     if not ss or len(ss) == 0:
         print("you must supply at least one program name")
@@ -182,6 +194,8 @@ def checkPgmNames(ss):
                 sys.exit(1)
 
 PKG_VERSION_RE = re.compile(r'^\d+\.\d+.\d+$')
+
+
 def checkVersion(s):
     if not s:
         print("version must not be empty")
@@ -189,9 +203,10 @@ def checkVersion(s):
     else:
         s = s.strip()
         m = PKG_VERSION_RE.match(s)
-        if m == None:
+        if m is None:
             print(("'%s' is not a valid X.Y.Z version" % s))
             sys.exit(1)
+
 
 def invokeShell(cmdList):
     try:
@@ -200,6 +215,7 @@ def invokeShell(cmdList):
     except subprocess.CalledProcessError as e:
         output = str(e)
     return output
+
 
 class FuseFunc(object):
 
@@ -212,19 +228,22 @@ class FuseFunc(object):
     @property
     def name(self):
         return self._name
+
     @property
     def fType(self):
         return self._type
+
     @property
     def params(self):
         return self._params
+
     @property
     def p2tMap(self):
         return self._p2tMap
 
     def firstLine(self):
         """ return the first line of the function """
-        line = self.fType  + self.name + '('
+        line = self.fType + self.name + '('
         pCount = len(self.params)
         for ndx, param in enumerate(self.params):
             line += param[0]
@@ -242,13 +261,13 @@ class FuseFunc(object):
         for ndx, param in enumerate(self.params):
             pName = param[1]
             if pName != 'fi' and ndx > 0:
-                s += ', ' +param[1]
+                s += ', ' + param[1]
         return s
 
     @classmethod
     def parseProto(clz, line, prefix=''):
 
-        line   = line.strip()
+        line = line.strip()
         params = []     # of 2-tuples
         p2tMap = {}
 
@@ -259,7 +278,7 @@ class FuseFunc(object):
             sys.exit(1)
         fType = parts[0].strip()
         fType += ' '
-        rest  = parts[1].lstrip()
+        rest = parts[1].lstrip()
         if rest[0] == '*':
             rest = rest[1:]
             fType += '*'
@@ -275,7 +294,7 @@ class FuseFunc(object):
         else:
             fName = prefix + baseName
 
-        argList = rest[lNdx+1:rNdx]
+        argList = rest[lNdx + 1:rNdx]
 
         # DEBUG
         #print("type '%s', fName '%s', args '%s'" % (fType, fName, argList))
@@ -302,7 +321,7 @@ class FuseFunc(object):
             # DEBUG
             #print("    argType: '%s', argName '%s'" % (argType, argName))
             # END
-            params.append( (argType, argName) )     # that's a 2-tuple
+            params.append((argType, argName))     # that's a 2-tuple
             p2tMap[argName] = argType
 
         return baseName, FuseFunc(fName, fType, params, p2tMap)
@@ -320,20 +339,22 @@ class FuseFunc(object):
                     lines.append(line)
                     line = f.readline()
 
-        funcMap   = {}  # this maps prefixed names to FuseFunc objects
+        funcMap = {}  # this maps prefixed names to FuseFunc objects
         opCodeMap = {}  # maps names to integer opCodes
 
         for ndx, line in enumerate(lines):
             name, ff = FuseFunc.parseProto(line, prefix)
-            funcMap[name]   = ff
+            funcMap[name] = ff
             opCodeMap[name] = ndx
             # DEBUG
             print("FuseFunc.getFuncMap: %-13s => %2d" % (name, ndx))
             # END
 
         # DEBUG
-        if 'lock' in funcMap:       print("lock is in the map")
-        else:                       print("lock is NOT in the map")
+        if 'lock' in funcMap:
+            print("lock is in the map")
+        else:
+            print("lock is NOT in the map")
         # END
         return funcMap, opCodeMap
 
@@ -341,22 +362,23 @@ class FuseFunc(object):
 
 # attributes of fuse operations
 
-DEPRECATED          = 0x00000001
-RETURNS_STATUS      = 0x00000002
-CHECK_ERR_AND_FLIP  = 0x00000004
-FULL_PATH           = 0x00000008
-DOUBLE_FULL_PATH    = 0x00000010
+DEPRECATED = 0x00000001
+RETURNS_STATUS = 0x00000002
+CHECK_ERR_AND_FLIP = 0x00000004
+FULL_PATH = 0x00000008
+DOUBLE_FULL_PATH = 0x00000010
 #
-LOGGING_STAT        = 0x00000040
-LOGGING_STATVFS     = 0x00000080
-HAS_LINK_FILE       = 0x00000100
-LOGGING_FI          = 0x00000200
-SYSCALL_RET_FD      = 0x00000400
-SET_FH_FROM_FD      = 0x00000800
-SYSCALL_FI_PARAM1   = 0x00001000
+LOGGING_STAT = 0x00000040
+LOGGING_STATVFS = 0x00000080
+HAS_LINK_FILE = 0x00000100
+LOGGING_FI = 0x00000200
+SYSCALL_RET_FD = 0x00000400
+SET_FH_FROM_FD = 0x00000800
+SYSCALL_FI_PARAM1 = 0x00001000
 
-CHK_DEF_XATTR       = 0x10000000
-NOT_IMPLEMENTED     = 0x80000000
+CHK_DEF_XATTR = 0x10000000
+NOT_IMPLEMENTED = 0x80000000
+
 
 def setOpAttrs():
     """
@@ -365,58 +387,59 @@ def setOpAttrs():
     opAttrs = {}
     for name in OP_NAMES:
         attrs = 0
-        if name in ['getdir', 'utime',]:
+        if name in ['getdir', 'utime', ]:
             attrs |= DEPRECATED
-        elif name in ['ioctl','poll','write_buf','read_buf',]:
+        elif name in ['ioctl', 'poll', 'write_buf', 'read_buf', ]:
             attrs |= NOT_IMPLEMENTED
         else:
-            if name in ['symlink',]:
+            if name in ['symlink', ]:
                 attrs |= HAS_LINK_FILE
-    
+
             if name != 'init' and name != 'destroy':
                 attrs |= RETURNS_STATUS
-    
-            if name in ['rename','link',]:
+
+            if name in ['rename', 'link', ]:
                 attrs |= DOUBLE_FULL_PATH
-    
+
             # this is a NEGATIVE check: list those ops which do NOT use
-            if name not in ['flock', 'lock', 
+            if name not in ['flock', 'lock',
                             'symlink',
                             'read', 'write', 'flush', 'release', 'fsync',
-                            'readdir', 'releasedir','fsyncdir', 'init',
+                            'readdir', 'releasedir', 'fsyncdir', 'init',
                             'destroy', 'ftruncate', 'fgetattr']:
                 attrs |= FULL_PATH
-    
-            if name not in [ 'destroy', 'flush', 'fsyncdir',
-                    'init', 'mknod', 'readdir', ]:
+
+            if name not in ['destroy', 'flush', 'fsyncdir',
+                            'init', 'mknod', 'readdir', ]:
                 attrs |= CHECK_ERR_AND_FLIP
-    
-            if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr',]:
+
+            if name in ['setxattr', 'getxattr', 'listxattr', 'removexattr', ]:
                 attrs |= CHK_DEF_XATTR
-    
+
             if name in ['create', 'fallocate', 'fgetattr', 'flush',
-                    'fsync', 'fsyncdir', 'ftruncate',
-                    'lock',
-                    'opendir', 'open', 'readdir', 'read', 'releasedir',
-                    'release', 'write',]:
+                        'fsync', 'fsyncdir', 'ftruncate',
+                        'lock',
+                        'opendir', 'open', 'readdir', 'read', 'releasedir',
+                        'release', 'write', ]:
                 attrs |= LOGGING_FI
-    
-            if name in ['create', 'open',  ]:
+
+            if name in ['create', 'open', ]:
                 attrs |= SET_FH_FROM_FD
-    
-            if name in ['fgetattr', 'flock', 'fsync', 'opendir', 
-                    'read', 'releasedir', 'release', 'ftruncate', 'write']:
+
+            if name in ['fgetattr', 'flock', 'fsync', 'opendir',
+                        'read', 'releasedir', 'release', 'ftruncate', 'write']:
                 attrs |= SYSCALL_FI_PARAM1
-    
-            if name in ['getattr', 'fgetattr',]:
+
+            if name in ['getattr', 'fgetattr', ]:
                 attrs |= LOGGING_STAT
             elif name == 'statfs':
                 attrs |= LOGGING_STATVFS
-            if name in ['create', 'open',]:
+            if name in ['create', 'open', ]:
                 attrs |= SYSCALL_RET_FD
 
         opAttrs[name] = attrs
     return opAttrs
+
 
 def makedir_p(path, mode):
     # XXX SLOPPY: doesn't handle case where mode is wrong
@@ -428,27 +451,30 @@ def makedir_p(path, mode):
             raise e
         pass
 
+
 def makeFusePkg(args):
-    acPrereq        = args.acPrereq
-    emailAddr       = args.emailAddr
-    instrumenting   = args.instrumenting
-    force           = args.force
-    lcName          = args.lcName
-    logging         = args.logging
-    myDate          = args.myDate
-    myVersion       = args.myVersion
-    pathToPkg       = args.pathToPkg    # target package directory
-    pkgName         = args.pkgName
-    prefix          = pkgName + '_'     # XXX FORCES UNDERSCORE
-    testing         = args.testing
-    ucName          = args.ucName
-    verbose         = args.verbose
+    acPrereq = args.acPrereq
+    emailAddr = args.emailAddr
+    instrumenting = args.instrumenting
+    force = args.force
+    lcName = args.lcName
+    logging = args.logging
+    myDate = args.myDate
+    myVersion = args.myVersion
+    pathToPkg = args.pathToPkg    # target package directory
+    pkgName = args.pkgName
+    prefix = pkgName + '_'     # XXX FORCES UNDERSCORE
+    testing = args.testing
+    ucName = args.ucName
+    verbose = args.verbose
 
     # make sure opCode <-> opName maps are consistent ---------------
     funcMap, opCodeMap = FuseFunc.getFuncMap(prefix)
     # DEBUG
-    if 'lock' in funcMap:       print("lock is in the main map")
-    else:                       print("lock is NOT in the main map")
+    if 'lock' in funcMap:
+        print("lock is in the main map")
+    else:
+        print("lock is NOT in the main map")
     # END
     inconsistent = False
     for ndx in range(len(OP_NAMES)):
@@ -465,9 +491,9 @@ def makeFusePkg(args):
         sys.exit(1)
 
     # ===============================================================
-    # CREATE DIRECTORIES 
+    # CREATE DIRECTORIES
     # ===============================================================
-    
+
     # if -force and pathToPkg exists, delete it -- unless there is a .git/
     if force and os.path.exists(pathToPkg):
         pathToDotGit = os.path.join(pathToPkg, ".git")
@@ -479,12 +505,12 @@ def makeFusePkg(args):
 
     makedir_p(pathToPkg, 0o755)
 
-    mountPoint      = os.path.join('workdir', 'mountPoint')
-    rootDir         = os.path.join('workdir', 'rootdir')
-    makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests',]
-    otherSubDirs    = ['bin', 'config', 'ghpDoc', 'm4', 'workdir',
-                        mountPoint, rootDir, 'tmp',]
-    subDirs         = makeFileSubDirs + otherSubDirs
+    mountPoint = os.path.join('workdir', 'mountPoint')
+    rootDir = os.path.join('workdir', 'rootdir')
+    makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests', ]
+    otherSubDirs = ['bin', 'config', 'ghpDoc', 'm4', 'workdir',
+                    mountPoint, rootDir, 'tmp', ]
+    subDirs = makeFileSubDirs + otherSubDirs
     for dir in subDirs:
         pathToSubDir = os.path.join(pathToPkg, dir)
         makedir_p(pathToSubDir, 0o755)
@@ -496,14 +522,14 @@ def makeFusePkg(args):
     # copy over fusgegen/src files  ---------------------------------
     def copyFromSrc(name, executable=False, topLevel=True):
         """ copy a file from py/fusegen/src/ to the top level package dir """
-        src  = os.path.join('src', name)
+        src = os.path.join('src', name)
         if topLevel:
             dest = os.path.join(pathToPkg, name)
         else:
             dest = os.path.join(pathToPkg, os.path.join('src', name))
         with open(src, 'r') as a:
             text = a.read()
-            with open(dest,'w') as b:
+            with open(dest, 'w') as b:
                 b.write(text)
             if executable:
                 os.chmod(dest, 0o744)
@@ -512,8 +538,8 @@ def makeFusePkg(args):
 
     # install-sh removed from both lists 2015-02-22
     for x in ['autogen.sh', 'build', 'config.guess', 'config.sub', 'COPYING',
-            'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION', 'COPYING.GNUBL',
-            'README.licenses',]:
+              'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION', 'COPYING.GNUBL',
+              'README.licenses', ]:
         copyFromSrc(x, x in ['autogen.sh', 'build', ])
     for x in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
         copyFromSrc(x, False, False)
@@ -599,7 +625,7 @@ install-dvi install-info install-ps install-pdf dvi pdf ps info :
     # write Makefile.in  --------------------------------------------
     # XXX This bit of silliness handles aclocal's requirement that
     # the file exist before we create it
-    makeInFile = os.path.join(pathToPkg, os.path.join('src','Makefile.in'))
+    makeInFile = os.path.join(pathToPkg, os.path.join('src', 'Makefile.in'))
     content = """
 """
     with open(makeInFile, 'w', 0o644) as f:
@@ -908,11 +934,11 @@ int main(int argc, char *argv[])
     # src/opcodes.h -------------------------------------------------
     pathToOpcodes = os.path.join(pathToSrc, 'opcodes.h')
     with open(pathToOpcodes, 'w') as f:
-        f.write("/* opcodes.h */\n\n");
-        f.write("#ifndef _OPCODES_H_\n");
+        f.write("/* opcodes.h */\n\n")
+        f.write("#ifndef _OPCODES_H_\n")
         for ndx, name in enumerate(OP_NAMES):
             f.write("#define FG_%-14s (%d)\n" % (name.upper(), ndx))
-        f.write("#endif\n");
+        f.write("#endif\n")
 
     # package header file -------------------------------------------
     content = """/** {0:s}.h */
@@ -1139,7 +1165,7 @@ int {1:s}Error(char *msg)
         content += """\
     {1:s}LogMsg("    ERROR %s: %s\\n", msg, strerror(errno));
 """.format(pkgName, prefix, ucName)     # GEEP
-   
+
     content += """\
     return errCode;
 }}
@@ -1370,8 +1396,8 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
     int status = clock_gettime(CLOCK_MONOTONIC, tEntry);
     assert(status == 0);
     bucket_t *myBucket = &buckets[0];   // should be bktNdx
-    int doubled = 0; 
-    
+    int doubled = 0;
+
     status = pthread_mutex_lock(&myBucket->lock);
     assert(status == 0);
     int myCount = myBucket->count++;
@@ -1379,7 +1405,7 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
         opData_t *p;
         slotsPerBucket *= 2;
         doubled++;
-        p = realloc(buckets[0].ops, 
+        p = realloc(buckets[0].ops,
                 slotsPerBucket*sizeof(opData_t));
         assert(p != NULL);
         buckets[0].ops = p;
@@ -1393,7 +1419,7 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
     // DEBUG
     if (doubled) {{
         {1:s}LogMsg("slotsPerBucket doubled to %d\\n", slotsPerBucket);
-        {1:s}FlushLog(); 
+        {1:s}FlushLog();
     }}
     // END
 """.format(pkgName, prefix, ucName)     # GEEP
@@ -1592,7 +1618,7 @@ struct fuse_operations {0:s}OpTable = {{
             ss.append('    int status = 0;')
         if (attrs & SYSCALL_RET_FD) or name == 'fallocate':
             ss.append('    int fd;')
-        if attrs & (FULL_PATH | DOUBLE_FULL_PATH) :
+        if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
             ss.append('    char fpath[PATH_MAX];')
         if attrs & DOUBLE_FULL_PATH:
             ss.append('    char fnewpath[PATH_MAX];')
@@ -1601,7 +1627,7 @@ struct fuse_operations {0:s}OpTable = {{
 
         if name in ['opendir', 'readdir']:
             ss.append('    DIR *dp;')
-            if name=='readdir':
+            if name == 'readdir':
                 ss.append('    struct dirent *entry;')
         elif name == 'listxattr':
             ss.append('    char *ptr;')
@@ -1611,7 +1637,9 @@ struct fuse_operations {0:s}OpTable = {{
         # -- log on entry -----------------------------
         if logging:
             if name == 'init':
-                ss.append("    %sLogEntry(\"\\n%sinit()\\n\");" % (prefix, prefix))
+                ss.append(
+                    "    %sLogEntry(\"\\n%sinit()\\n\");" %
+                    (prefix, prefix))
                 ss.append('    %sLogConn(conn);' % prefix)
                 ss.append('    %sLogContext(fuse_get_context());' % prefix)
             else:
@@ -1622,7 +1650,9 @@ struct fuse_operations {0:s}OpTable = {{
                     ss.append(s)
                     ss.append("            path, newpath);")
                 else:
-                    logE = ['    %sLogEntry(\"\\n%s%s(' % (prefix, prefix, name) ]
+                    logE = [
+                        '    %sLogEntry(\"\\n%s%s(' %
+                        (prefix, prefix, name)]
                     for ndx, param in enumerate(ff.params):
                         if ndx > 0:
                             logE.append(', ')
@@ -1633,18 +1663,18 @@ struct fuse_operations {0:s}OpTable = {{
                             else:
                                 pat = '%d'
                         elif pName == 'value':
-                            if name in ['getxattr',]:
+                            if name in ['getxattr', ]:
                                 pat = '0x%08x'
                             else:
                                 pat = '\\"%s\\"'
                         elif pName in LOG_ENTRY_PAT_MAP:
-                            pat  = LOG_ENTRY_PAT_MAP[pName]
+                            pat = LOG_ENTRY_PAT_MAP[pName]
                         else:
                             pat = 'UNKNOWN PAT FOR \'%s\'' % pName
-                        logE.append( '%s=%s' % (pName, pat))
+                        logE.append('%s=%s' % (pName, pat))
                     logE.append(")\\n\",")
-                    ss.append( ''.join(logE))
-    
+                    ss.append(''.join(logE))
+
                     # now add a parameter list on the next line
                     logEP = ['             ']
                     for ndx, param in enumerate(ff.params):
@@ -1696,7 +1726,7 @@ struct fuse_operations {0:s}OpTable = {{
                 ss.append('    status = flock(fi->fh, op);')
             elif name == 'fsync':
                 ss.append(
-"""    // freebsd
+                    """    // freebsd
 #ifdef HAVE_FDATASYNC
     if (datasync)
         status = fdatasync(fi->fh);
@@ -1705,13 +1735,14 @@ struct fuse_operations {0:s}OpTable = {{
         status = fsync(fi->fh);""")
 
             elif name == 'lock':
-                ss.append('    status = ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner, sizeof(fi->lock_owner));')
+                ss.append(
+                    '    status = ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner, sizeof(fi->lock_owner));')
 
             elif name == 'mknod':
                 # in python format specs {} must be doubled :-(
                 ss.append(
 
-"""    // ATTRIBUTION
+                    """    // ATTRIBUTION
     if (S_ISREG(mode)) {{
         status = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
         if (status < 0)
@@ -1741,19 +1772,19 @@ struct fuse_operations {0:s}OpTable = {{
         return status;
     }}
     do {{
-""".format(name,prefix)                         # BLIP
+""".format(name, prefix)                         # BLIP
                 if logging:
                     content += """\
         {1:s}LogMsg("calling filler(%s)\\n", entry->d_name);
-""".format(name,prefix)                         # BLIP
+""".format(name, prefix)                         # BLIP
 
                 content += """\
         if (filler(buf, entry->d_name, NULL, 0) != 0) {{
-""".format(name,prefix)                         # BLIP
+""".format(name, prefix)                         # BLIP
                 if logging:
                     content += """\
             {1:s}LogMsg("    ERROR {1:s}readdir filler:  buffer full");
-""".format(name,prefix)                         # BLIP
+""".format(name, prefix)                         # BLIP
 
                 content += """\
             return -ENOMEM;
@@ -1768,7 +1799,7 @@ struct fuse_operations {0:s}OpTable = {{
                 ss.append("    status = closedir((DIR *) (uintptr_t) fi->fh);")
             elif name == 'utimens':
                 ss.append(
-                "    status = utimensat(0, fpath, tv, AT_SYMLINK_NOFOLLOW);")
+                    "    status = utimensat(0, fpath, tv, AT_SYMLINK_NOFOLLOW);")
             elif attrs & HAS_LINK_FILE:
                 ss.append("    status = %s(path, flink);" % sysCall)
             elif attrs & DOUBLE_FULL_PATH:
@@ -1780,7 +1811,8 @@ struct fuse_operations {0:s}OpTable = {{
                 else:
                     if attrs & SYSCALL_FI_PARAM1:
                         if name == 'fgetattr':
-                            ss.append('    // FreeBSD special case; ATTRIBUTION')
+                            ss.append(
+                                '    // FreeBSD special case; ATTRIBUTION')
                             ss.append('    if (!strcmp(path, "/")) {')
                             ss.append('        char fpath[PATH_MAX];')
                             ss.append("        %sFullPath(fpath, path);" % (
@@ -1788,12 +1820,16 @@ struct fuse_operations {0:s}OpTable = {{
                             ss.append("        status = lstat(fpath%s);" % (
                                 ff.otherArgs()))
                             ss.append('        if (status < 0)')
-                            ss.append("            status = %sError(\"%sfgetattr lstat\");" % (prefix, prefix))
+                            ss.append(
+                                "            status = %sError(\"%sfgetattr lstat\");" %
+                                (prefix, prefix))
                             ss.append('    } else {')
                             ss.append("        status = %s(fi->fh%s);" % (
                                 sysCall, ff.otherArgs()))
                             ss.append('        if (status < 0)')
-                            ss.append("            status = %sError(\"%sfgetattr fstat\");" % (prefix, prefix))
+                            ss.append(
+                                "            status = %sError(\"%sfgetattr fstat\");" %
+                                (prefix, prefix))
                             ss.append('    }')
                         elif name == 'opendir':
                             ss.append('    dp = opendir(fpath);')
@@ -1821,45 +1857,49 @@ struct fuse_operations {0:s}OpTable = {{
                 ss.append('        link[status] = \'\\0\';')
                 ss.append('        status = 0;')
                 ss.append('    }')
-        if logging and name in ['getxattr',]:
+        if logging and name in ['getxattr', ]:
             ss.append('    else')
             start = '        %sLogMsg(' % prefix
-            ss.append(start + '"    value=\\"%s\\"\\n", value);' )
+            ss.append(start + '"    value=\\"%s\\"\\n", value);')
 
         if logging and name == 'listxattr':
             start = '    %sLogMsg("    ' % prefix
             ss.append(
-                  start + 'returned attributes (length %d):\\n", status);')
+                start + 'returned attributes (length %d):\\n", status);')
             ss.append(
-              '    for (ptr = list; ptr < list + status; ptr += strlen(ptr)+1)')
+                '    for (ptr = list; ptr < list + status; ptr += strlen(ptr)+1)')
             start = '        %sLogMsg' % prefix
-            ss.append( start + '("    \\"%s\\"\\n", ptr);')
+            ss.append(start + '("    \\"%s\\"\\n", ptr);')
 
         # -- logging stat -----------------------------
         if logging:
             if (attrs & LOGGING_STAT):
-                ss.append("    %sLogStat(%s);\n"    % (prefix, ff.params[1][1]))
+                ss.append("    %sLogStat(%s);\n" % (prefix, ff.params[1][1]))
             elif attrs & LOGGING_STATVFS:
-                ss.append("    %sLogStatVFS(%s);\n" % (prefix, ff.params[1][1]))
+                ss.append(
+                    "    %sLogStatVFS(%s);\n" %
+                    (prefix, ff.params[1][1]))
 
         if attrs & SET_FH_FROM_FD:
             ss.append('    fi->fh = fd;')
             if logging:
                 ss.append('    %sLogFI(fi);' % prefix)
-        elif name=='opendir':
+        elif name == 'opendir':
             ss.append('    fi->fh = (intptr_t) dp;')
             if logging:
                 ss.append('    %sLogFI(fi);' % prefix)
-        elif logging and name=='readdir':
+        elif logging and name == 'readdir':
             ss.append('    %sLogFI(fi);' % prefix)
 
         # -- instrumentation at exit ------------------
         if instrumenting:
             if name in ['readlink', 'read', 'write',
-                    'setxattr', 'getxattr', 'listxattr',]:
+                        'setxattr', 'getxattr', 'listxattr', ]:
                 ss.append('    %sClockMeOut(&tEntry, myData, size);' % prefix)
             else:
-                ss.append('    %sClockMeOut(&tEntry, myData, %s);' % (prefix,0))
+                ss.append(
+                    '    %sClockMeOut(&tEntry, myData, %s);' %
+                    (prefix, 0))
             if name == 'destroy':
                 ss.append('\n    %sWriteBucket();' % prefix)
 
@@ -1869,13 +1909,10 @@ struct fuse_operations {0:s}OpTable = {{
         elif name == 'init':
             ss.append("    return %s_DATA;" % ucName)
         ss.append("}")
-        if (attrs & CHK_DEF_XATTR) or (name == 'fallocate') or (name=='utimens'):
+        if (attrs & CHK_DEF_XATTR) or (
+                name == 'fallocate') or (name == 'utimens'):
             ss.append("#endif")
 
         out = "\n".join(ss) + "\n"
         with open(pathToInc, 'w') as f:
             f.write(out)
-
-
-
-

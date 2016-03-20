@@ -1,33 +1,37 @@
 #!/usr/bin/python3
 
-import os, struct, sys
-from argparse   import ArgumentParser
+import os
+import struct
+import sys
+from argparse import ArgumentParser
 # XXX we want to drop OP_NAMES
-from fusegen    import __version__, __version_date__, OP_NAMES, FuseFunc
+from fusegen import __version__, __version_date__, OP_NAMES, FuseFunc
+
 
 def decode(chunk):
     sec, ns, lateNsec, b0, b1, b2, opCode = struct.unpack('IIIBBBB', chunk)
     # DEBUG
     #print("%3d %3d %3d %3d" % (b0, b1, b2, opCode))
     # END
-    lateSec    = 0x3f & b0             # low-order 7 bits
-    lowBit     = (b0 >> 7) & 1         # high-order bit from that byte
+    lateSec = 0x3f & b0             # low-order 7 bits
+    lowBit = (b0 >> 7) & 1         # high-order bit from that byte
     higherBits = (b1 + (b2 << 8)) << 1
-    byteCount  = higherBits | lowBit
+    byteCount = higherBits | lowBit
 
     return sec, ns, lateSec, lateNsec, byteCount, opCode
+
 
 def doCounts(args):
     """ generate a table showing how often each opcode ws invoked """
     howMany = args.howMany
-    path    = args.pathToData
+    path = args.pathToData
     verbose = args.verbose
-    zeroes  = args.zeroes
+    zeroes = args.zeroes
 
     with open(path, 'rb') as f:
         data = f.read()
-    byteCount   = len(data)
-    opCount     = byteCount/16
+    byteCount = len(data)
+    opCount = byteCount / 16
     if verbose:
         print("%d bytes, %d ops" % (byteCount, opCount))
 
@@ -35,10 +39,10 @@ def doCounts(args):
 
     # XXX WORKING HERE XXX
 
-    table = [0]*len(OP_NAMES)
+    table = [0] * len(OP_NAMES)
     for n in range(howMany):
         begin = n * 16
-        end   = begin + 16
+        end = begin + 16
         chunk = data[begin:end]
         sec, ns, lateSec, lateNsec, byteCount, opCode = decode(chunk)
         table[opCode] += 1
@@ -63,34 +67,35 @@ def simpleDump(args):
     print("  sec   nanosec  sec  nanosec   count   op   name")
 
     howMany = args.howMany
-    path    = args.pathToData
+    path = args.pathToData
     verbose = args.verbose
 
     with open(path, 'rb') as f:
         data = f.read()
-    byteCount   = len(data)
-    opCount     = byteCount/16
+    byteCount = len(data)
+    opCount = byteCount / 16
     if verbose:
         print("%d bytes, %d ops" % (byteCount, opCount))
-    lastSec      = 0
-    lastNsec     = 0
-    lastLateSec  = 0
+    lastSec = 0
+    lastNsec = 0
+    lastLateSec = 0
     lastLateNsec = 0
     for n in range(howMany):
-        flag  = ''                          # 'P' if concurrency detected
+        flag = ''                          # 'P' if concurrency detected
         begin = n * 16
-        end   = begin + 16
+        end = begin + 16
         chunk = data[begin:end]
         sec, ns, lateSec, lateNsec, byteCount, opCode = decode(chunk)
         if sec == lastSec and ns < lastNsec + lastLateNsec:
             flag = 'P'
-        print ("%6d %9d %2d %9d %7d   %2d %-16s %s" % (
-            sec, ns, lateSec, lateNsec, 
+        print("%6d %9d %2d %9d %7d   %2d %-16s %s" % (
+            sec, ns, lateSec, lateNsec,
             byteCount, opCode, OP_NAMES[opCode], flag))
-        lastSec       = sec
-        lastNsec      = ns
-        lastLateSec   = lateSec
-        lastLateNsec  = lateNsec
+        lastSec = sec
+        lastNsec = ns
+        lastLateSec = lateSec
+        lastLateNsec = lateNsec
+
 
 def doRun(args):
     counting = args.stats
@@ -98,29 +103,29 @@ def doRun(args):
         doCounts(args)
     else:
         simpleDump(args)
-    
+
 
 def main():
-    DESC    = 'parse a fuseGenned data file'
-    parser  = ArgumentParser(description=DESC)
+    DESC = 'parse a fuseGenned data file'
+    parser = ArgumentParser(description=DESC)
 
-    parser.add_argument('-D', '--pathToData', 
-        help = 'path to data file')
+    parser.add_argument('-D', '--pathToData',
+                        help='path to data file')
 
     parser.add_argument('-j', '--justShow', action='store_true',
-        help='show options and exit')
+                        help='show options and exit')
 
     parser.add_argument('-n', '--howMany', type=int, default=0,
-        help='how many data points to decode')
+                        help='how many data points to decode')
 
     parser.add_argument('-S', '--stats', action='store_true',
-        help='be chatty')
+                        help='be chatty')
 
     parser.add_argument('-v', '--verbose', action='store_true',
-        help='be chatty')
+                        help='be chatty')
 
     parser.add_argument('-z', '--zeroes', action='store_true',
-        help='list only zero-count opcodes')
+                        help='list only zero-count opcodes')
 
     args = parser.parse_args()
 
@@ -132,11 +137,11 @@ def main():
     # fixups --------------------------------------------------------
     fileSize = os.path.getsize(args.pathToData)
     itemCount = int(fileSize / 16)
-    if itemCount*16 != fileSize:
+    if itemCount * 16 != fileSize:
         print("warning: file size is not a multiple of 16")
     if args.howMany > itemCount or args.howMany == 0:
         args.howMany = itemCount
- 
+
     # sanity checks -------------------------------------------------
     if args.howMany <= 0:
         print("%d is not a positive integer" % args.howMany)
@@ -147,7 +152,7 @@ def main():
 
     # maybe show options and such -----------------------------------
     if args.verbose or args.justShow:
-        print ("%s %s" % (appName, __version_date__))
+        print("%s %s" % (appName, __version_date__))
 
     if args.verbose or args.justShow:
         print('justShow             = ' + str(args.justShow))
@@ -162,4 +167,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
