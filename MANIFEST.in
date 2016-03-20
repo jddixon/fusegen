@@ -1,7 +1,7 @@
 include netDistrib.conf
 include CHANGES LICENSE.md MANIFEST.in PACKAGES README* TODO
-include check* diff* countem genEm installit
-include fragments/* fuseDecode fuseGen genEm
+include auto8it check* diff* countem genEm* installit
+include fragments/* fuseDecode fuseGen 
 include extern/*
 include ghpDoc/*
 include PACKAGES
