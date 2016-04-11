@@ -2,15 +2,4 @@ cd /home/jdd/dev/py/fusegen
 
 rm -rf build/
 
-pySloc -v -X "^runData" $@  \
-    bash:auto8it bash:checkIncs  bash:checkScaffolding      \
-    bash:checkIncsI bash:checkScaffoldingI          \
-    bash:countem    bash:installit  bash:test.all   \
-    bash:diffEm  bash:diffSrc  bash:diffTop         \
-    bash:diffEmI bash:diffSrcI bash:diffTopI        \
-    bash:genEm bash:genEmI bash:genEmIL bash:genEmL \
-    txt:MANIFEST.in                                 \
-    fragments/prototypes                            \
-    py:fuseDecode py:fuseGen                        \
-
-
+pySloc -v -X "^extern$|^runData" $@ 

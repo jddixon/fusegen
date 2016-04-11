@@ -1,3 +1,5 @@
+#!/bin/bash
+
 echo "creating filesystem xxxfs with neither logging nor instrumentation"
 cd ~/dev/py/fusegen
 ./fuseGen -fvP xxxfs

@@ -1,2 +1,4 @@
+#!/bin/bash
+
 echo "src level $1:  standard vs generated"
 diff ~/dev/c/std_fs/src/$1 ~/dev/c/xxxfs/src/$1
