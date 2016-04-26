@@ -1,5 +1,7 @@
-cd /home/jdd/dev/py/fusegen
+#!/usr/bin/env bash
 
-rm -rf build/
+cd $DEV_BASE/py/fusegen
 
-pySloc -v -X "^extern$|^runData" $@ 
+rm -rf build/* 
+
+pySloc  -X dist -X extern -v $@
