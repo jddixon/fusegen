@@ -1,0 +1,23 @@
+dir:extern:extern
+code:std:.dvcz/projCfg
+code:std:.dvcz/projCfg.local
+code:local:fragments/prototypes
+
+bash:local:diffEm
+bash:local:diffSrc
+bash:local:diffTop
+bash:local:diffEmI
+bash:local:diffSrcI
+bash:local:diffTopI
+bash:local:genEm
+bash:local:genEmI
+bash:local:genEmIL
+bash:local:genEmL
+
+c:local:myGetExtents.c
+
+# executables
+py:global:fuseDecode
+py:global:fuseGen
+
+
