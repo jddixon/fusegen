@@ -1,3 +1,0 @@
-cd /home/jdd/dev/py/fusegen
-
-autopep8 -air fusegen setup.py test*.py fuseDecode fuseGen

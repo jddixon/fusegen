@@ -1,0 +1,46 @@
+// jdd formatted these.  This data structure is defined in the local
+// copy of fuse.h, which is under the LGPL.  The /usr/include/fuse/fuse.h
+// carries the full GPL, so include and refer to the LGPLed version.
+// The offsets are referred to by name, so the index is not important.
+//
+struct fuse_operations xxxfs_oper = {
+  .getattr      = xxxfs_getattr,
+  .readlink     = xxxfs_readlink,
+  .getdir       = NULL,
+  .mknod        = xxxfs_mknod,
+  .mkdir        = xxxfs_mkdir,
+  .unlink       = xxxfs_unlink,
+  .rmdir        = xxxfs_rmdir,
+  .symlink      = xxxfs_symlink,
+  .rename       = xxxfs_rename,
+  .link         = xxxfs_link,
+  .chmod        = xxxfs_chmod,
+  .chown        = xxxfs_chown,
+  .truncate     = xxxfs_truncate,
+  .utime        = xxxfs_utime,
+  .open         = xxxfs_open,
+  .read         = xxxfs_read,
+  .write        = xxxfs_write,
+  .statfs       = xxxfs_statfs,
+  .flush        = xxxfs_flush,
+  .release      = xxxfs_release,
+  .fsync        = xxxfs_fsync,
+
+#ifdef HAVE_SYS_XATTR_H
+  .setxattr     = xxxfs_setxattr,
+  .getxattr     = xxxfs_getxattr,
+  .listxattr    = xxxfs_listxattr,
+  .removexattr  = xxxfs_removexattr,
+#endif
+
+  .opendir      = xxxfs_opendir,
+  .readdir      = xxxfs_readdir,
+  .releasedir   = xxxfs_releasedir,
+  .fsyncdir     = xxxfs_fsyncdir,
+  .init         = xxxfs_init,
+  .destroy      = xxxfs_destroy,
+  .access       = xxxfs_access,
+  .create       = xxxfs_create,
+  .ftruncate    = xxxfs_ftruncate,
+  .fgetattr     = xxxfs_fgetattr
+};
