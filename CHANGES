@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.24
+    2016-05-20
+        * add bkp2U, update .dvcz etc                               SLOC 4390
 v0.6.23
     2016-04-26
         * added .dvcz/projCfg{,.local}                              SLOC 3668
@@ -212,6 +215,7 @@ v0.1.0
 v0.0.0
     2015-01-17
         * first version                                             SLOC  237
+
 
 
 
