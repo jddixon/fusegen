@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.25
+    2016-06-21
+        * add ghpDoc/{css,img}/                                     SLOC 4341
 v0.6.24
     2016-05-20
         * add bkp2U, update .dvcz etc                               SLOC 4390
@@ -215,6 +218,7 @@ v0.1.0
 v0.0.0
     2015-01-17
         * first version                                             SLOC  237
+
 
 
 
