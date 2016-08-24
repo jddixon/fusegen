@@ -1,5 +1,8 @@
 dir:pkg:fusegen
 
+txt:std:LICENSE-MIT.md
+txt:local:PACKAGES
+
 dir:extern:extern
 code:std:.dvcz/projCfg
 code:std:.dvcz/projCfg.local

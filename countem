@@ -6,7 +6,7 @@ then
   
   rm -rf build/* 
   
-  pySloc  -X dist -X extern -v $@
+  pySloc -L py fuseDecode fuseGen  -X dist -X extern -v $@
 else
   echo "DEV_BASE is not defined"
 fi
