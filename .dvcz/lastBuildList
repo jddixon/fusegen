@@ -7,21 +7,22 @@ zPjEShF9rvcNa9XEy1dKpcDz9Szbm2SlxOgM83fDDGtOq4SSCSqndtxrOvXXPB57
 H1mJV/FmerbXRPm5ERJVNIxtLk7Gr2Ce45FVlWyJGMhpfVlKkkk+bRQ02OFfazJI
 GQIDAQAB
 -----END RSA PUBLIC KEY-----
-fusegen v0.6.25
-2016-06-21 20:16:18
-# START CONTENT #
+fusegen v0.6.26
+2016-08-24 20:12:19
+# BEGIN CONTENT #
 fusegen
- .copyright 304c14d702dff7c6c2c39729ff62aed7203b3427
  .dvcz
-  builds ae161e910052e73822f5510b3804b8571972d5ba
-  lastBuildList 77ced2bd06d16c4f2a17d74999668f8fa4402188
-  projCfg bd5d467dd8410c9a15bc099d7ae630075f924e9d
-  projCfg.local 8a14c4b55aad30ae69dce64170f37d2a62399d95
-  version 2388542b33e7dd9d82cb9ff61aa3753a67e2e411
+  builds 45f191ddf54416f614478037bbb27dfdcf1c3cea
+  copyright 304c14d702dff7c6c2c39729ff62aed7203b3427
+  lastBuildList 48c423ac9c1a1849306d2a0219fe86ad3f021652
+  license 5977a55c75bb4612004451a56b0b4c22d9d3311d
+  projCfg 434676f8afd7d444cd80b5dd28c06a30bd6d77a7
+  projCfg.local 3bef92d3a21d4337959bf7c3e63075e1b3661997
+  version 20bd16e5cb1ee42d9552b1825df3f4331a016147
  .gitignore 673f8d98aa638533ae34a01efea048e2a7c6f8ff
  .gitignore.local d3672ca44f2ca6d24a6c1a4bcf6d9ebeedf9dcf1
- CHANGES 2b01e082a4e132f480943eb8e6340d3a0032cec8
- LICENSE.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
+ CHANGES 8705229020c9b2e9755e5fafce8f258db23b2c11
+ LICENSE-MIT.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
  MANIFEST.in 6cefcdc5d017041aa0b1abbc60fac8e8665dab28
  PACKAGES 7d8a466f84d75a632861995fc24d254e081de1e2
  README.adding.ops 2e42a9ecca80cb299eee4ea824d12b9766979c8e
@@ -30,12 +31,12 @@ fusegen
  TODO 926721dfdd2a8c36507cd38a10e92f36302e4c88
  bin
   test-random-read-write d0fc40f2140a5e85bdaf7195bd0ac527ea348c65
- bkp2U afbaff35a3c5840b4e959816bc480214fb77f388
+ bkp2U ef999bd8cd6a48cc22ebe7cc82190792190830ca
  checkIncs 50943b713cba527187daa79e3b67e8a103c88063
  checkIncsI 76b0ff0c189cd6a4daa8055b800c84727ea9c2bf
  checkScaffolding ee065b2399836a9bd82b25e9b8585b55bf0a0829
  checkScaffoldingI 1090bceabf08080e33ac08344f3bb6c06a30e432
- countem 68b25305666ab2ab577af6bdd0936ace1fda5760
+ countem 76976e548abeb3f34aee6896e015372b3c3810e4
  diffEm e585b81b33dc99f77f515c690544afda65c16d1a
  diffEmI 6e0ad9aa1f8693939ce6472580d685fd0bbdcb7e
  diffSrc adba2d3acb1bde9395041c1799ec7c8ba05d77fe
@@ -98,6 +99,7 @@ fusegen
   fusegen-0.6.23.tar.gz 9ebdbb95cecacdde4976c97207913b672aabf36e
   fusegen-0.6.24.tar.gz ec363e77fe1708e5ecb548f079274a1afb9d2efd
   fusegen-0.6.25.tar.gz c903a9fdc5ed412cbdd97d251525fd27cb7a5073
+  fusegen-0.6.26.tar.gz 12ebd41ac93792dd36e9253aa7e378e09c37bfc1
   fusegen-0.6.3.tar.gz 82b33d41fd31b0d200d086f64dc909c7b7930974
   fusegen-0.6.4.tar.gz f838408fb8cc18200466258b91f29199a4bbdab2
   fusegen-0.6.5.tar.gz 06185142c3447abe7122deb4cca8f68d3ae6b61f
@@ -114,7 +116,7 @@ fusegen
  fuseDecode 4372d490a41a663e1a5e0f6774241dec42ea824e
  fuseGen 60994671e83652c4612cc1fb06ca75f381f6ac97
  fusegen
-  __init__.py f3fcd1cffb7cf3e711055ac47cf47d522b8858b7
+  __init__.py 749a7697da6b2a251c2a4c08d66e8d01058b2b46
  genEm 5650b01f52be8662c2ddef78f16146f1075b800f
  genEmI 117ea8859d067d7960ce22ec3ec90103da0020b9
  genEmIL 7e75921a3ec1a43e7cd2ded5f5ec366a1f182e69
@@ -139,7 +141,7 @@ fusegen
  makeGetExt 84ebeb26fa0d79f6e145429b40ec2a938e4a0d43
  makeParamLists 80705a2e2ac097df2bd377eaea1e8f1164fce6c0
  myGetExtents.c e684409b106678b924705aa2f41559434c63e638
- setup.py dd06df0736f5604e020915200e556ab01acaca0e
+ setup.py 2d73605e46549e98fe69aa849220950b4da33723
  src
   COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
   COPYING.AUTOCONF.EXCEPTION a6873630548f8b602515ea294df96e0a70935df9
@@ -153,9 +155,9 @@ fusegen
   fuse_common.h c68fe4071a86d033866217892583780c5eeb148e
   fuse_opt.h b4601325c978e393b38e54df2dd8f3cc4eefa5ba
  styleit a88a096edc18ab68031489f010636f30720aa871
- test.all 176effa96b7cf39e6b0e3968913b4e7cd46328b9
+ test.all 5b9890e55f914a2ad80b0077effca38f03c295a3
  testFuseFunc.py b04952670dc2d58a5d0d5423607b2d0baa3f4da9
  testFuseGeneration.py b2649a589ead79628375fad97dad7d66112ff810
 # END CONTENT #
 
-FITlBJz28aT078QaAa1qX5XB5BY86J+K9YbBzeammhkj5D2a27xaQ1g5K1wuP/4U/Tee5DqVrgPfn+eDmwrACpkkqwt+3q2I+LGiB8RgbY6l7XRfgR+UBmrp4r6K6+DX/2yAOwkmbIN8vEW9Hszav+TEvQTbRgDZqnrZPeD2ALXvuVryeslEx/QdlSXy3+ae41DFu9iAnFeZKC2+P8wxdxPShg/HrBjZGAAQ6qeaiG7yVHwpVyzNJvKjBP1ShAjE4KIiUmb36GQV8LFL3QINswowFzcJAf30swv+KPQpQTQBBuopkSagBHVyyEeOjpm0lCOFIEWkFUAjxpP+uVD6tw==
+XN/76Au4R1JoEg8HCP6P+aHnjXWRgOWC0CBI4WNTZ/RxSZR3Ny0HLiu7Aj1H7RXq4N1McCyYAyRVOYpDd+dnZhPTOXnErPAoxg/8xP3Ngewn5HEK070+3KMh8dCRtGiyu33T1D2ReqahAis2YO7VFRB2CYMqwvB3POGjZQJ7exMc+trredApIoRJI6i7rNGQT7pM7UwwACyj6gNh2sVcT+TJ72Cq2GBZbTLG2VyDIVU7RjnK58oIKtJCc72oVFXtE9C2Nc1JI/+vsaLuPAzFUeFjh7czMdRnPsOWe0O5QpX8fFbTcQz0alinJU0nl4scruj+0KUdZvug8Zb+8G0v4w==

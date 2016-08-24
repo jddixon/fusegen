@@ -27,5 +27,14 @@ setup(name='fusegen',
       #   they might be in a scripts/ subdir; SQuote
       #   the script name
       scripts=['fuseDecode', 'fuseGen', ],
-      # MISSING url
+      description='generator for fusegen projects',
+      ulr='https://jddixon.github.io/fusegen',
+      classifiers=[
+          'Development Status :: 4 - Beta',
+          'Intended Audience :: Developers',
+          'License :: OSI Approved :: MIT License',
+          'Natural Language :: English',
+          'Programming Language :: Python 3',
+          'Topic :: Software Development :: Libraries :: Python Modules',
+      ],
       )

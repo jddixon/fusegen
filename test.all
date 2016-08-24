@@ -1,2 +1,12 @@
-./testFuseFunc.py
-./testFuseGeneration.py
+#!/usr/bin/env bash
+
+if [ ! -z "${DEV_BASE// }" ]
+then
+  cd $DEV_BASE/py/fusegen
+  
+  ./testFuseFunc.py
+  ./testFuseGeneration.py
+  
+else
+  echo "DEV_BASE is not defined"
+fi
