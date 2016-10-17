@@ -2,8 +2,8 @@
 project:fusegen
 package:fusegen
 mainlang:py
-version:0.6.26
-versionDate:2016-08-24
+version:0.6.27
+versionDate:2016-10-17
 :?dirs?:
 dir:std:ghpDoc
 dir:std:dist
@@ -25,6 +25,9 @@ code:std:.dvczignore.local
 code:std:.gitignore
 code:std:.gitignore.local
 code:std:/var/app/sharedev/config/projCfg
+code:std:pylintrc
+code:std:.coveragerc
+code:std:check.summary
 code:std:MANIFEST.in
 code:local:fragments/prototypes
 txt:std:LICENSE-MIT.md
@@ -39,6 +42,8 @@ bash:std:countem
 bash:std:installit
 bash:std:styleit
 bash:std:test.all
+bash:std:doPyLint
+bash:std:checkCoverage
 bash:local:diffEm
 bash:local:diffSrc
 bash:local:diffTop
@@ -56,9 +61,9 @@ bash:local:checkScaffoldingI
 bash:local:makeGetExt
 bash:local:makeParamLists
 py:std:setup.py
-py:global:fuseDecode
-py:global:fuseGen
-py:test:testFuseFunc.py
-py:test:testFuseGeneration.py
+py:global:fuse_decode
+py:global:run_fusegen
+py:test:test_fuse_func.py
+py:test:test_fuse_generation.py
 c:local:myGetExtents.c
 bin:local:getExtents

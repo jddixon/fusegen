@@ -22,7 +22,7 @@ bash:local:genEmL
 c:local:myGetExtents.c
 
 # executables
-py:global:fuseDecode
-py:global:fuseGen
+py:global:fuse_decode
+py:global:run_fusegen
 
 

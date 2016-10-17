@@ -4,8 +4,8 @@ if [ ! -z "${DEV_BASE// }" ]
 then
   cd $DEV_BASE/py/fusegen
   
-  ./testFuseFunc.py
-  ./testFuseGeneration.py
+  ./test_fuse_func.py
+  ./test_fuse_generation.py
   
 else
   echo "DEV_BASE is not defined"

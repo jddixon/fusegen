@@ -26,7 +26,7 @@ setup(name='fusegen',
       # scripts should have a globally unique name;
       #   they might be in a scripts/ subdir; SQuote
       #   the script name
-      scripts=['fuseDecode', 'fuseGen', ],
+      scripts=['fuse_decode', 'run_fusegen', ],
       description='generator for fusegen projects',
       ulr='https://jddixon.github.io/fusegen',
       classifiers=[
