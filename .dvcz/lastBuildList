@@ -7,21 +7,21 @@ zPjEShF9rvcNa9XEy1dKpcDz9Szbm2SlxOgM83fDDGtOq4SSCSqndtxrOvXXPB57
 H1mJV/FmerbXRPm5ERJVNIxtLk7Gr2Ce45FVlWyJGMhpfVlKkkk+bRQ02OFfazJI
 GQIDAQAB
 -----END RSA PUBLIC KEY-----
-fusegen v0.6.26
-2016-08-24 20:12:19
+fusegen v0.6.27
+2016-10-17 20:50:30
 # BEGIN CONTENT #
 fusegen
  .dvcz
-  builds 45f191ddf54416f614478037bbb27dfdcf1c3cea
+  builds 56d7da3f188a13d2f17902150c6c10b4024b70b3
   copyright 304c14d702dff7c6c2c39729ff62aed7203b3427
-  lastBuildList 48c423ac9c1a1849306d2a0219fe86ad3f021652
+  lastBuildList a9d67d10290d268b667a9e61f0faa3772654cc43
   license 5977a55c75bb4612004451a56b0b4c22d9d3311d
-  projCfg 434676f8afd7d444cd80b5dd28c06a30bd6d77a7
-  projCfg.local 3bef92d3a21d4337959bf7c3e63075e1b3661997
-  version 20bd16e5cb1ee42d9552b1825df3f4331a016147
- .gitignore 673f8d98aa638533ae34a01efea048e2a7c6f8ff
+  projCfg 909ab17dd09314a079fa6abcf5395e04c67c5c4e
+  projCfg.local b4f867714ef7e2b461226e384f16db1d5abe11a5
+  version e38a1e2900fd6f67cf059bfacd3960ae09fb7c6e
+ .gitignore e8dbfd1b40953869472d7cc3ba178b5b4790656d
  .gitignore.local d3672ca44f2ca6d24a6c1a4bcf6d9ebeedf9dcf1
- CHANGES 8705229020c9b2e9755e5fafce8f258db23b2c11
+ CHANGES 1a622aed0e062f6a129ff03dd782fe2e687a4f43
  LICENSE-MIT.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
  MANIFEST.in 6cefcdc5d017041aa0b1abbc60fac8e8665dab28
  PACKAGES 7d8a466f84d75a632861995fc24d254e081de1e2
@@ -31,12 +31,13 @@ fusegen
  TODO 926721dfdd2a8c36507cd38a10e92f36302e4c88
  bin
   test-random-read-write d0fc40f2140a5e85bdaf7195bd0ac527ea348c65
- bkp2U ef999bd8cd6a48cc22ebe7cc82190792190830ca
+ bkp2U 08d9c96076877580cbd4ff76abdbef973b68bdd4
+ checkCoverage c17285d7affb7cc8249f8fc1f922faaa69962e6a
  checkIncs 50943b713cba527187daa79e3b67e8a103c88063
  checkIncsI 76b0ff0c189cd6a4daa8055b800c84727ea9c2bf
  checkScaffolding ee065b2399836a9bd82b25e9b8585b55bf0a0829
  checkScaffoldingI 1090bceabf08080e33ac08344f3bb6c06a30e432
- countem 76976e548abeb3f34aee6896e015372b3c3810e4
+ countem fe4f2bbb481f65763ebeb4ce696cfd9492976be9
  diffEm e585b81b33dc99f77f515c690544afda65c16d1a
  diffEmI 6e0ad9aa1f8693939ce6472580d685fd0bbdcb7e
  diffSrc adba2d3acb1bde9395041c1799ec7c8ba05d77fe
@@ -100,6 +101,7 @@ fusegen
   fusegen-0.6.24.tar.gz ec363e77fe1708e5ecb548f079274a1afb9d2efd
   fusegen-0.6.25.tar.gz c903a9fdc5ed412cbdd97d251525fd27cb7a5073
   fusegen-0.6.26.tar.gz 12ebd41ac93792dd36e9253aa7e378e09c37bfc1
+  fusegen-0.6.27.tar.gz 0a4aa99604ed8173a616b7f00c98cc5bda1b2521
   fusegen-0.6.3.tar.gz 82b33d41fd31b0d200d086f64dc909c7b7930974
   fusegen-0.6.4.tar.gz f838408fb8cc18200466258b91f29199a4bbdab2
   fusegen-0.6.5.tar.gz 06185142c3447abe7122deb4cca8f68d3ae6b61f
@@ -107,16 +109,16 @@ fusegen
   fusegen-0.6.7.tar.gz cf2a1ba49d18ed9a307564d61a74fb5bed7b444d
   fusegen-0.6.8.tar.gz ebee18861f347a30e76d9ff11043cb79d7d6c54d
   fusegen-0.6.9.tar.gz cc8553eb4ee5591e6ff91f871718af9cf00ff4c4
+ doPyLint e48c4c31ebd1509ea587909cac29a86a5b9f1172
  extern
   gustav_ctries.c 36822026a83915a9e697764aa50a9e96df088364
   majek_siphash.c ee104723edd4ab20e7868f9e7660086b4cb14903
  fragments
   optable 460856bb8ccd139798eed910da13d2c7a25d085d
   prototypes e63f0e2e7b5f63a34f216676943784ebb0bee258
- fuseDecode 4372d490a41a663e1a5e0f6774241dec42ea824e
- fuseGen 60994671e83652c4612cc1fb06ca75f381f6ac97
+ fuse_decode 6cd8e1c1eb601880a1cc1331da4e6bd6d6f9909e
  fusegen
-  __init__.py 749a7697da6b2a251c2a4c08d66e8d01058b2b46
+  __init__.py 5a549d61d48b7fa13296d233f15a0ebf3ad8661d
  genEm 5650b01f52be8662c2ddef78f16146f1075b800f
  genEmI 117ea8859d067d7960ce22ec3ec90103da0020b9
  genEmIL 7e75921a3ec1a43e7cd2ded5f5ec366a1f182e69
@@ -141,7 +143,9 @@ fusegen
  makeGetExt 84ebeb26fa0d79f6e145429b40ec2a938e4a0d43
  makeParamLists 80705a2e2ac097df2bd377eaea1e8f1164fce6c0
  myGetExtents.c e684409b106678b924705aa2f41559434c63e638
- setup.py 2d73605e46549e98fe69aa849220950b4da33723
+ pylintrc dd234fda24a547a9071f1e4608a3c1f3b7de9aa0
+ run_fusegen 15066c9540251700f94bddea894c772724110555
+ setup.py aa89d1188bc8db84b00b6867da1984b3a9d8ce0e
  src
   COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
   COPYING.AUTOCONF.EXCEPTION a6873630548f8b602515ea294df96e0a70935df9
@@ -154,10 +158,10 @@ fusegen
   fuse.h 4229b70752c770703b0e156e73fb053c1d8fd071
   fuse_common.h c68fe4071a86d033866217892583780c5eeb148e
   fuse_opt.h b4601325c978e393b38e54df2dd8f3cc4eefa5ba
- styleit a88a096edc18ab68031489f010636f30720aa871
- test.all 5b9890e55f914a2ad80b0077effca38f03c295a3
- testFuseFunc.py b04952670dc2d58a5d0d5423607b2d0baa3f4da9
- testFuseGeneration.py b2649a589ead79628375fad97dad7d66112ff810
+ styleit d4d113a5cd219b0e379d7c9c1ee736b5852013d3
+ test.all b7c26e20be8e3c9e0257bd866fe6cb0e4016445f
+ test_fuse_func.py b04952670dc2d58a5d0d5423607b2d0baa3f4da9
+ test_fuse_generation.py b2649a589ead79628375fad97dad7d66112ff810
 # END CONTENT #
 
-XN/76Au4R1JoEg8HCP6P+aHnjXWRgOWC0CBI4WNTZ/RxSZR3Ny0HLiu7Aj1H7RXq4N1McCyYAyRVOYpDd+dnZhPTOXnErPAoxg/8xP3Ngewn5HEK070+3KMh8dCRtGiyu33T1D2ReqahAis2YO7VFRB2CYMqwvB3POGjZQJ7exMc+trredApIoRJI6i7rNGQT7pM7UwwACyj6gNh2sVcT+TJ72Cq2GBZbTLG2VyDIVU7RjnK58oIKtJCc72oVFXtE9C2Nc1JI/+vsaLuPAzFUeFjh7czMdRnPsOWe0O5QpX8fFbTcQz0alinJU0nl4scruj+0KUdZvug8Zb+8G0v4w==
+nKw42EdPnpzjQMDKtM2Z7/Le6qktkmeCKMZ91ppkCja6HIhL7B0P6xir/puoDN6Q4E5VyXOhP4fRKJQpkyhYg3WzKuW+9mGSAWruLe/8AcvfxXQGrF+lo0sjoT+S1lfDXIUlXzfO/kD9JjDTxkGaWL4u7n9y3aHclcUSpn4th5N8hNVtn8/g81lmHnWGLmqr6Eve716/MZlke4SwTKmVwyBGZx/cNqjGd9fcQv6H0hiVOjutHQe7IOCeNs8AHGMgVf5SG0mpIsbvWvn9APjkC1t+ztQCnEiP6O++biWCrEQ70G5b8fs5p51XbI+512HENW0kzAzhUjD6cXDKCCpinQ==

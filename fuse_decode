@@ -148,7 +148,7 @@ def main():
         sys.exit(1)
 
     # complete setup ------------------------------------------------
-    appName = 'fuseDecode %s' % __version__
+    appName = 'fuse_decode %s' % __version__
 
     # maybe show options and such -----------------------------------
     if args.verbose or args.justShow:

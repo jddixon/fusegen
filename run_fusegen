@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-# ~/dev/py/fusegen/fuseGen
+# ~/dev/py/fusegen/run_fusegen
 
 import os
 import sys
@@ -71,7 +71,7 @@ def main():
         args.pathToPkg = os.path.join(args.devDir, args.pkgName)
 
     # complete setup ------------------------------------------------
-    appName = 'fuseGen %s' % __version__
+    appName = 'run_fusegen %s' % __version__
 
     # maybe show options and such -----------------------------------
     if args.verbose or args.justShow:
