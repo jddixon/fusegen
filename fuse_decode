@@ -6,10 +6,11 @@ import sys
 from argparse import ArgumentParser
 # XXX we want to drop OP_NAMES
 from fusegen import __version__, __version_date__, OP_NAMES, FuseFunc
+from optionz import dump_options
 
 
 def decode(chunk):
-    sec, ns, lateNsec, b0, b1, b2, opCode = struct.unpack('IIIBBBB', chunk)
+    sec, ns, lateNsec, b0, b1, b2, op_code = struct.unpack('IIIBBBB', chunk)
     # DEBUG
     #print("%3d %3d %3d %3d" % (b0, b1, b2, opCode))
     # END
@@ -18,7 +19,7 @@ def decode(chunk):
     higherBits = (b1 + (b2 << 8)) << 1
     byteCount = higherBits | lowBit
 
-    return sec, ns, lateSec, lateNsec, byteCount, opCode
+    return sec, ns, lateSec, lateNsec, byteCount, op_code
 
 
 def doCounts(args):
@@ -28,14 +29,14 @@ def doCounts(args):
     verbose = args.verbose
     zeroes = args.zeroes
 
-    with open(path, 'rb') as f:
-        data = f.read()
+    with open(path, 'rb') as file:
+        data = file.read()
     byteCount = len(data)
     opCount = byteCount / 16
     if verbose:
         print("%d bytes, %d ops" % (byteCount, opCount))
 
-    junk, opCodeMap = FuseFunc.getFuncMap()
+    junk, op_code_map = FuseFunc.get_func_map()
 
     # XXX WORKING HERE XXX
 
@@ -44,8 +45,8 @@ def doCounts(args):
         begin = n * 16
         end = begin + 16
         chunk = data[begin:end]
-        sec, ns, lateSec, lateNsec, byteCount, opCode = decode(chunk)
-        table[opCode] += 1
+        sec, ns, lateSec, lateNsec, byteCount, op_code = decode(chunk)
+        table[op_code] += 1
 
     myMap = {}
     for n, name in enumerate(OP_NAMES):
@@ -70,8 +71,8 @@ def simpleDump(args):
     path = args.pathToData
     verbose = args.verbose
 
-    with open(path, 'rb') as f:
-        data = f.read()
+    with open(path, 'rb') as file:
+        data = file.read()
     byteCount = len(data)
     opCount = byteCount / 16
     if verbose:
@@ -85,12 +86,12 @@ def simpleDump(args):
         begin = n * 16
         end = begin + 16
         chunk = data[begin:end]
-        sec, ns, lateSec, lateNsec, byteCount, opCode = decode(chunk)
+        sec, ns, lateSec, lateNsec, byteCount, op_code = decode(chunk)
         if sec == lastSec and ns < lastNsec + lastLateNsec:
             flag = 'P'
         print("%6d %9d %2d %9d %7d   %2d %-16s %s" % (
             sec, ns, lateSec, lateNsec,
-            byteCount, opCode, OP_NAMES[opCode], flag))
+            byteCount, op_code, OP_NAMES[op_code], flag))
         lastSec = sec
         lastNsec = ns
         lastLateSec = lateSec
@@ -106,8 +107,8 @@ def doRun(args):
 
 
 def main():
-    DESC = 'parse a fuseGenned data file'
-    parser = ArgumentParser(description=DESC)
+    desc = 'parse a fuseGenned data file'
+    parser = ArgumentParser(description=desc)
 
     parser.add_argument('-D', '--pathToData',
                         help='path to data file')
@@ -148,19 +149,14 @@ def main():
         sys.exit(1)
 
     # complete setup ------------------------------------------------
-    appName = 'fuse_decode %s' % __version__
+    app_name = 'fuse_decode %s' % __version__
 
     # maybe show options and such -----------------------------------
     if args.verbose or args.justShow:
-        print("%s %s" % (appName, __version_date__))
+        print("%s %s" % (app_name, __version_date__))
 
     if args.verbose or args.justShow:
-        print('justShow             = ' + str(args.justShow))
-        print('howMany              = ' + str(args.howMany))
-        print('pathToData           = ' + str(args.pathToData))
-        print('stats                = ' + str(args.stats))
-        print('verbose              = ' + str(args.verbose))
-        print('zeroes               = ' + str(args.zeroes))
+        print(dump_options(args))
 
     if not args.justShow:
         doRun(args)

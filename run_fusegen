@@ -1,27 +1,32 @@
 #!/usr/bin/python3
-#
 # ~/dev/py/fusegen/run_fusegen
+
+""" Run the fuse code generation module. """
 
 import os
 import sys
 import time
 from argparse import ArgumentParser
-from fusegen import *
+from fusegen import (__version__, __version_date__,
+                     check_date, check_pkg_name, check_version, make_fuse_pkg)
+from optionz import dump_options
 
 
 def main():
+    """ Collect options for fuse code generation. """
+
     # program defaults ----------------------------------------------
-    myDate = "%04d-%02d-%02d" % time.gmtime()[:3]
+    my_date = "%04d-%02d-%02d" % time.gmtime()[:3]
 
     # parse the command line ----------------------------------------
 
-    DESC = 'generate a minimal FUSE (file system in user space) package'
-    parser = ArgumentParser(description=DESC)
+    desc = 'generate a minimal FUSE (file system in user space) package'
+    parser = ArgumentParser(description=desc)
 
     parser.add_argument('-A', '--acPrereq', default='2.69',
                         help='prerequisite autoconfig version number')
 
-    parser.add_argument('-D', '--myDate', default=myDate,
+    parser.add_argument('-D', '--myDate', default=my_date,
                         help='date in YYYY-MM-DD format')
 
     parser.add_argument('-d', '--devDir', default='/home/jdd/dev/c',
@@ -57,47 +62,34 @@ def main():
     args = parser.parse_args()
 
     # sanity checks -------------------------------------------------
-    checkDate(args.myDate)
-    checkPkgName(args.pkgName)
-    checkVersion(args.myVersion)
+    check_date(args.my_date)
+    check_pkg_name(args.pkg_name)
+    check_version(args.my_version)
 
     # fixups --------------------------------------------------------
-    args.lcName = args.pkgName.lower()
-    args.ucName = args.pkgName.upper()
+    args.lc_name = args.pkg_name.lower()
+    args.uc_name = args.pkg_name.upper()
 
     if args.testing:
-        args.pathToPkg = os.path.join('tmp', args.pkgName)
+        args.path_to_pkg = os.path.join('tmp', args.pkg_name)
     else:
-        args.pathToPkg = os.path.join(args.devDir, args.pkgName)
+        args.path_to_pkg = os.path.join(args.dev_dir, args.pkg_name)
 
     # complete setup ------------------------------------------------
-    appName = 'run_fusegen %s' % __version__
+    app_name = 'run_fusegen %s' % __version__
 
     # maybe show options and such -----------------------------------
     if args.verbose or args.justShow:
-        print("%s %s" % (appName, __version_date__))
+        print("%s %s" % (app_name, __version_date__))
 
     if args.verbose or args.justShow:
-        print('acPrereq             = ' + str(args.acPrereq))
-        print('devDir               = ' + str(args.devDir))
-        print('emailAddr            = ' + str(args.emailAddr))
-        print('instrumenting        = ' + str(args.instrumenting))
-        print('force                = ' + str(args.force))
-        print('logging              = ' + str(args.logging))
-        print('myDate               = ' + str(args.myDate))
-        print('myVersion            = ' + str(args.myVersion))
-        print('pathToPkg            = ' + str(args.pathToPkg))
-        print('pkgName              = ' + str(args.pkgName))
-        print('  lcName             = ' + str(args.lcName))
-        print('  ucName             = ' + str(args.ucName))
-        print('testing              = ' + str(args.testing))
-        print('verbose              = ' + str(args.verbose))
+        print(dump_options(args))
 
     if args.justShow:
         sys.exit(0)
 
     # do what's required --------------------------------------------
-    makeFusePkg(args)
+    make_fuse_pkg(args)
 
 if __name__ == '__main__':
     main()

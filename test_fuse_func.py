@@ -22,31 +22,31 @@ class TestFuseFunc (unittest.TestCase):
 
     # actual unit tests #############################################
 
-    def testNameToFuncMap(self):
-        m, o = FuseFunc.getFuncMap('xxx_')   # funcMap, opCodeMap
+    def test_name_to_func_map(self):
+        match_, o_map = FuseFunc.get_func_map('xxx_')   # funcMap, opCodeMap
         # for testing, build a new p2tMap from the data in funcMap
-        for name in m:
-            func = m[name]
+        for name in match_:
+            func = match_[name]
             params = func.params        # a list of 2-tuples
-            myP2T = {}    # maps parameter names to type as a string
-            p2tMap = func.p2tMap
-            for p in params:
-                pType = p[0]
-                pName = p[1]
-                myP2T[pName] = pType
+            my_p2t = {}    # maps parameter names to type as a string
+            p2t_map = func.p2t_map
+            for param_ in params:
+                p_type = param_[0]
+                p_name = param_[1]
+                my_p2t[p_name] = p_type
 
             # now check the maps for equality
-            self.assertEqual(len(myP2T), len(p2tMap))
-            for p in p2tMap:
-                t = p2tMap[p]   # param type from param name
-                T = myP2T[p]
-                self.assertEqual(t, T)
+            self.assertEqual(len(my_p2t), len(p2t_map))
+            for param_ in p2t_map:
+                p_type_name = p2t_map[param_]   # param type from param name
+                p_type = my_p2t[param_]
+                self.assertEqual(p_type_name, p_type)
 
-    def testFirstLine(self):
-        m, o = FuseFunc.getFuncMap('xxx_')  # funcMap, opCodeMap
-        for name in m:
-            func = m[name]
-            line = func.firstLine()
+    def test_first_line(self):
+        match_, o_map = FuseFunc.get_func_map('xxx_')  # funcMap, opCodeMap
+        for name in match_:
+            func = match_[name]
+            line = func.first_line()
             # DEBUG
             print(line)
             # END

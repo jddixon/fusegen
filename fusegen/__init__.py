@@ -8,17 +8,16 @@ import subprocess
 import sys
 
 __all__ = ['__version__', '__version_date__',
-           'BIN', 'SH',
+           'BASH', 'SH',
            'DEPRECATED', 'NOT_IMPLEMENTED',
            # functions
-           'checkDate', 'checkPkgName', 'checkPgmNames', 'checkVersion',
-           'invokeShell', 'makeFusePkg',
-           'opNames',
-           ]
+           'check_date', 'check_pkg_name', 'check_pgm_names', 'check_version',
+           'invoke_shell', 'make_fuse_pkg',
+           'op_names', ]
 
 # -- exported constants ---------------------------------------------
-__version__ = '0.6.27'
-__version_date__ = '2016-10-17'
+__version__ = '0.6.28'
+__version_date__ = '2016-12-07'
 
 BASH = '/bin/bash'
 SH = '/bin/sh'
@@ -50,15 +49,15 @@ OP_NAMES = [
 ]
 
 
-def opNames():
+def op_names():
     """
     Return a copy of the list of op names, possibly including deprecated
     functions but excluding any which are not implemented.
     """
-    x = []
-    for name in opNames:
-        x.append(name)
-    return x
+    in_file = []
+    for name in OP_NAMES:
+        in_file.append(name)
+    return in_file
 
 SET_STATUS = 0x01      # sets the status variable
 SET_FD = 0x02      # sets an fd variable
@@ -155,82 +154,82 @@ PAT_MAP = {
 PKG_DATE_RE = re.compile(r'^[\d]{4}-\d\d-\d\d$')
 
 
-def checkDate(s):
-    if not s:
+def check_date(str_):
+    if not str_:
         print("date must not be empty")
         sys.exit(1)
     else:
-        s = s.strip()
-        m = PKG_DATE_RE.match(s)
-        if m is None:
-            print(("'%s' is not a valid YYYY-MM-DD date" % s))
+        str_ = str_.strip()
+        match_ = PKG_DATE_RE.match(str_)
+        if match_ is None:
+            print(("'%s' is not a valid YYYY-MM-DD date" % str_))
             sys.exit(1)
 
 PKG_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
 
 
-def checkPkgName(s):
-    if not s:
+def check_pkg_name(str_):
+    if not str_:
         print("you must provide a package name")
         sys.exit(1)
     else:
-        s = s.strip()
-        m = PKG_NAME_RE.match(s)
-        if m is None:
-            print("'%s' is not a valid package name" % s)
+        str_ = str_.strip()
+        match_ = PKG_NAME_RE.match(str_)
+        if match_ is None:
+            print("'%s' is not a valid package name" % str_)
             sys.exit(1)
 
 PGM_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
 
 
-def checkPgmNames(ss):
-    if not ss or len(ss) == 0:
+def check_pgm_names(strings):
+    if not strings or len(strings) == 0:
         print("you must supply at least one program name")
         sys.exit(1)
     else:
-        for s in ss:
-            if not PGM_NAME_RE.match(s):
-                print("'%s' is not a valid program name" % s)
+        for str_ in strings:
+            if not PGM_NAME_RE.match(str_):
+                print("'%s' is not a valid program name" % str_)
                 sys.exit(1)
 
 PKG_VERSION_RE = re.compile(r'^\d+\.\d+.\d+$')
 
 
-def checkVersion(s):
-    if not s:
+def check_version(str_):
+    if not str_:
         print("version must not be empty")
         sys.exit(1)
     else:
-        s = s.strip()
-        m = PKG_VERSION_RE.match(s)
-        if m is None:
-            print(("'%s' is not a valid X.Y.Z version" % s))
+        str_ = str_.strip()
+        match_ = PKG_VERSION_RE.match(str_)
+        if match_ is None:
+            print(("'%s' is not a valid X.Y.Z version" % str_))
             sys.exit(1)
 
 
-def invokeShell(cmdList):
+def invoke_shell(cmd_list):
     try:
-        output = subprocess.check_output(cmdList, stderr=subprocess.STDOUT)
+        output = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT)
         output = str(output, 'utf-8')
-    except subprocess.CalledProcessError as e:
-        output = str(e)
+    except subprocess.CalledProcessError as exc:
+        output = str(exc)
     return output
 
 
 class FuseFunc(object):
 
-    def __init__(self, fName, fType, params, p2tMap):
-        self._name = fName      # string, trimmed
-        self._type = fType      # string, left-trimmed,
+    def __init__(self, f_name, f_type, params, p2t_map):
+        self._name = f_name      # string, trimmed
+        self._type = f_type      # string, left-trimmed,
         self._params = params   # a list of 2-tuples
-        self._p2tMap = p2tMap   # map, parameter name to type (as string)
+        self._p2p_map = p2t_map   # map, parameter name to type (as string)
 
     @property
     def name(self):
         return self._name
 
     @property
-    def fType(self):
+    def f_type(self):
         return self._type
 
     @property
@@ -238,69 +237,69 @@ class FuseFunc(object):
         return self._params
 
     @property
-    def p2tMap(self):
-        return self._p2tMap
+    def p2t_map(self):
+        return self._p2p_map
 
-    def firstLine(self):
+    def first_line(self):
         """ return the first line of the function """
-        line = self.fType + self.name + '('
-        pCount = len(self.params)
+        line = self.f_type + self.name + '('
+        p_count = len(self.params)
         for ndx, param in enumerate(self.params):
             line += param[0]
             line += param[1]
-            if ndx < pCount - 1:
+            if ndx < p_count - 1:
                 line += ', '
         line += ')'
         return line
 
-    def otherArgs(self):
+    def other_args(self):
         """ return comma-separated list of arguments other than the first """
 
-        pCount = len(self.params)
-        s = ''
+        p_count = len(self.params)
+        str_ = ''
         for ndx, param in enumerate(self.params):
-            pName = param[1]
-            if pName != 'fi' and ndx > 0:
-                s += ', ' + param[1]
-        return s
+            p_name = param[1]
+            if p_name != 'fi' and ndx > 0:
+                str_ += ', ' + param[1]
+        return str_
 
     @classmethod
-    def parseProto(clz, line, prefix=''):
+    def parse_proto(cls, line, prefix=''):
 
         line = line.strip()
         params = []     # of 2-tuples
-        p2tMap = {}
+        p2t_map = {}
 
         parts = line.split(' ', 1)
-        pCount = len(parts)
-        if pCount != 2:
-            print("error parsing prototype: splits into %d parts!" % pCount)
+        p_count = len(parts)
+        if p_count != 2:
+            print("error parsing prototype: splits into %d parts!" % p_count)
             sys.exit(1)
-        fType = parts[0].strip()
-        fType += ' '
+        f_type = parts[0].strip()
+        f_type += ' '
         rest = parts[1].lstrip()
         if rest[0] == '*':
             rest = rest[1:]
-            fType += '*'
+            f_type += '*'
 
-        lNdx = rest.index('(')
-        rNdx = rest.index(')')
-        if lNdx == -1 or rNdx == -1:
+        l_ndx = rest.index('(')
+        r_ndx = rest.index(')')
+        if l_ndx == -1 or r_ndx == -1:
             print("can't locate parens is '%s'; aborting" % rest)
             sys.exit(1)
-        baseName = rest[:lNdx]
-        if prefix == '' or baseName == 'main':
-            fName = baseName
+        base_name = rest[:l_ndx]
+        if prefix == '' or base_name == 'main':
+            f_name = base_name
         else:
-            fName = prefix + baseName
+            f_name = prefix + base_name
 
-        argList = rest[lNdx + 1:rNdx]
+        arg_list = rest[l_ndx + 1:r_ndx]
 
         # DEBUG
         #print("type '%s', fName '%s', args '%s'" % (fType, fName, argList))
         # END
 
-        parts = argList.split(',')
+        parts = arg_list.split(',')
         for part in parts:
             # DEBUG
             #print("  part: '%s'" % part)
@@ -308,55 +307,55 @@ class FuseFunc(object):
             if part == '':
                 continue
             chunks = part.rsplit(' ', 1)
-            chunkCount = len(chunks)
-            if chunkCount != 2:
+            chunk_count = len(chunks)
+            if chunk_count != 2:
                 print("can't split '%s': aborting" % part)
                 sys.exit(1)
-            argType = chunks[0].strip()
-            argType += ' '
-            argName = chunks[1]
-            if argName[0] == '*':
-                argName = argName[1:]
-                argType += '*'
+            arg_type = chunks[0].strip()
+            arg_type += ' '
+            art_name = chunks[1]
+            if art_name[0] == '*':
+                art_name = art_name[1:]
+                arg_type += '*'
             # DEBUG
             #print("    argType: '%s', argName '%s'" % (argType, argName))
             # END
-            params.append((argType, argName))     # that's a 2-tuple
-            p2tMap[argName] = argType
+            params.append((arg_type, art_name))     # that's a 2-tuple
+            p2t_map[art_name] = arg_type
 
-        return baseName, FuseFunc(fName, fType, params, p2tMap)
+        return base_name, FuseFunc(f_name, f_type, params, p2t_map)
 
     @classmethod
-    def getFuncMap(clz, prefix=''):
+    def get_func_map(cls, prefix=''):
 
         lines = []
-        with open(PATH_TO_FIRST_LINES, 'r') as f:
-            line = f.readline()
+        with open(PATH_TO_FIRST_LINES, 'r') as file:
+            line = file.readline()
             while line and line != '':
                 # simplified comments
                 if line[0] != '#':
                     line = line[:-1]
                     lines.append(line)
-                    line = f.readline()
+                    line = file.readline()
 
-        funcMap = {}  # this maps prefixed names to FuseFunc objects
-        opCodeMap = {}  # maps names to integer opCodes
+        func_map = {}  # this maps prefixed names to FuseFunc objects
+        op_code_map = {}  # maps names to integer opCodes
 
         for ndx, line in enumerate(lines):
-            name, ff = FuseFunc.parseProto(line, prefix)
-            funcMap[name] = ff
-            opCodeMap[name] = ndx
+            name, f_map = FuseFunc.parse_proto(line, prefix)
+            func_map[name] = f_map
+            op_code_map[name] = ndx
             # DEBUG
             print("FuseFunc.getFuncMap: %-13s => %2d" % (name, ndx))
             # END
 
         # DEBUG
-        if 'lock' in funcMap:
+        if 'lock' in func_map:
             print("lock is in the map")
         else:
             print("lock is NOT in the map")
         # END
-        return funcMap, opCodeMap
+        return func_map, op_code_map
 
 # == MAIN FUNCTION ==================================================
 
@@ -380,11 +379,11 @@ CHK_DEF_XATTR = 0x10000000
 NOT_IMPLEMENTED = 0x80000000
 
 
-def setOpAttrs():
+def set_op_attrs():
     """
     Return a map from fuse op names to attributes
     """
-    opAttrs = {}
+    op_attrs = {}
     for name in OP_NAMES:
         attrs = 0
         if name in ['getdir', 'utime', ]:
@@ -437,8 +436,8 @@ def setOpAttrs():
             if name in ['create', 'open', ]:
                 attrs |= SYSCALL_RET_FD
 
-        opAttrs[name] = attrs
-    return opAttrs
+        op_attrs[name] = attrs
+    return op_attrs
 
 
 def makedir_p(path, mode):
@@ -446,32 +445,32 @@ def makedir_p(path, mode):
     # XXX MISLEADING: the name suggests it creates missing subdirs
     try:
         os.mkdir(path, mode)
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise e
+    except OSError as exc:
+        if exc.errno != errno.EEXIST:
+            raise exc
         pass
 
 
-def makeFusePkg(args):
-    acPrereq = args.acPrereq
-    emailAddr = args.emailAddr
+def make_fuse_pkg(args):
+    ac_prereq = args.ac_prereq
+    email_addr = args.email_addr
     instrumenting = args.instrumenting
     force = args.force
-    lcName = args.lcName
+    lc_name = args.lc_name
     logging = args.logging
-    myDate = args.myDate
-    myVersion = args.myVersion
-    pathToPkg = args.pathToPkg    # target package directory
-    pkgName = args.pkgName
-    prefix = pkgName + '_'     # XXX FORCES UNDERSCORE
+    my_date = args.my_date
+    my_version = args.my_version
+    path_to_pkg = args.path_to_pkg    # target package directory
+    pkg_name = args.pkg_name
+    prefix = pkg_name + '_'     # XXX FORCES UNDERSCORE
     testing = args.testing
-    ucName = args.ucName
+    uc_name = args.uc_name
     verbose = args.verbose
 
     # make sure opCode <-> opName maps are consistent ---------------
-    funcMap, opCodeMap = FuseFunc.getFuncMap(prefix)
+    func_map, op_code_map = FuseFunc.get_func_map(prefix)
     # DEBUG
-    if 'lock' in funcMap:
+    if 'lock' in func_map:
         print("lock is in the main map")
     else:
         print("lock is NOT in the main map")
@@ -479,12 +478,12 @@ def makeFusePkg(args):
     inconsistent = False
     for ndx in range(len(OP_NAMES)):
         name = OP_NAMES[ndx]
-        if not name in opCodeMap:
+        if not name in op_code_map:
             break
-        ndxFromName = opCodeMap[name]
-        if ndx != ndxFromName:
+        ndx_from_name = op_code_map[name]
+        if ndx != ndx_from_name:
             print("INCONSISTENCY: %s is OP_NAME %d, but opCodeMap has %d" % (
-                name, ndx, ndxFromName))
+                name, ndx, ndx_from_name))
             inconsistent = True
     if inconsistent:
         print("aborting")
@@ -495,66 +494,73 @@ def makeFusePkg(args):
     # ===============================================================
 
     # if -force and pathToPkg exists, delete it -- unless there is a .git/
-    if force and os.path.exists(pathToPkg):
-        pathToDotGit = os.path.join(pathToPkg, ".git")
-        if os.path.exists(pathToDotGit):
-            print("'%s' exists; cannot proceed" % pathToDotGit)
+    if force and os.path.exists(path_to_pkg):
+        path_to_dot_git = os.path.join(path_to_pkg, ".git")
+        if os.path.exists(path_to_dot_git):
+            print("'%s' exists; cannot proceed" % path_to_dot_git)
             sys.exit(0)
         else:
-            shutil.rmtree(pathToPkg)
+            shutil.rmtree(path_to_pkg)
 
-    makedir_p(pathToPkg, 0o755)
+    makedir_p(path_to_pkg, 0o755)
 
-    mountPoint = os.path.join('workdir', 'mountPoint')
-    rootDir = os.path.join('workdir', 'rootdir')
-    makeFileSubDirs = ['doc', 'examples', 'man', 'scripts', 'src', 'tests', ]
-    otherSubDirs = ['bin', 'config', 'ghpDoc', 'm4', 'workdir',
-                    mountPoint, rootDir, 'tmp', ]
-    subDirs = makeFileSubDirs + otherSubDirs
-    for dir in subDirs:
-        pathToSubDir = os.path.join(pathToPkg, dir)
-        makedir_p(pathToSubDir, 0o755)
+    mount_point = os.path.join('workdir', 'mount_point')
+    root_dir = os.path.join('workdir', 'rootdir')
+    make_file_sub_dirs = [
+        'doc',
+        'examples',
+        'man',
+        'scripts',
+        'src',
+        'tests',
+    ]
+    other_sub_dirs = ['bin', 'config', 'ghpDoc', 'm4', 'workdir',
+                      mount_point, root_dir, 'tmp', ]
+    sub_dir = make_file_sub_dirs + other_sub_dirs
+    for dir in sub_dir:
+        path_to_sub_dir = os.path.join(path_to_pkg, dir)
+        makedir_p(path_to_sub_dir, 0o755)
 
     # ===============================================================
     # TOP LEVEL FILES
     # ===============================================================
 
     # copy over fusgegen/src files  ---------------------------------
-    def copyFromSrc(name, executable=False, topLevel=True):
+    def copy_from_src(name, executable=False, top_file=True):
         """ copy a file from py/fusegen/src/ to the top level package dir """
         src = os.path.join('src', name)
-        if topLevel:
-            dest = os.path.join(pathToPkg, name)
+        if top_file:
+            dest = os.path.join(path_to_pkg, name)
         else:
-            dest = os.path.join(pathToPkg, os.path.join('src', name))
-        with open(src, 'r') as a:
-            text = a.read()
-            with open(dest, 'w') as b:
-                b.write(text)
+            dest = os.path.join(path_to_pkg, os.path.join('src', name))
+        with open(src, 'r') as file_a:
+            text = file_a.read()
+            with open(dest, 'w') as file_b:
+                file_b.write(text)
             if executable:
                 os.chmod(dest, 0o744)
             else:
                 os.chmod(dest, 0o644)
 
     # install-sh removed from both lists 2015-02-22
-    for x in ['autogen.sh', 'build', 'config.guess', 'config.sub', 'COPYING',
-              'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION', 'COPYING.GNUBL',
-              'README.licenses', ]:
-        copyFromSrc(x, x in ['autogen.sh', 'build', ])
-    for x in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
-        copyFromSrc(x, False, False)
+    for in_file in ['autogen.sh', 'build', 'config.guess', 'config.sub',
+                    'COPYING', 'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION',
+                    'COPYING.GNUBL', 'README.licenses', ]:
+        copy_from_src(in_file, in_file in ['autogen.sh', 'build', ])
+    for in_file in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
+        copy_from_src(in_file, False, False)
 
     # write CHANGES -------------------------------------------------
-    chgFile = os.path.join(pathToPkg, 'CHANGES')
-    with open(chgFile, 'w', 0o644) as f:
-        f.write("~/dev/c/%s/CHANGES\n\n" % pkgName)
-        f.write("v%s\n" % myVersion)
-        f.write("    %s\n" % myDate)
-        f.write("        *\n")
+    chg_file = os.path.join(path_to_pkg, 'CHANGES')
+    with open(chg_file, 'w', 0o644) as file:
+        file.write("~/dev/c/%s/CHANGES\n\n" % pkg_name)
+        file.write("v%s\n" % my_version)
+        file.write("    %s\n" % my_date)
+        file.write("        *\n")
 
     # write configure.ac --------------------------------------------
-    configFile = os.path.join(pathToPkg, 'configure.ac')
-    configText = """#                                               -*- Autoconf -*-
+    config_file = os.path.join(path_to_pkg, 'configure.ac')
+    config_test = """#                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([{0:s}])
@@ -597,13 +603,13 @@ AC_CHECK_FUNCS([posix_fallocate])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
 AC_OUTPUT
-""".format(acPrereq, pkgName, myDate, emailAddr)
-    with open(configFile, 'w', 0o644) as f:
-        f.write(configText)
+""".format(ac_prereq, pkg_name, my_date, email_addr)
+    with open(config_file, 'w', 0o644) as file:
+        file.write(config_test)
 
     # write Makefile.am  --------------------------------------------
     # XXX The EXTRA_DIST line seems senseless, as we copy it in.
-    makeAMFile = os.path.join(pathToPkg, 'Makefile.am')
+    make_am_file = os.path.join(path_to_pkg, 'Makefile.am')
     content = """
 ACLOCAL_AMFLAGS = -I m4
 EXTRA_DIST = autogen.sh
@@ -619,46 +625,48 @@ install install-data install-exec uninstall installdirs check installcheck:
 install-dvi install-info install-ps install-pdf dvi pdf ps info :
 	echo This package must never be installed.
 """
-    with open(makeAMFile, 'w', 0o644) as f:
-        f.write(content)
+    with open(make_am_file, 'w', 0o644) as file:
+        file.write(content)
 
     # write Makefile.in  --------------------------------------------
     # XXX This bit of silliness handles aclocal's requirement that
     # the file exist before we create it
-    makeInFile = os.path.join(pathToPkg, os.path.join('src', 'Makefile.in'))
+    make_in_file = os.path.join(
+        path_to_pkg, os.path.join(
+            'src', 'Makefile.in'))
     content = """
 """
-    with open(makeInFile, 'w', 0o644) as f:
-        f.write(content)
+    with open(make_in_file, 'w', 0o644) as file:
+        file.write(content)
 
     # write TODO ----------------------------------------------------
-    todoFile = os.path.join(pathToPkg, 'TODO')
-    with open(todoFile, 'w', 0o644) as f:
-        f.write("~/dev/c/%s/TODO\n\n" % pkgName)
-        f.write("%s\n" % myDate)
-        f.write("    *\n")
+    todo_file = os.path.join(path_to_pkg, 'TODO')
+    with open(todo_file, 'w', 0o644) as file:
+        file.write("~/dev/c/%s/TODO\n\n" % pkg_name)
+        file.write("%s\n" % my_date)
+        file.write("    *\n")
 
     # ===============================================================
     # bin/ FILE GENERATION
     # ===============================================================
 
     # write bin/mountNAME
-    pathToBin = os.path.join(pathToPkg, 'bin')
-    pathToCmd = os.path.join(pathToBin, 'mount' + ucName)
-    with open(pathToCmd, 'w') as f:
-        f.write("cd %s\n" % pathToPkg)
-        f.write("src/%s workdir/rootdir workdir/mountPoint\n" % pkgName)
-    os.chmod(pathToCmd, 0o744)
+    path_to_bin = os.path.join(path_to_pkg, 'bin')
+    path_to_cmd = os.path.join(path_to_bin, 'mount' + uc_name)
+    with open(path_to_cmd, 'w') as file:
+        file.write("cd %s\n" % path_to_pkg)
+        file.write("src/%s workdir/rootdir workdir/mountPoint\n" % pkg_name)
+    os.chmod(path_to_cmd, 0o744)
 
     # write bin/umountNAME
-    pathToCmd = os.path.join(pathToBin, 'umount' + ucName)
-    with open(pathToCmd, 'w') as f:
-        f.write("cd %s\n" % pathToPkg)
-        f.write("fusermount -uz workdir/mountPoint\n")
-    os.chmod(pathToCmd, 0o744)
+    path_to_cmd = os.path.join(path_to_bin, 'umount' + uc_name)
+    with open(path_to_cmd, 'w') as file:
+        file.write("cd %s\n" % path_to_pkg)
+        file.write("fusermount -uz workdir/mountPoint\n")
+    os.chmod(path_to_cmd, 0o744)
 
     # write bin/blk-31-4k
-    pathToCmd = os.path.join(pathToBin, 'blk-31-4k')
+    path_to_cmd = os.path.join(path_to_bin, 'blk-31-4k')
     content = """echo "blk-31-4k: test size is being set to $1 MB"
 #
 cd ~/dev/c/{0:s}
@@ -669,20 +677,20 @@ fio --name=global --bs=4k --size=$1m \
 	--name=job1 --name=job2 --name=job3 --name=job4
 cd ../..
 bin/umount{1:s}
-""".format(pkgName, ucName)
-    with open(pathToCmd, 'w') as f:
-        f.write(content)
-    os.chmod(pathToCmd, 0o744)
+""".format(pkg_name, uc_name)
+    with open(path_to_cmd, 'w') as file:
+        file.write(content)
+    os.chmod(path_to_cmd, 0o744)
 
     # ===============================================================
     # src/ FILE GENERATION
     # ===============================================================
 
-    pathToSrc = os.path.join(pathToPkg, 'src')
+    path_to_src = os.path.join(path_to_pkg, 'src')
 
     # src/fuse_version.h --------------------------------------------
 
-    fuseVersionFile = os.path.join(pathToSrc, 'fuse_version.h')
+    fuse_version_file = os.path.join(path_to_src, 'fuse_version.h')
     content = """/** fuse_version.h */
 
 #ifndef _FUSE_VERSION_H_
@@ -693,20 +701,20 @@ bin/umount{1:s}
 #endif
 """
 
-    with open(fuseVersionFile, 'w') as f:
-        f.write(content)
+    with open(fuse_version_file, 'w') as file:
+        file.write(content)
 
     # src/Makefile.am -----------------------------------------------
-    makeAMFile = os.path.join(pathToSrc, 'Makefile.am')
+    make_am_file = os.path.join(path_to_src, 'Makefile.am')
     content = """
 bin_PROGRAMS = {0:s}
 {1:s}SOURCES = {0:s}.c fuse.h fuse_version.h opcodes.h {0:s}.h util.c $(wildcard *.inc)
 AM_CFLAGS = @FUSE_CFLAGS@
 LDADD = @FUSE_LIBS@
-""".format(pkgName, prefix)
+""".format(pkg_name, prefix)
 
-    with open(makeAMFile, 'w', 0o644) as f:
-        f.write(content)
+    with open(make_am_file, 'w', 0o644) as file:
+        file.write(content)
 
     # src/main.inc --------------------------------------------------
     content = """/** main.inc */
@@ -790,13 +798,13 @@ int main(int argc, char *argv[])
         perror("main calloc failed");
         abort();
     }}
-""".format(pkgName, prefix)                         # BAZ
+""".format(pkg_name)                                # BAZ
 
     if logging:
         content += """\
     // Set up logging
-    myData->logfile = {1:s}OpenLog();
-""".format(pkgName, prefix)                         # BAZ
+    myData->logfile = {0:s}OpenLog();
+""".format(prefix)                                  # BAZ
 
     content += """\
     // Strange warning here "initialization makes pointer from integer
@@ -858,7 +866,7 @@ int main(int argc, char *argv[])
     }}
     int i;
 
-""".format(pkgName, prefix, ucName)     # FOO
+""".format(pkg_name)        # , prefix, uc_name)     # FOO
 
     if instrumenting:
         content += """\
@@ -886,7 +894,7 @@ int main(int argc, char *argv[])
         for (i = 0; i < argc; i++)
             fprintf(stderr, "  %d: %s\\n", i, argv[i]);
     }}
-""".format(pkgName, prefix, ucName)     # FOO
+"""                 # .format(pkg_name, prefix, uc_name)     # FOO
 
     content += """\
 
@@ -925,26 +933,26 @@ int main(int argc, char *argv[])
     status = fuse_main(argc, argv, &{1:s}OpTable, myData);
     return status;
 }}
-""".format(pkgName, prefix)                         # BAZ
+""".format(pkg_name, prefix)                         # BAZ
 
-    pathToMain = os.path.join(pathToSrc, 'main.inc')
-    with open(pathToMain, 'w') as f:
-        f.write(content)
+    path_to_main = os.path.join(path_to_src, 'main.inc')
+    with open(path_to_main, 'w') as file:
+        file.write(content)
 
     # src/opcodes.h -------------------------------------------------
-    pathToOpcodes = os.path.join(pathToSrc, 'opcodes.h')
-    with open(pathToOpcodes, 'w') as f:
-        f.write("/* opcodes.h */\n\n")
-        f.write("#ifndef _OPCODES_H_\n")
+    path_to_op_codes = os.path.join(path_to_src, 'opcodes.h')
+    with open(path_to_op_codes, 'w') as file:
+        file.write("/* opcodes.h */\n\n")
+        file.write("#ifndef _OPCODES_H_\n")
         for ndx, name in enumerate(OP_NAMES):
-            f.write("#define FG_%-14s (%d)\n" % (name.upper(), ndx))
-        f.write("#endif\n")
+            file.write("#define FG_%-14s (%d)\n" % (name.upper(), ndx))
+        file.write("#endif\n")
 
     # package header file -------------------------------------------
     content = """/** {0:s}.h */
 
-#ifndef _{2:s}_H_
-#define _{2:s}_H_
+#ifndef _{1:s}_H_
+#define _{1:s}_H_
 
 #ifdef linux
 #ifndef _XOPEN_SOURCE
@@ -952,7 +960,7 @@ int main(int argc, char *argv[])
 #endif
 #endif
 
-""".format(pkgName, prefix, ucName)     # FOO
+""".format(pkg_name, uc_name)     # FOO
 
     if instrumenting:
         content += """\
@@ -990,20 +998,20 @@ struct {0:s}Data {{
 
 #define {2:s}_DATA ((struct {0:s}Data *) fuse_get_context()->private_data)
 
-""".format(pkgName, prefix, ucName)     # FOO
+""".format(pkg_name, prefix, uc_name)     # FOO
 
     if logging:
         content += """\
 
-void {1:s}LogConn   (struct fuse_conn_info *conn);
-void {1:s}LogEntry  (const char *fmt, ...);
-void {1:s}LogFI     (struct fuse_file_info *fi);
-void {1:s}LogMsg    (const char *fmt, ...);
-void {1:s}LogStat   (struct stat *si);
-void {1:s}LogstatVFS(struct statvfs *sv);
-FILE *{1:s}OpenLog  (void);
-int  {1:s}FlushLog  (void);
-""".format(pkgName, prefix, ucName)     # FOO
+void {0:s}LogConn   (struct fuse_conn_info *conn);
+void {0:s}LogEntry  (const char *fmt, ...);
+void {0:s}LogFI     (struct fuse_file_info *fi);
+void {0:s}LogMsg    (const char *fmt, ...);
+void {0:s}LogStat   (struct stat *si);
+void {0:s}LogstatVFS(struct statvfs *sv);
+FILE *{0:s}OpenLog  (void);
+int  {0:s}FlushLog  (void);
+""".format(prefix)          # pkg_name, prefix, uc_name)     # FOO
 
     if instrumenting:
         content += """
@@ -1039,19 +1047,19 @@ extern long     slotsPerBucket;     // number of opData_t
 extern long     maxBucketSize;
 extern bucket_t *buckets;           // [BUCKET_COUNT];
 
-opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opCode);
-void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count);
-int {1:s}WriteBucket();
+opData_t *{0:s}ClockMeIn(struct timespec *tEntry, unsigned opCode);
+void {0:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count);
+int {0:s}WriteBucket();
 
 // END INSTRUMENTATION ----------------------------------------------
-""".format(pkgName, prefix, ucName)     # FOO
+""".format(prefix)          # pkg_name, prefix, uc_name)     # FOO
 
     content += """\
 #endif
 """
-    headerFile = os.path.join(pathToSrc, "%s.h" % pkgName)
-    with open(headerFile, 'w') as f:
-        f.write(content)
+    header_file = os.path.join(path_to_src, "%s.h" % pkg_name)
+    with open(header_file, 'w') as file:
+        file.write(content)
 
     # package .c file -----------------------------------------------
 
@@ -1139,11 +1147,11 @@ long slotsPerBucket;
 
 #include "optable.inc"
 #include "main.inc"
-""".format(pkgName)
+""".format(pkg_name)
 
-    pkgCFile = os.path.join(pathToSrc, "%s.c" % pkgName)
-    with open(pkgCFile, 'w') as f:
-        f.write(content)
+    pkg_c_file = os.path.join(path_to_src, "%s.c" % pkg_name)
+    with open(pkg_c_file, 'w') as file:
+        file.write(content)
 
     # generate util.c -----------------------------------------------
 
@@ -1156,15 +1164,15 @@ long slotsPerBucket;
 
 // Return -errno to caller, conditionally after logging -------------
 
-int {1:s}Error(char *msg)
+int {0:s}Error(char *msg)
 {{
     int errCode = -errno;
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(prefix)      # pkg_name, prefix, uc_name)     # GEEP
 
     if logging:
         content += """\
-    {1:s}LogMsg("    ERROR %s: %s\\n", msg, strerror(errno));
-""".format(pkgName, prefix, ucName)     # GEEP
+    {0:s}LogMsg("    ERROR %s: %s\\n", msg, strerror(errno));
+""".format(prefix)          # pkg_name, prefix, uc_name)     # GEEP
 
     content += """\
     return errCode;
@@ -1172,17 +1180,17 @@ int {1:s}Error(char *msg)
 
 // Given a path relative to the mount point, return an absolute -----
 // path including the root directory
-void {1:s}FullPath(char fpath[PATH_MAX], const char *path)
+void {0:s}FullPath(char fpath[PATH_MAX], const char *path)
 {{
-    strcpy(fpath, {2:s}_DATA->rootdir);
+    strcpy(fpath, {1:s}_DATA->rootdir);
     strncat(fpath, path, PATH_MAX);
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(prefix, uc_name)              # pkg_name, prefix, uc_name)     # GEEP
 
     if logging:
         content += """\
-    {1:s}LogMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\", fpath = \\"%s\\"\\n",
-           {2:s}_DATA->rootdir, path, fpath);
-""".format(pkgName, prefix, ucName)     # GEEP
+    {0:s}LogMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\", fpath = \\"%s\\"\\n",
+           {1:s}_DATA->rootdir, path, fpath);
+""".format(prefix, uc_name)              # pkg_name, prefix, uc_name)     # GEEP
 
     content += """\
 }
@@ -1379,7 +1387,7 @@ void {1:s}LogStatVFS(struct statvfs *sv)
 
     {1:s}LogMsg(buffer);
 }}
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(pkg_name, prefix, uc_name)     # GEEP
         content += content2
 
     content3 = ''
@@ -1391,7 +1399,7 @@ void {1:s}LogStatVFS(struct statvfs *sv)
 // calloc BUCKET_COUNT of these
 bucket_t *buckets;
 
-opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
+opData_t *{0:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
 {{
     int status = clock_gettime(CLOCK_MONOTONIC, tEntry);
     assert(status == 0);
@@ -1412,17 +1420,17 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
     }}
     status = pthread_mutex_unlock(&myBucket->lock);
 
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(prefix)      # pkg_name, prefix, uc_name)     # GEEP
 
         if logging:
             content3 += """\
     // DEBUG
     if (doubled) {{
-        {1:s}LogMsg("slotsPerBucket doubled to %d\\n", slotsPerBucket);
-        {1:s}FlushLog();
+        {0:s}LogMsg("slotsPerBucket doubled to %d\\n", slotsPerBucket);
+        {0:s}FlushLog();
     }}
     // END
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(prefix)          # pkg_name, prefix, uc_name)     # GEEP
 
         content3 += """\
     assert(status == 0);
@@ -1431,7 +1439,7 @@ opData_t *{1:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
     return mySlot;
 }}
 
-void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
+void {0:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
 {{
     struct timespec tExit;
     long inSec  = tEntry->tv_sec;
@@ -1454,27 +1462,27 @@ void {1:s}ClockMeOut(struct timespec *tEntry, opData_t *mySlot, size_t count)
     mySlot->count    = count;
 }}
 
-int {1:s}WriteBucket()
+int {0:s}WriteBucket()
 {{
     time_t now         = time(NULL);
     struct tm *when    = localtime(&now);
     char fullPath[PATH_MAX];
-    strcpy(fullPath, {2:s}_DATA->cwd);
+    strcpy(fullPath, {1:s}_DATA->cwd);
     strncat(fullPath, "/tmp/", PATH_MAX);
     char *p = fullPath + strlen(fullPath);
     snprintf(p, PATH_MAX, "/bucket-%04d%02d%02d-%02d%02d%02d",
         when->tm_year + 1900, when->tm_mon + 1, when->tm_mday,
         when->tm_hour, when->tm_min, when->tm_sec);
 
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(prefix, uc_name)          # pkg_name, prefix, uc_name)     # GEEP
 
         if logging:
             content3 += """\
     // DEBUG
-    {1:s}LogMsg("data file is %s\\n", fullPath);
+    {0:s}LogMsg("data file is %s\\n", fullPath);
     // END
 
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(prefix)              # pkg_name, prefix, uc_name)     # GEEP
 
         content3 += """\
     // any 'b' has no effect in Linux
@@ -1482,35 +1490,35 @@ int {1:s}WriteBucket()
     if (f != NULL) {{
         size_t written = fwrite(
                 buckets[0].ops, sizeof(opData_t), buckets[0].count, f);
-""".format(pkgName, prefix, ucName)     # GEEP
+"""         # .format(pkg_name, prefix, uc_name)     # GEEP
 
         if logging:
             content3 += """\
-        {1:s}LogMsg("wrote %lu bytes, %lu items, to %s\\n",
+        {0:s}LogMsg("wrote %lu bytes, %lu items, to %s\\n",
                 written, buckets[0].count, fullPath);
-""".format(pkgName, prefix, ucName)     # GEEP
+""".format(prefix)  # pkg_name, prefix, uc_name)     # GEEP
 
         content3 += """\
         fflush(f);
         fclose(f);
     }} else {{
         int myErr = errno;
-""".format(pkgName, prefix, ucName)     # GEEP
+"""             # .format(pkg_name, prefix, uc_name)     # GEEP
 
         if logging:
             content3 += """\
-        {1:s}LogMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
-""".format(pkgName, prefix, ucName)     # GEEP
+        {0:s}LogMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
+""".format(prefix)  # pkg_name, prefix, uc_name)     # GEEP
 
         content3 += """\
     }}
 }}
-""".format(pkgName, prefix, ucName)     # GEEP
+"""             # .format(pkg_name, prefix, uc_name)     # GEEP
     content += content3
 
-    utilCFile = os.path.join(pathToSrc, "util.c")
-    with open(utilCFile, 'w') as f:
-        f.write(content)
+    util_c_file = os.path.join(path_to_src, "util.c")
+    with open(util_c_file, 'w') as file:
+        file.write(content)
 
     # generate .inc files -------------------------------------------
 
@@ -1571,144 +1579,149 @@ struct fuse_operations {0:s}OpTable = {{
 #endif
 }};
 """.format(prefix)
-    opTableFile = os.path.join(pathToPkg, os.path.join('src', 'optable.inc'))
-    with open(opTableFile, 'w') as f:
-        f.write(content)
+    op_table_file = os.path.join(
+        path_to_pkg, os.path.join(
+            'src', 'optable.inc'))
+    with open(op_table_file, 'w') as file:
+        file.write(content)
 
     # generate op .inc files ------------------------------
-    opAttrs = setOpAttrs()
+    op_attrs = set_op_attrs()
     # mkSrcDir(args, opAttrs)
 
-    srcDir = os.path.join(pathToPkg, 'src')
-    makedir_p(srcDir, 0o755)
+    src_dir = os.path.join(path_to_pkg, 'src')
+    makedir_p(src_dir, 0o755)
 
     # XXX does not catch 'main'
     for name in OP_NAMES:
-        attrs = opAttrs[name]
+        attrs = op_attrs[name]
         if (attrs & DEPRECATED) or (attrs & NOT_IMPLEMENTED):
             continue
-        if not name in funcMap:   # names at end are not yet implemented
+        if not name in func_map:   # names at end are not yet implemented
             # DEBUG
             print("%s is NOT IN funcMap" % name)
             # END
             break
-        ff = funcMap[name]    # FuseFunc for this name
-        opCode = "FG_%s" % name.upper()
-        pathToInc = os.path.join(srcDir, "%s.inc" % name)
-        ss = []
-        ss.append("/** %s.inc */\n" % (name))
+        f_map = func_map[name]    # FuseFunc for this name
+        op_code = "FG_%s" % name.upper()
+        path_to_inc = os.path.join(src_dir, "%s.inc" % name)
+        strings = []
+        strings.append("/** %s.inc */\n" % (name))
         if attrs & CHK_DEF_XATTR:
-            ss.append("#ifdef HAVE_SYS_XATTR_H")
+            strings.append("#ifdef HAVE_SYS_XATTR_H")
         elif name == 'utimens':
-            ss.append("#ifdef HAVE_UTIMENSAT")
+            strings.append("#ifdef HAVE_UTIMENSAT")
         elif name == 'fallocate':
-            ss.append("#ifdef HAVE_POSIX_FALLOCATE")
+            strings.append("#ifdef HAVE_POSIX_FALLOCATE")
 
         # -- first line, LBRACE -----------------------
-        ss.append("static %s\n{" % ff.firstLine())
+        strings.append("static %s\n{" % f_map.first_line())
 
         # -- instrumenation ---------------------------
         if instrumenting:
             content = """    struct timespec tEntry;
-    opData_t *myData = {1:s}ClockMeIn(&tEntry, {2:s});
-""".format(name, prefix, opCode)
-            ss.append(content)
+    opData_t *myData = {0:s}ClockMeIn(&tEntry, {1:s});
+""".format(prefix, op_code)  # name, prefix, op_code)
+            strings.append(content)
         # -- variable declarations --------------------
         if attrs & RETURNS_STATUS:
-            ss.append('    int status = 0;')
+            strings.append('    int status = 0;')
         if (attrs & SYSCALL_RET_FD) or name == 'fallocate':
-            ss.append('    int fd;')
+            strings.append('    int fd;')
         if attrs & (FULL_PATH | DOUBLE_FULL_PATH):
-            ss.append('    char fpath[PATH_MAX];')
+            strings.append('    char fpath[PATH_MAX];')
         if attrs & DOUBLE_FULL_PATH:
-            ss.append('    char fnewpath[PATH_MAX];')
+            strings.append('    char fnewpath[PATH_MAX];')
         if attrs & HAS_LINK_FILE:
-            ss.append('    char flink[PATH_MAX];')
+            strings.append('    char flink[PATH_MAX];')
 
         if name in ['opendir', 'readdir']:
-            ss.append('    DIR *dp;')
+            strings.append('    DIR *dp;')
             if name == 'readdir':
-                ss.append('    struct dirent *entry;')
+                strings.append('    struct dirent *entry;')
         elif name == 'listxattr':
-            ss.append('    char *ptr;')
+            strings.append('    char *ptr;')
 
-        ss.append("")
+        strings.append("")
 
         # -- log on entry -----------------------------
         if logging:
             if name == 'init':
-                ss.append(
+                strings.append(
                     "    %sLogEntry(\"\\n%sinit()\\n\");" %
                     (prefix, prefix))
-                ss.append('    %sLogConn(conn);' % prefix)
-                ss.append('    %sLogContext(fuse_get_context());' % prefix)
+                strings.append('    %sLogConn(conn);' % prefix)
+                strings.append(
+                    '    %sLogContext(fuse_get_context());' %
+                    prefix)
             else:
                 if attrs & DOUBLE_FULL_PATH:
                     part0 = "\"\\n%s%s" % (prefix, name)
                     part1 = '(path=\\"%s\\", newpath=\\"%s\\")\\n",'
-                    s = ("    %sLogEntry(" % prefix) + part0 + part1
-                    ss.append(s)
-                    ss.append("            path, newpath);")
+                    str_ = ("    %sLogEntry(" % prefix) + part0 + part1
+                    strings.append(str_)
+                    strings.append("            path, newpath);")
                 else:
-                    logE = [
+                    log_e = [
                         '    %sLogEntry(\"\\n%s%s(' %
                         (prefix, prefix, name)]
-                    for ndx, param in enumerate(ff.params):
+                    for ndx, param in enumerate(f_map.params):
                         if ndx > 0:
-                            logE.append(', ')
-                        pName = param[1]
-                        if pName == 'size':
+                            log_e.append(', ')
+                        p_name = param[1]
+                        if p_name == 'size':
                             if name in ['read', 'write', ]:
                                 pat = '%lld'
                             else:
                                 pat = '%d'
-                        elif pName == 'value':
+                        elif p_name == 'value':
                             if name in ['getxattr', ]:
                                 pat = '0x%08x'
                             else:
                                 pat = '\\"%s\\"'
-                        elif pName in LOG_ENTRY_PAT_MAP:
-                            pat = LOG_ENTRY_PAT_MAP[pName]
+                        elif p_name in LOG_ENTRY_PAT_MAP:
+                            pat = LOG_ENTRY_PAT_MAP[p_name]
                         else:
-                            pat = 'UNKNOWN PAT FOR \'%s\'' % pName
-                        logE.append('%s=%s' % (pName, pat))
-                    logE.append(")\\n\",")
-                    ss.append(''.join(logE))
+                            pat = 'UNKNOWN PAT FOR \'%s\'' % p_name
+                        log_e.append('%s=%s' % (p_name, pat))
+                    log_e.append(")\\n\",")
+                    strings.append(''.join(log_e))
 
                     # now add a parameter list on the next line
-                    logEP = ['             ']
-                    for ndx, param in enumerate(ff.params):
+                    log_ep = ['             ']
+                    for ndx, param in enumerate(f_map.params):
                         if ndx > 0:
-                            logEP.append(', ')
-                        pName = param[1]
-                        logEP.append(pName)
-                    logEP.append(');')
-                    ss.append(''.join(logEP))
+                            log_ep.append(', ')
+                        p_name = param[1]
+                        log_ep.append(p_name)
+                    log_ep.append(');')
+                    strings.append(''.join(log_ep))
 
         if name == 'readdir':
-            ss.append('    dp = (DIR *) (uintptr_t) fi->fh;')
+            strings.append('    dp = (DIR *) (uintptr_t) fi->fh;')
 
-        if logging and name != 'opendir' and name != 'readdir' and attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
-            ss.append('    %sLogFI(fi);' % prefix)
+        if logging and name != 'opendir' and name != 'readdir' and \
+                attrs & LOGGING_FI and not attrs & SET_FH_FROM_FD:
+            strings.append('    %sLogFI(fi);' % prefix)
 
         # -- set up absolute paths ------------------------
         if attrs & FULL_PATH:
-            ss.append("    %sFullPath(fpath, path);" % prefix)
+            strings.append("    %sFullPath(fpath, path);" % prefix)
         if attrs & DOUBLE_FULL_PATH:
-            ss.append("    %sFullPath(fnewpath, newpath);" % prefix)
+            strings.append("    %sFullPath(fnewpath, newpath);" % prefix)
         if attrs & HAS_LINK_FILE:
-            ss.append("    %sFullPath(flink, link);" % prefix)
-        ss.append("")
+            strings.append("    %sFullPath(flink, link);" % prefix)
+        strings.append("")
 
         # -- SYS CALL -------------------------------------
 
-        sysCall = OP_CALL_MAP[name][0]
-        if sysCall == '':
+        sys_call = OP_CALL_MAP[name][0]
+        if sys_call == '':
             if name != 'init':
-                ss.append("    // CURRENTLY A NO-OP\n")
+                strings.append("    // CURRENTLY A NO-OP\n")
         else:
             if name == 'fallocate':
-                ss.append("""
+                strings.append("""
     if (mode) {
         status = -1;
         errno  = EOPNOTSUPP;
@@ -1723,9 +1736,9 @@ struct fuse_operations {0:s}OpTable = {{
     }
 """)
             elif name == 'flock':
-                ss.append('    status = flock(fi->fh, op);')
+                strings.append('    status = flock(fi->fh, op);')
             elif name == 'fsync':
-                ss.append(
+                strings.append(
                     """    // freebsd
 #ifdef HAVE_FDATASYNC
     if (datasync)
@@ -1735,184 +1748,190 @@ struct fuse_operations {0:s}OpTable = {{
         status = fsync(fi->fh);""")
 
             elif name == 'lock':
-                ss.append(
-                    '    status = ulockmgr_op(fi->fh, cmd, lock, &fi->lock_owner, sizeof(fi->lock_owner));')
+                strings.append(
+                    '    status = ulockmgr_op(fi->fh, cmd, lock, '
+                    '&fi->lock_owner, sizeof(fi->lock_owner));')
 
             elif name == 'mknod':
                 # in python format specs {} must be doubled :-(
-                ss.append(
+                strings.append(
 
                     """    // ATTRIBUTION
     if (S_ISREG(mode)) {{
         status = open(fpath, O_CREAT | O_EXCL | O_WRONLY, mode);
         if (status < 0)
-            status = {1:s}Error(\"{1:s}mknod open\");
+            status = {0:s}Error(\"{0:s}mknod open\");
         else {{
             status = close(status);
             if (status < 0)
-                status = {1:s}Error(\"{1:s}mknod close\");
+                status = {0:s}Error(\"{0:s}mknod close\");
         }}
     }} else if (S_ISFIFO(mode)) {{
         status = mkfifo(fpath, mode);
         if (status < 0)
-            status = {1:s}Error(\"{1:s}mknod mkfifo\");
+            status = {0:s}Error(\"{0:s}mknod mkfifo\");
     }} else {{
         status = mknod(fpath, mode, dev);
         if (status < 0)
-            status = {1:s}Error(\"{1:s}mknod mknod\");
-    }}""".format(name, prefix) )
+            status = {0:s}Error(\"{0:s}mknod mknod\");
+    }}""".format(prefix))  # name, prefix) )
 
             elif name == 'open':
-                ss.append("    fd = %s(fpath, fi->flags);" % sysCall)
+                strings.append("    fd = %s(fpath, fi->flags);" % sys_call)
             elif name == 'readdir':
                 content = """
     entry = readdir(dp);
     if (entry == 0) {{
-        status = {1:s}Error("{1:s}readdir readdir");
+        status = {0:s}Error("{0:s}readdir readdir");
         return status;
     }}
     do {{
-""".format(name, prefix)                         # BLIP
+""".format(prefix)  # name, prefix)                     # BLIP
                 if logging:
                     content += """\
-        {1:s}LogMsg("calling filler(%s)\\n", entry->d_name);
-""".format(name, prefix)                         # BLIP
+        {0:s}LogMsg("calling filler(%s)\\n", entry->d_name);
+""".format(prefix)          # name, prefix)                         # BLIP
 
                 content += """\
         if (filler(buf, entry->d_name, NULL, 0) != 0) {{
-""".format(name, prefix)                         # BLIP
+"""                         # .format(name, prefix)                     # BLIP
                 if logging:
                     content += """\
-            {1:s}LogMsg("    ERROR {1:s}readdir filler:  buffer full");
-""".format(name, prefix)                         # BLIP
+            {0:s}LogMsg("    ERROR {0:s}readdir filler:  buffer full");
+""".format(prefix)              # name, prefix)                         # BLIP
 
                 content += """\
             return -ENOMEM;
         }
     } while ((entry = readdir(dp)) != NULL);
 """
-                ss.append(content)
+                strings.append(content)
 
             elif name == 'readlink':
-                ss.append("    status = readlink(fpath, link, size - 1);")
+                strings.append("    status = readlink(fpath, link, size - 1);")
             elif name == 'releasedir':
-                ss.append("    status = closedir((DIR *) (uintptr_t) fi->fh);")
+                strings.append(
+                    "    status = closedir((DIR *) (uintptr_t) fi->fh);")
             elif name == 'utimens':
-                ss.append(
+                strings.append(
                     "    status = utimensat(0, fpath, tv, AT_SYMLINK_NOFOLLOW);")
             elif attrs & HAS_LINK_FILE:
-                ss.append("    status = %s(path, flink);" % sysCall)
+                strings.append("    status = %s(path, flink);" % sys_call)
             elif attrs & DOUBLE_FULL_PATH:
-                ss.append("    status = %s(fpath, fnewpath);" % sysCall)
+                strings.append("    status = %s(fpath, fnewpath);" % sys_call)
             elif attrs & (FULL_PATH | LOGGING_FI):
                 if attrs & SYSCALL_RET_FD:
-                    ss.append("    fd = %s(fpath%s);" % (
-                        sysCall, ff.otherArgs()))
+                    strings.append("    fd = %s(fpath%s);" % (
+                        sys_call, f_map.other_args()))
                 else:
                     if attrs & SYSCALL_FI_PARAM1:
                         if name == 'fgetattr':
-                            ss.append(
+                            strings.append(
                                 '    // FreeBSD special case; ATTRIBUTION')
-                            ss.append('    if (!strcmp(path, "/")) {')
-                            ss.append('        char fpath[PATH_MAX];')
-                            ss.append("        %sFullPath(fpath, path);" % (
+                            strings.append('    if (!strcmp(path, "/")) {')
+                            strings.append('        char fpath[PATH_MAX];')
+                            strings.append("        %sFullPath(fpath, path);" % (
                                 prefix))
-                            ss.append("        status = lstat(fpath%s);" % (
-                                ff.otherArgs()))
-                            ss.append('        if (status < 0)')
-                            ss.append(
+                            strings.append("        status = lstat(fpath%s);" % (
+                                f_map.other_args()))
+                            strings.append('        if (status < 0)')
+                            strings.append(
                                 "            status = %sError(\"%sfgetattr lstat\");" %
                                 (prefix, prefix))
-                            ss.append('    } else {')
-                            ss.append("        status = %s(fi->fh%s);" % (
-                                sysCall, ff.otherArgs()))
-                            ss.append('        if (status < 0)')
-                            ss.append(
+                            strings.append('    } else {')
+                            strings.append("        status = %s(fi->fh%s);" % (
+                                sys_call, f_map.other_args()))
+                            strings.append('        if (status < 0)')
+                            strings.append(
                                 "            status = %sError(\"%sfgetattr fstat\");" %
                                 (prefix, prefix))
-                            ss.append('    }')
+                            strings.append('    }')
                         elif name == 'opendir':
-                            ss.append('    dp = opendir(fpath);')
+                            strings.append('    dp = opendir(fpath);')
                         else:
-                            ss.append("    status = %s(fi->fh%s);" % (
-                                sysCall, ff.otherArgs()))
+                            strings.append("    status = %s(fi->fh%s);" % (
+                                sys_call, f_map.other_args()))
                     else:
-                        ss.append("    status = %s(fpath%s);" % (
-                            (sysCall, ff.otherArgs())))
+                        strings.append("    status = %s(fpath%s);" % (
+                            (sys_call, f_map.other_args())))
 
         # -- check for error status -----------------------
         if name == 'opendir':
-            ss.append('    if (dp == NULL)')
-            ss.append("        status = %sError(\"%s%s %s\");" % (
-                prefix, prefix, name, sysCall))
+            strings.append('    if (dp == NULL)')
+            strings.append("        status = %sError(\"%s%s %s\");" % (
+                prefix, prefix, name, sys_call))
         elif name != 'fgetattr' and attrs & CHECK_ERR_AND_FLIP:
             if attrs & SYSCALL_RET_FD:
-                ss.append("    if (fd < 0)")
+                strings.append("    if (fd < 0)")
             else:
-                ss.append("    if (status < 0)")
-            ss.append("        status = %sError(\"%s %s\");\n" % (
-                prefix, prefix + name, sysCall))
+                strings.append("    if (status < 0)")
+            strings.append("        status = %sError(\"%s %s\");\n" % (
+                prefix, prefix + name, sys_call))
             if name == 'readlink':
-                ss.append('    else {')
-                ss.append('        link[status] = \'\\0\';')
-                ss.append('        status = 0;')
-                ss.append('    }')
+                strings.append('    else {')
+                strings.append('        link[status] = \'\\0\';')
+                strings.append('        status = 0;')
+                strings.append('    }')
         if logging and name in ['getxattr', ]:
-            ss.append('    else')
+            strings.append('    else')
             start = '        %sLogMsg(' % prefix
-            ss.append(start + '"    value=\\"%s\\"\\n", value);')
+            strings.append(start + '"    value=\\"%s\\"\\n", value);')
 
         if logging and name == 'listxattr':
             start = '    %sLogMsg("    ' % prefix
-            ss.append(
+            strings.append(
                 start + 'returned attributes (length %d):\\n", status);')
-            ss.append(
+            strings.append(
                 '    for (ptr = list; ptr < list + status; ptr += strlen(ptr)+1)')
             start = '        %sLogMsg' % prefix
-            ss.append(start + '("    \\"%s\\"\\n", ptr);')
+            strings.append(start + '("    \\"%s\\"\\n", ptr);')
 
         # -- logging stat -----------------------------
         if logging:
             if (attrs & LOGGING_STAT):
-                ss.append("    %sLogStat(%s);\n" % (prefix, ff.params[1][1]))
+                strings.append(
+                    "    %sLogStat(%s);\n" %
+                    (prefix, f_map.params[1][1]))
             elif attrs & LOGGING_STATVFS:
-                ss.append(
+                strings.append(
                     "    %sLogStatVFS(%s);\n" %
-                    (prefix, ff.params[1][1]))
+                    (prefix, f_map.params[1][1]))
 
         if attrs & SET_FH_FROM_FD:
-            ss.append('    fi->fh = fd;')
+            strings.append('    fi->fh = fd;')
             if logging:
-                ss.append('    %sLogFI(fi);' % prefix)
+                strings.append('    %sLogFI(fi);' % prefix)
         elif name == 'opendir':
-            ss.append('    fi->fh = (intptr_t) dp;')
+            strings.append('    fi->fh = (intptr_t) dp;')
             if logging:
-                ss.append('    %sLogFI(fi);' % prefix)
+                strings.append('    %sLogFI(fi);' % prefix)
         elif logging and name == 'readdir':
-            ss.append('    %sLogFI(fi);' % prefix)
+            strings.append('    %sLogFI(fi);' % prefix)
 
         # -- instrumentation at exit ------------------
         if instrumenting:
             if name in ['readlink', 'read', 'write',
                         'setxattr', 'getxattr', 'listxattr', ]:
-                ss.append('    %sClockMeOut(&tEntry, myData, size);' % prefix)
+                strings.append(
+                    '    %sClockMeOut(&tEntry, myData, size);' %
+                    prefix)
             else:
-                ss.append(
+                strings.append(
                     '    %sClockMeOut(&tEntry, myData, %s);' %
                     (prefix, 0))
             if name == 'destroy':
-                ss.append('\n    %sWriteBucket();' % prefix)
+                strings.append('\n    %sWriteBucket();' % prefix)
 
         # -- return -----------------------------------
         if attrs & RETURNS_STATUS:
-            ss.append("    return status;")
+            strings.append("    return status;")
         elif name == 'init':
-            ss.append("    return %s_DATA;" % ucName)
-        ss.append("}")
+            strings.append("    return %s_DATA;" % uc_name)
+        strings.append("}")
         if (attrs & CHK_DEF_XATTR) or (
                 name == 'fallocate') or (name == 'utimens'):
-            ss.append("#endif")
+            strings.append("#endif")
 
-        out = "\n".join(ss) + "\n"
-        with open(pathToInc, 'w') as f:
-            f.write(out)
+        out = "\n".join(strings) + "\n"
+        with open(path_to_inc, 'w') as file:
+            file.write(out)
