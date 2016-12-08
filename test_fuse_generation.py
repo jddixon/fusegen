@@ -10,11 +10,11 @@ import time
 import unittest
 from argparse import Namespace
 from rnglib import SimpleRNG
-from fusegen import invokeShell, makeFusePkg, SH
-from merkletree import *
+from fusegen import invoke_shell, make_fuse_pkg, SH
+from merkletree import MerkleTree
 
 
-class TestFuseGeneration (unittest.TestCase):
+class TestFuseGeneration(unittest.TestCase):
 
     def setUp(self):
         self.rng = SimpleRNG(time.time())
@@ -29,25 +29,25 @@ class TestFuseGeneration (unittest.TestCase):
     # AND DISK IMAGE (either under mountPoint or rootDir)
     # XXX STUB XXX
 
-    def fiddleWithFiles(self, pkgName, pathToPkg, umountCmd):
+    def fiddle_with_files(self, pkg_name, path_to_pkg, umount_cmd):
         """ Enter with the file system mounted """
-        workDir = os.path.join(pathToPkg, 'workdir')
-        mountPoint = os.path.join(workDir, 'mountPoint')
-        rootDir = os.path.join(workDir, 'rootdir')
+        work_dir = os.path.join(path_to_pkg, 'workdir')
+        mount_point = os.path.join(work_dir, 'mount_point')
+        root_dir = os.path.join(work_dir, 'rootdir')
 
         # Devise a directory structure, say M files wide, N directories deep.
         # The files are of random-ish length, populated with random-ish data.
-        sampleName = self.rng.nextFileName(16)
-        pathToSample = os.path.join(mountPoint, sampleName)
+        sample_name = self.rng.next_file_name(16)
+        path_to_sample = os.path.join(mount_point, sample_name)
         # builds a directory tree with a depth of 4, 5 files (including
         # directories) at each level, and 16 <= file length <= 128
-        self.rng.nextDataDir(pathToDir=pathToSample,
-                             depth=4, width=5, maxLen=128, minLen=16)
+        self.rng.nextDataDir(path_to_dir=path_to_sample,
+                             depth=4, width=5, max_len=128, min_len=16)
         # DEBUG
         print("creating tree1")
         sys.stdout.flush()
         # END
-        tree1 = MerkleTree.createFromFileSystem(pathToSample)
+        tree1 = MerkleTree.create_from_file_system(path_to_sample)
         self.assertTrue(tree1 is not None)
 
         # If this succeeds, we have written the directory structure on the
@@ -58,16 +58,16 @@ class TestFuseGeneration (unittest.TestCase):
         # Lengthen some files, modifying in-memory data structure accordingly
 
         # Unmount the file system
-        chatter = invokeShell(umountCmd)
+        chatter = invoke_shell(umount_cmd)
 
         # Verify that the expected directory structure appears below
         # the root directory.
-        pathViaRoot = os.path.join(rootDir, sampleName)
+        path_via_root = os.path.join(root_dir, sample_name)
         # DEBUG
         print("creating tree2")
         sys.stdout.flush()
         # END
-        tree2 = MerkleTree.createFromFileSystem(pathViaRoot)
+        tree2 = MerkleTree.create_from_file_system(path_via_root)
         self.assertTrue(tree2 is not None)
         self.assertEqual(tree1.equal(tree2), True)
         # DEBUG
@@ -76,26 +76,33 @@ class TestFuseGeneration (unittest.TestCase):
         # END
         return chatter
 
-    def exerciseFileSystem(self, pkgName, pathToPkg):
-        dirNow = os.getcwd()
-        os.chdir(pathToPkg)
-        pathToBin = os.path.join(pathToPkg, 'bin')
+    def exercise_file_system(self, pkg_name, path_to_pkg):
+        dir_now = os.getcwd()
+        os.chdir(path_to_pkg)
+        path_to_bin = os.path.join(path_to_pkg, 'bin')
 
-        mountCmd = [SH, os.path.join(pathToBin, 'mount%s' % pkgName.upper()), ]
-        umountCmd = [
+        mount_cmd = [
             SH,
             os.path.join(
-                pathToBin,
+                path_to_bin,
+                'mount%s' %
+                pkg_name.upper()),
+        ]
+        umount_cmd = [
+            SH,
+            os.path.join(
+                path_to_bin,
                 'umount%s' %
-                pkgName.upper()),
+                pkg_name.upper()),
         ]
 
         chatter = ''
         try:
-            chatter = invokeShell(mountCmd)
-            chatter += self.fiddleWithFiles(pkgName, pathToPkg, umountCmd)
-        except Exception as e:
-            print(e)
+            chatter = invoke_shell(mount_cmd)
+            chatter += self.fiddle_with_files(pkg_name,
+                                              path_to_pkg, umount_cmd)
+        except Exception as exc:
+            print(exc)
 
         else:
             # XXX STUB XXX
@@ -108,45 +115,45 @@ class TestFuseGeneration (unittest.TestCase):
             sys.stdout.flush()
             # END
             try:
-                invokeShell(umountCmd)
+                invoke_shell(umount_cmd)
             except:
                 pass
 
             if chatter and chatter != '':
                 print(chatter)
-            os.chdir(dirNow)
+            os.chdir(dir_now)
 
             # DEBUG
-            print("after fiddling with files we are back in %s" % dirNow)
+            print("after fiddling with files we are back in %s" % dir_now)
             sys.stdout.flush()
             # END
 
-    def doBaseTest(self, logging=False, instrumenting=False):
+    def do_bae_test(self, logging=False, instrumenting=False):
         """
         Build the selected type of file system under devDir and
         then run exerciseFileSystem() on it.
         """
-        devDir = '/home/jdd/dev/c'
-        pkgName = 'xxxfs'
+        dev_dir = '/home/jdd/dev/c'
+        pkg_name = 'xxxfs'
         if instrumenting:
-            pkgName += 'I'
+            pkg_name += 'I'
         if logging:
-            pkgName += 'L'
-        pathToPkg = os.path.join(devDir, pkgName)
+            pkg_name += 'L'
+        path_to_pkg = os.path.join(dev_dir, pkg_name)
 
         cmds = Namespace()
-        setattr(cmds, 'acPrereq', '2.6.9')
-        setattr(cmds, 'devDir', devDir)
-        setattr(cmds, 'emailAddr', 'jddixon at gmail dot com')
+        setattr(cmds, 'ac_prereq', '2.6.9')
+        setattr(cmds, 'dev_dir', dev_dir)
+        setattr(cmds, 'email_addr', 'jddixon at gmail dot com')
         setattr(cmds, 'force', True)
         setattr(cmds, 'instrumenting', instrumenting)
         setattr(cmds, 'logging', logging)
-        setattr(cmds, 'myDate', "%04d-%02d-%02d" % time.gmtime()[:3])
-        setattr(cmds, 'myVersion', '1.2.3')
-        setattr(cmds, 'pathToPkg', pathToPkg)
-        setattr(cmds, 'pkgName', pkgName)
-        setattr(cmds, 'lcName', pkgName.lower())
-        setattr(cmds, 'ucName', pkgName.upper())
+        setattr(cmds, 'my_date', "%04d-%02d-%02d" % time.gmtime()[:3])
+        setattr(cmds, 'my_version', '1.2.3')
+        setattr(cmds, 'path_to_pkg', path_to_pkg)
+        setattr(cmds, 'pkg_name', pkg_name)
+        setattr(cmds, 'lc_name', pkg_name.lower())
+        setattr(cmds, 'uc_name', pkg_name.upper())
         setattr(cmds, 'testing', False)
         setattr(cmds, 'verbose', False)
 
@@ -155,42 +162,42 @@ class TestFuseGeneration (unittest.TestCase):
         # END
 
         # create the target file system
-        makeFusePkg(cmds)
+        make_fuse_pkg(cmds)
 
         # invoke the build command
-        dirNow = os.getcwd()
-        os.chdir(pathToPkg)
-        cmd = [SH, os.path.join(pathToPkg, 'build'), ]
+        dir_now = os.getcwd()
+        os.chdir(path_to_pkg)
+        cmd = [SH, os.path.join(path_to_pkg, 'build'), ]
         chatter = ''
         try:
-            chatter = invokeShell(cmd)
-        except Exception as e:
-            print(e)
+            chatter = invoke_shell(cmd)
+        except Exception as exc:
+            print(exc)
         if chatter and chatter != '':
             print(chatter)
-        os.chdir(dirNow)
+        os.chdir(dir_now)
 
         # DEBUG
-        print("we are back in %s" % dirNow)
+        print("we are back in %s" % dir_now)
         # END
 
         # run test verifying that the file system works as expected
-        self.exerciseFileSystem(pkgName, pathToPkg)
+        self.exercise_file_system(pkg_name, path_to_pkg)
 
-    def doInstrumentedTest(self):
-        self.doBaseTest(instrumenting=True)
+    def do_instruments_test(self):
+        self.do_bae_test(instrumenting=True)
 
-    def doLoggingTest(self):
-        self.doBaseTest(logging=True)
+    def do_logging_test(self):
+        self.do_bae_test(logging=True)
 
-    def doTestLoggingAndInstrumented(self):
-        self.doBaseTest(logging=True, instrumenting=True)
+    def do_test_logging_and_instrumented(self):
+        self.do_bae_test(logging=True, instrumenting=True)
 
-    def testFuseGeneration(self):
-        self.doBaseTest()
-        self.doInstrumentedTest()
-        self.doLoggingTest()
-        self.doTestLoggingAndInstrumented()
+    def test_fuse_generation(self):
+        self.do_bae_test()
+        self.do_instruments_test()
+        self.do_logging_test()
+        self.do_test_logging_and_instrumented()
 
 if __name__ == '__main__':
     unittest.main()

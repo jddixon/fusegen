@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.28
+    2016-12-07
+        * pylinted to 9.08/10; switched to dump_options()          SLOC 4541
 v0.6.27
     2016-10-17
         * add pylint, coverage; rename files per PEP 8              SLOC 4483
@@ -224,6 +227,7 @@ v0.1.0
 v0.0.0
     2015-01-17
         * first version                                             SLOC  237
+
 
 
 
