@@ -41,8 +41,8 @@ class TestFuseGeneration(unittest.TestCase):
         path_to_sample = os.path.join(mount_point, sample_name)
         # builds a directory tree with a depth of 4, 5 files (including
         # directories) at each level, and 16 <= file length <= 128
-        self.rng.nextDataDir(path_to_dir=path_to_sample,
-                             depth=4, width=5, max_len=128, min_len=16)
+        self.rng.next_data_dir(path_to_dir=path_to_sample,
+                               depth=4, width=5, max_len=128, min_len=16)
         # DEBUG
         print("creating tree1")
         sys.stdout.flush()
