@@ -5,7 +5,7 @@ include fragments/* fuseDecode fuseGen
 include extern/*
 include ghpDoc/*
 include PACKAGES
-include src/*
-include test*.py
+include src/c_src/*
+include tests/test*.py
 recursive-include *.py
 global-exclude junk* .*swp

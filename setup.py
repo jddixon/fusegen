@@ -5,7 +5,7 @@
 import re
 from distutils.core import setup
 __version__ = re.search(r"__version__\s*=\s*'(.*)'",
-                        open('fusegen/__init__.py').read()).group(1)
+                        open('src/fusegen/__init__.py').read()).group(1)
 
 # see http://docs.python.org/distutils/setupscript.html
 
@@ -21,14 +21,14 @@ setup(name='fusegen',
       #
       # a package has its own directory with an
       #  __init__.py in it
-      packages=['fusegen', ],
+      packages=['src/fusegen', ],
       #
       # scripts should have a globally unique name;
       #   they might be in a scripts/ subdir; SQuote
       #   the script name
-      scripts=['fuse_decode', 'run_fusegen', ],
+      scripts=['src/fuse_decode', 'src/run_fusegen', ],
       description='generator for fusegen projects',
-      ulr='https://jddixon.github.io/fusegen',
+      url='https://jddixon.github.io/fusegen',
       classifiers=[
           'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',

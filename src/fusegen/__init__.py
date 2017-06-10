@@ -16,8 +16,8 @@ __all__ = ['__version__', '__version_date__',
            'op_names', ]
 
 # -- exported constants ---------------------------------------------
-__version__ = '0.6.29'
-__version_date__ = '2017-04-23'
+__version__      = '0.6.30'
+__version_date__ = '2017-06-10'
 
 BASH = '/bin/bash'
 SH = '/bin/sh'
@@ -1935,3 +1935,4 @@ struct fuse_operations {0:s}OpTable = {{
         out = "\n".join(strings) + "\n"
         with open(path_to_inc, 'w') as file:
             file.write(out)
+
