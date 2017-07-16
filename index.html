@@ -12,18 +12,14 @@
 <h1 class="libTop">fusegen</h1>
 
 <p>Tools for generating and monitoring a Linux FUSE user-space file system.</p>
-
 <h2>fuseGen</h2>
-
 <p>FuseGen is a Python 3 script which generates the basis of a FUSE file system
 in the form
 of a mix of Autotools configuration files and ANSI C source code.  The
 C files constitute a <strong>pass-through</strong> FUSE file system.  This means that FUSE
 operations are logged and statistics gathered, and then the commands are
 passed through to the local file system for execution.</p>
-
 <h3>FuseGen Command Line</h3>
-
 <pre><code>usage: fuseGen [-h] [-A ACPREREQ] [-D MYDATE] [-E EMAILADDR] [-I] [-f] [-j]
                [-P PKGNAME] [-T] [-v] [-V MYVERSION]
 
@@ -47,34 +43,26 @@ optional arguments:
   -V MYVERSION, --myVersion MYVERSION
                         version in X.Y.Z format
 </code></pre>
-
 <p>This is the command line at the time of writing; when you unpack
 fusegen you should type <code>fuseGen -h</code> to see the current set of
 supported arguments.</p>
-
 <h3>Typical FuseGen Command Line: genEm</h3>
-
 <p>When fusegen is unpacked, the distribution directory contains a file
 <code>genEm</code>.  As it stands this creates the <code>xxxfs</code> file system.  That is,
 it writes a number of files to a subdirectory of your development
 directory.</p>
-
 <pre><code>cd ~/dev/py/fusegen
 ./fuseGen -fIvP xxxfs
 </code></pre>
-
 <p>In this case, the package name is <strong>xxxfs</strong> (because the follows the <strong>-P</strong>),
 and that will be the name
 of the development directory.  If the directory already exists, it is
 overwritten (<strong>-f</strong>).  Instrumentation code will be generated (<strong>-I</strong>)</p>
-
 <h3>File System Created</h3>
-
 <p><code>genEm</code> creates a number of files and directories.   What you see below
 is a snapshot taken shortly after initialization (in fact, after running
 the <strong>build</strong> command but without the object files and executables
 generated my <code>make</code>).</p>
-
 <pre><code>/home/jdd/dev/c/xxxfs
 ├── aclocal.m4
 ├── AUTHORS
@@ -179,44 +167,33 @@ generated my <code>make</code>).</p>
 │       └── job4.4.0
 └── xxxfs.log
 </code></pre>
-
 <p>For easy customization there is a <code>.inc</code> file for each FUSE command.</p>
-
 <h3>The build Command</h3>
-
 <p>The <code>build</code> command completes the creation of the file system.  It runs
 <code>autogen.sh</code>, which installs many of the standard Autotools files, and
 then creates the <code>configure</code> script from the instructions in <code>configure.ac</code>.
 Finaly it runs make, which compiles the object files and then links the
 file system, the <code>xxxfs</code> executable.</p>
-
 <pre><code>./autogen.sh
 ./configure
 make
 </code></pre>
-
 <p>It may be desirable to change the generated system to some degree.
 Usually limited changes are accomplished by editing <code>configure.ac</code>
 and/or <code>Makefile.ac</code> and then rerunning build.  This will have no
 effect on <code>src/*.inc</code> and in that sense is safe.</p>
-
 <h3>bin/ Commands</h3>
-
 <p>The <code>bin/</code> subdirectory contains scripts for</p>
-
 <ul>
 <li>mounting the file system (<code>mountXXXFS</code> in this case)</li>
 <li>running a simple FIO benchmark (<code>blk-31-4k</code>)</li>
 <li>and dismounting the file system (<code>umountXXXFS</code>)</li>
 </ul>
-
 <h2>Putting It All Together: Running an Application</h2>
-
 <p>The script <code>blk-31-4k</code>, found in the default <code>bin/</code> directory, is used
 to collect statistics on a short <strong>fio</strong> run.  FIO is an open source tool
 for measuring the performance of a file system.</p>
-
-<pre><code>echo &quot;blk-31-4k: test size is being set to $1 MB&quot;
+<pre><code>echo "blk-31-4k: test size is being set to $1 MB"
 #
 cd ~/dev/c/xxxfs
 bin/mountXXXFS
@@ -225,7 +202,6 @@ fio --name=global --bs=4k --size=$1m    --rw=randrw --rwmixread=75  --name=job1 
 cd ../..
 bin/umountXXXFS
 </code></pre>
-
 <p>This particular script runs four jobs simultaneously.  Each job reads
 and/or writes the same amount of data to the disk.  On the command line
 the script has a single argument, the number of megabytes to be read from
@@ -235,24 +211,18 @@ directory above that, then mounts the FUSE file system (<code>bin/mountXXXFS</co
 It then runs the FIO jobs in the <code>mountPoint</code> subdirectory.  When the FIO
 jobs terminate, the script changes back to the distribution directory and
 unmounts the file system.</p>
-
 <p>Running this script has two major effects:</p>
-
 <ul>
 <li>it writes its log to the file <code>xxxfs.log</code></li>
 <li>it writes run statistics to a file under <code>tmp/</code></li>
 </ul>
-
 <p>If full logging is turned on, the log file can be very large.</p>
-
 <h2>FuseGen Statistics File</h2>
-
 <p>The statistics file has a name like <code>bucket-20150316-150838</code>.  The first
 set of numbers in the file name represents the date in <code>CCYYMMDD</code> format; the
 second set is the start time of the run, local time, as <code>HHMMSS</code>.  We use
 a 24-hour clock, so in this case the run started at 15:08:38, just
 after 3 pm local time.</p>
-
 <pre><code>typedef struct o_ {
     uint32_t    opSec;
     uint32_t    opNsec;             // may not exceed BILLION
@@ -262,31 +232,23 @@ after 3 pm local time.</p>
     unsigned    opCode      :  8;
 } __attribute__((aligned(16), packed)) opData_t;
 </code></pre>
-
 <p>Each call on the FUSE file system is recorded to the statistics file as
 a 16-byte object laid out as specified above.</p>
-
 <p>The time of the call is recorded as a 128-bit pair, <code>opSec</code> and
 <code>opNsec</code>.  This is a Linux CLOCK_MONOTONIC time representing an absolute
-elapsed time; it is generally <strong>not</strong> the same as the system&#39;s (guess at)
+elapsed time; it is generally <strong>not</strong> the same as the system's (guess at)
 the local time.</p>
-
 <p>When the system call is complete, the latency is calculated.  This has the
 same 32-bit nanosecond part, but only 7 bits are reserved for the seconds
 of latency.  That is, latencies greater than 128 seconds will not be recorded
 correctly.</p>
-
 <p>Finally 8 bits are reserved for the FUSE opcode.  There are currently
 fewer than four dozen opcodes so this number of bits is likely to be
 sufficient for some time.</p>
-
 <h2>FuseDecode</h2>
-
 <p>FuseDecode is a utility for converting FuseGen statistics files to a
 human-readable format.</p>
-
 <h3>FuseDecode Command Line</h3>
-
 <pre><code>usage: fuseDecode [-h] [-D PATHTODATA] [-j] [-n HOWMANY] [-v]
 
 parse a fuseGenned data file
@@ -300,9 +262,7 @@ optional arguments:
                         how many data points to decode
   -v, --verbose         be chatty
 </code></pre>
-
 <h3>Typical FuseDecode Output</h3>
-
 <pre><code>==== op time === == latency == = byte = == opcode ==     = flags =
   sec   nanosec  sec  nanosec   count   op   name
 369886 170431079  0     74955       0   29 init
@@ -329,14 +289,10 @@ optional arguments:
 369886 172007454  0     53362       0   25 opendir          P
 369886 172099167  0     49953       0   26 readdir
 </code></pre>
-
 <p>Output from a typical run of the <code>blk-31-4k</code> script is available
 <a href="runData-20150316-135941.gz">here</a></p>
-
 <h2>Project Status</h2>
-
 <p>A good beta.  Tests succeed.</p>
-
 <h2>Licensing</h2>
 <p><a rel="license" href="http://creativecommons.org/licenses/by/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by/4.0/88x31.png" /></a><br />The material on this github.io website is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International License</a>.</p>
 <p>Project software is licensed under an MIT license.
