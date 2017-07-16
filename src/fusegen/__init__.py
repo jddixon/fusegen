@@ -16,8 +16,8 @@ __all__ = ['__version__', '__version_date__',
            'op_names', ]
 
 # -- exported constants ---------------------------------------------
-__version__ = '0.6.29'
-__version_date__ = '2017-04-23'
+__version__ = '0.6.31'
+__version_date__ = '2017-07-16'
 
 BASH = '/bin/bash'
 SH = '/bin/sh'
@@ -58,6 +58,7 @@ def op_names():
     for name in OP_NAMES:
         in_file.append(name)
     return in_file
+
 
 SET_STATUS = 0x01      # sets the status variable
 SET_FD = 0x02      # sets an fd variable
@@ -165,6 +166,7 @@ def check_date(str_):
             print(("'%s' is not a valid YYYY-MM-DD date" % str_))
             sys.exit(1)
 
+
 PKG_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
 
 
@@ -179,6 +181,7 @@ def check_pkg_name(str_):
             print("'%s' is not a valid package name" % str_)
             sys.exit(1)
 
+
 PGM_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
 
 
@@ -191,6 +194,7 @@ def check_pgm_names(strings):
             if not PGM_NAME_RE.match(str_):
                 print("'%s' is not a valid program name" % str_)
                 sys.exit(1)
+
 
 PKG_VERSION_RE = re.compile(r'^\d+\.\d+.\d+$')
 
@@ -361,6 +365,7 @@ class FuseFunc(object):
 
 # attributes of fuse operations
 
+
 DEPRECATED = 0x00000001
 RETURNS_STATUS = 0x00000002
 CHECK_ERR_AND_FLIP = 0x00000004
@@ -526,9 +531,9 @@ def make_fuse_pkg(args):
     # ===============================================================
 
     # copy over fusgegen/src files  ---------------------------------
-    def copy_from_src(name, executable=False, top_file=True):
+    def copy_from_csrc(name, executable=False, top_file=True):
         """ copy a file from py/fusegen/src/ to the top level package dir """
-        src = os.path.join('src', name)
+        src = os.path.join('src', 'c_src', name)
         if top_file:
             dest = os.path.join(path_to_pkg, name)
         else:
@@ -546,9 +551,9 @@ def make_fuse_pkg(args):
     for in_file in ['autogen.sh', 'build', 'config.guess', 'config.sub',
                     'COPYING', 'COPYING.LIB', 'COPYING.AUTOCONF.EXCEPTION',
                     'COPYING.GNUBL', 'README.licenses', ]:
-        copy_from_src(in_file, in_file in ['autogen.sh', 'build', ])
+        copy_from_csrc(in_file, in_file in ['autogen.sh', 'build', ])
     for in_file in ['fuse.h', 'fuse_common.h', 'fuse_opt.h', ]:
-        copy_from_src(in_file, False, False)
+        copy_from_csrc(in_file, False, False)
 
     # write CHANGES -------------------------------------------------
     chg_file = os.path.join(path_to_pkg, 'CHANGES')

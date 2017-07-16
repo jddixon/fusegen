@@ -4,8 +4,7 @@ if [ ! -z "${DEV_BASE// }" ]
 then
   cd $DEV_BASE/py/fusegen
   
-  ./test_fuse_func.py
-  ./test_fuse_generation.py
+  PYTHONPATH=".:src:test" pytest
   
 else
   echo "DEV_BASE is not defined"

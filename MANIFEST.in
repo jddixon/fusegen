@@ -1,11 +1,11 @@
+# see http://docs.python.org/distutils/sourcedist.html
+
 include netDistrib.conf
-include CHANGES LICENSE.md MANIFEST.in PACKAGES README* TODO
-include auto8it check* diff* countem genEm* installit
-include fragments/* fuseDecode fuseGen 
-include extern/*
-include ghpDoc/*
-include PACKAGES
-include src/*
-include test*.py
-recursive-include *.py
-global-exclude junk* .*swp
+include CHANGES LICENSE* MANIFEST.in README* TODO
+include bkp2U checkCoverage countem doPyLint installit pylintrc styleit test.all
+include setup.py
+recursive-include src *
+recursive-include tests *
+recursive-include ghpDoc *
+global-exclude junk* .*swp 
+prune   .svn

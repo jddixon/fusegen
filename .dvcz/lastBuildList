@@ -1,4 +1,4 @@
------BEGIN RSA PUBLIC KEY-----
+-----BEGIN PUBLIC KEY-----
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAl9xsFHvzEsi3G8q8dUOM
 3v4WLJefw8Kv0hHBGFPFQF1WRPldwPGNdVKql8zcO52KO4hzFNHNSBCGgH8cbtAk
 mLWB78ackABFJzhY9TEbPkLnoMXJHAXQpZK/JAudSixuAZIXYtIyBWfgLaHjurAT
@@ -6,24 +6,28 @@ mLWB78ackABFJzhY9TEbPkLnoMXJHAXQpZK/JAudSixuAZIXYtIyBWfgLaHjurAT
 Giaje1YAJPNVBt3dlOA5lhBp4GpSYBskJ9UR2Zyt3lgAGK3dEwxYETLMh9VWEV8i
 k2lyCIE/V/CDb9eVDYQgYSJYrnQ/JAPST7NbcY8aI+/0l7QVBhLBpmOCvmS6ofvz
 /QIDAQAB
------END RSA PUBLIC KEY-----
-fusegen v0.6.29
-2017-04-23 22:49:37
+-----END PUBLIC KEY-----
+fusegen v0.6.31
+2017-07-16 22:46:44
 # BEGIN CONTENT #
 fusegen
+ .cache
+  v
+   cache
+    lastfailed bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f
  .dvcz
-  builds 69805ba39aed15f5d81f780b693f5b29434fdfb0
+  builds cb7c4a2111f99720f9f534724d141463850380a9
   copyright 304c14d702dff7c6c2c39729ff62aed7203b3427
-  lastBuildList 175062e5df85eaba12f98954d2fcff61a3a48837
+  lastBuildList 419abcaddb6bb78b0207c36b01bea6cf8311edbe
   license 5977a55c75bb4612004451a56b0b4c22d9d3311d
-  projCfg 909ab17dd09314a079fa6abcf5395e04c67c5c4e
+  projCfg ac2a554d595637ba8e08a49060402f8597445207
   projCfg.local b4f867714ef7e2b461226e384f16db1d5abe11a5
-  version eeb059f40904edaf1c73ff9bb9e2e9fcb3c61028
- .gitignore c4ea76de64a1e5cb70652f756fc8587efaacf42e
+  version f2863e0f8c984b05d4516bb48c1140e5fd53005c
+ .gitignore 27df466920f73b73fc41b6da23a399950ed7cf60
  .gitignore.local d3672ca44f2ca6d24a6c1a4bcf6d9ebeedf9dcf1
- CHANGES 00c4e3e46fe253aac2754b1f3537344b0899a28f
+ CHANGES 47ca58edda23d396dd7222e0a74f865e8273b6c8
  LICENSE-MIT.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
- MANIFEST.in 6cefcdc5d017041aa0b1abbc60fac8e8665dab28
+ MANIFEST.in ab66c4ba9f7b7352eb828e32839a387bf990125b
  PACKAGES 7d8a466f84d75a632861995fc24d254e081de1e2
  README.adding.ops 2e42a9ecca80cb299eee4ea824d12b9766979c8e
  README.jdd c5ce2180494e87158a61cddf1816b62106d28b8b
@@ -32,97 +36,25 @@ fusegen
  bin
   test-random-read-write d0fc40f2140a5e85bdaf7195bd0ac527ea348c65
  bkp2U 21c1c3cad57afa9691ada719248e667b34e24e84
- checkCoverage 7d00ba33ea0d22adc12897bf2aa8feb24f1a8e85
+ checkCoverage ab23f721db1abb53305994b4074aca5750580631
  checkIncs 50943b713cba527187daa79e3b67e8a103c88063
  checkIncsI 76b0ff0c189cd6a4daa8055b800c84727ea9c2bf
  checkScaffolding ee065b2399836a9bd82b25e9b8585b55bf0a0829
  checkScaffoldingI 1090bceabf08080e33ac08344f3bb6c06a30e432
- countem fe4f2bbb481f65763ebeb4ce696cfd9492976be9
+ countem b022c983eea47c4cb299c866fda1b6a76d7fd6b0
  diffEm e585b81b33dc99f77f515c690544afda65c16d1a
  diffEmI 6e0ad9aa1f8693939ce6472580d685fd0bbdcb7e
  diffSrc adba2d3acb1bde9395041c1799ec7c8ba05d77fe
  diffSrcI c6fcc355a4ae23a16669ea9311f466106e77d143
  diffTop 4faff6e9672e0983a424cbb3e1d5280480041c9d
  diffTopI 0a4d53615a84da1e68a9712f862a0c66ade25f33
- dist
-  fusegen-0.0.0.tar.gz c7b98ec05a3bad167a088ea6cfd2037a10119b86
-  fusegen-0.1.0.tar.gz 555a92b92d638deef0818c74729376c32db2b9e0
-  fusegen-0.2.0.tar.gz 08f51bd9f349f8dec49b649bf764c2f01d25561a
-  fusegen-0.3.0.tar.gz eb9b55f79da6b695bc7328bc1a68588795d18550
-  fusegen-0.3.1.tar.gz de50a74edadc2c2292adbfce1b656826ad694e41
-  fusegen-0.3.10.tar.gz 193af2135aadce912dd80e29d5e5a7c87fd6eb72
-  fusegen-0.3.11.tar.gz 42b38edbb74ba80c268842a85c2097e2a1ba171d
-  fusegen-0.3.12.tar.gz 36893e56751d843917c7f1afbebfe21bafb7e63a
-  fusegen-0.3.13.tar.gz 9b1da85377fa4e6087c1d95bb521e042796cc7f3
-  fusegen-0.3.2.tar.gz ff7f4ea69bec172ed18accf1b9493b800079f7a4
-  fusegen-0.3.4.tar.gz 1a187ebfea1d1b408415399656b194f64963790e
-  fusegen-0.3.5.tar.gz b6cf7039121921015e36220ce7bcab1d87f42b6a
-  fusegen-0.3.8.tar.gz 5b99da8c5ecbd1475633f702cd625c0f63497283
-  fusegen-0.3.9.tar.gz a0004535a517f0329832687f49bff8af162eae02
-  fusegen-0.4.0.tar.gz 645b6944dc7499f39e9acdf4b843be72a93c673c
-  fusegen-0.4.1.tar.gz 37a4fcb47095eb311ffa20cb015749b788f197dd
-  fusegen-0.4.10.tar.gz ef59b98f69d09f2884cd5fb220ef6d52b062fafe
-  fusegen-0.4.11.tar.gz c8ceb4b151201ed803ab3885dad291b15be02580
-  fusegen-0.4.12.tar.gz 3bb01ad1b1541556f70909f854e744ab56bbc47b
-  fusegen-0.4.13.tar.gz 7eb81f1e776f5dbdb696a80acf057d1887fc2c2e
-  fusegen-0.4.2.tar.gz 293530713f7c365bafc8dc4ff8ba075b459b5382
-  fusegen-0.4.3.tar.gz 355b3e67c597a7222c496fb91456dfb6718e8dda
-  fusegen-0.4.4.tar.gz 7926ce22fa654e9ad670937baf3e7af853f3008b
-  fusegen-0.4.6.tar.gz dede4559d2701d836e7868ae28d27b9f9b78a78f
-  fusegen-0.4.7.tar.gz 457d7112568f21845edb410c688e8767bd630806
-  fusegen-0.4.8.tar.gz 5bbef9117864fb8ac028041fd36dae2fb97f16e5
-  fusegen-0.4.9.tar.gz e5fc651706f3a0b7e84e23cca55bf952373ebab7
-  fusegen-0.5.0.tar.gz d1fa50d02c9d549243bd7539ad07e54aef45f3d7
-  fusegen-0.5.1.tar.gz 53143619e7cc74d0fb1989271065940c7e7b785a
-  fusegen-0.5.2.tar.gz bfc52d38ca3a94559c1c558ab5aa86ab8cc08579
-  fusegen-0.5.3.tar.gz b320f5a681b83b53487c9dac9819aef64b4fe30f
-  fusegen-0.5.4.tar.gz e5fb6db54c5ae506cb279ec739b5ec94d0e89292
-  fusegen-0.5.5.tar.gz 78d8a5faee1dd3afbd81a221d360427ec7458cfa
-  fusegen-0.5.6.tar.gz d3855841b6ddfcc1928f79574979f9184ecffa47
-  fusegen-0.5.7.tar.gz b2562cde1e9ebcc8ceaee11d9abba3c35bd4b580
-  fusegen-0.5.8.tar.gz 1adedec9a01350eba9faff872d8b147affcd6680
-  fusegen-0.5.9.tar.gz d95328c41db3297b356ed573ebaad0daace882a3
-  fusegen-0.6.0.tar.gz 631d48597684bd52d581490b8bce9e74578909ee
-  fusegen-0.6.1.tar.gz 83e63e6415baf737325bfaab00161208076e0b30
-  fusegen-0.6.10.tar.gz beaac0d10875224923865e0034ef6d29f814f7bd
-  fusegen-0.6.11.tar.gz 2c7010ce22fe7ffac3f7421b737843955ff74cb4
-  fusegen-0.6.12.tar.gz 9a023fc186f6ad9467242ded2d808a1f4628982b
-  fusegen-0.6.13.tar.gz 1cefdcc237019a73c3a259b83c2cd767870b3734
-  fusegen-0.6.14.tar.gz 955fa32370c7dc009797b6f6b7a74bab2aca18cd
-  fusegen-0.6.16.tar.gz a2e4f563094af87bd59a5de88e29d9b988b6e515
-  fusegen-0.6.17.tar.gz 9c4fa21ef5de594c9359b24147128a8f69724c0f
-  fusegen-0.6.18.tar.gz 4b8f7c15f114956c5cbba4022de48ff0cb7bb541
-  fusegen-0.6.19.tar.gz 81e01697ca9521eb2d12524656adea6db3cf4554
-  fusegen-0.6.2.tar.gz 0623ea88a05859bd580a0d135910736e0960ca49
-  fusegen-0.6.20.tar.gz 4ec7fa16c1822773b6b8f569b4f7be664964a763
-  fusegen-0.6.21.tar.gz 63be8d2e1272aef91d4089fe8d3c69bed94b6404
-  fusegen-0.6.22.tar.gz 01c0027e770a2f856dc2e0b3b681fdc130eab5a1
-  fusegen-0.6.23.tar.gz 9ebdbb95cecacdde4976c97207913b672aabf36e
-  fusegen-0.6.24.tar.gz ec363e77fe1708e5ecb548f079274a1afb9d2efd
-  fusegen-0.6.25.tar.gz c903a9fdc5ed412cbdd97d251525fd27cb7a5073
-  fusegen-0.6.26.tar.gz 12ebd41ac93792dd36e9253aa7e378e09c37bfc1
-  fusegen-0.6.27.tar.gz 0a4aa99604ed8173a616b7f00c98cc5bda1b2521
-  fusegen-0.6.28.tar.gz a29725f30a1296464b7fdfbb79b019578fd43476
-  fusegen-0.6.29.tar.gz 4aba7eb0fa75b7e4f75b0b132adaa09140309a47
-  fusegen-0.6.3.tar.gz 82b33d41fd31b0d200d086f64dc909c7b7930974
-  fusegen-0.6.4.tar.gz f838408fb8cc18200466258b91f29199a4bbdab2
-  fusegen-0.6.5.tar.gz 06185142c3447abe7122deb4cca8f68d3ae6b61f
-  fusegen-0.6.6.tar.gz 65dbcddd4e2d1fdf3a48041c461889590a9f2456
-  fusegen-0.6.7.tar.gz cf2a1ba49d18ed9a307564d61a74fb5bed7b444d
-  fusegen-0.6.8.tar.gz ebee18861f347a30e76d9ff11043cb79d7d6c54d
-  fusegen-0.6.9.tar.gz cc8553eb4ee5591e6ff91f871718af9cf00ff4c4
- doPyLint e48c4c31ebd1509ea587909cac29a86a5b9f1172
+ doPyLint 31321ad99eb3b9ac0928a68c29a8b5b88c9472fb
  extern
   gustav_ctries.c 36822026a83915a9e697764aa50a9e96df088364
   majek_siphash.c ee104723edd4ab20e7868f9e7660086b4cb14903
  fragments
   optable 460856bb8ccd139798eed910da13d2c7a25d085d
   prototypes e63f0e2e7b5f63a34f216676943784ebb0bee258
- fuseDecode 4372d490a41a663e1a5e0f6774241dec42ea824e
- fuseGen 60994671e83652c4612cc1fb06ca75f381f6ac97
- fuse_decode 5f3ec6af044710050ebdce59267551a213fce165
- fusegen
-  __init__.py 45572f9677e96ff32bec86df56d615bbc3777c92
  genEm 5650b01f52be8662c2ddef78f16146f1075b800f
  genEmI 117ea8859d067d7960ce22ec3ec90103da0020b9
  genEmIL 7e75921a3ec1a43e7cd2ded5f5ec366a1f182e69
@@ -147,27 +79,31 @@ fusegen
  makeGetExt 84ebeb26fa0d79f6e145429b40ec2a938e4a0d43
  makeParamLists 80705a2e2ac097df2bd377eaea1e8f1164fce6c0
  myGetExtents.c e684409b106678b924705aa2f41559434c63e638
- name-pairs-local 777fc157d671a5532e1e3cc4d3fd068a582a9299
  pylintrc dd234fda24a547a9071f1e4608a3c1f3b7de9aa0
- renameLocal 8473c806ad23064fe643fac5a7e84425bb77e551
- run_fusegen e32992d8d85d7e2655671d54676b2dbd66aaa53d
- setup.py 63c1cc815cc863f196ba7648f8ca3c75ea4ae10c
+ setup.py 96018317d36d69fd3cb8a32f69b44eeca6922c10
  src
-  COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
-  COPYING.AUTOCONF.EXCEPTION a6873630548f8b602515ea294df96e0a70935df9
-  COPYING.GNUBL 66ffbe78984b6f1d6d5b519c218d79fd6f249ae5
-  COPYING.LIB ec121c8709ff0b2cb71589d1a5eead281dc21e62
-  README.licenses 67698d53301c42f29a1ac7b45f0a83fba750b68e
-  autogen.sh 897fd5d62a12d437ef80ffabc65e44c651bed11f
-  config.guess b35a5c3fd2b1a5a55a3320c7cd12f17c2c8224b7
-  config.sub 1b3b27c94812820968ac46dbffbdcca3a5f46e62
-  fuse.h 4229b70752c770703b0e156e73fb053c1d8fd071
-  fuse_common.h c68fe4071a86d033866217892583780c5eeb148e
-  fuse_opt.h b4601325c978e393b38e54df2dd8f3cc4eefa5ba
- styleit d4d113a5cd219b0e379d7c9c1ee736b5852013d3
- test.all b7c26e20be8e3c9e0257bd866fe6cb0e4016445f
- test_fuse_func.py 60b3a194f91b85767159d8190c89106ddec6b0ad
- test_fuse_generation.py f5af22982a88105da16afbc83f07bdf1ba908cf8
+  c_src
+   COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
+   COPYING.AUTOCONF.EXCEPTION a6873630548f8b602515ea294df96e0a70935df9
+   COPYING.GNUBL 66ffbe78984b6f1d6d5b519c218d79fd6f249ae5
+   COPYING.LIB ec121c8709ff0b2cb71589d1a5eead281dc21e62
+   README.licenses 67698d53301c42f29a1ac7b45f0a83fba750b68e
+   autogen.sh 897fd5d62a12d437ef80ffabc65e44c651bed11f
+   config.guess b35a5c3fd2b1a5a55a3320c7cd12f17c2c8224b7
+   config.sub 1b3b27c94812820968ac46dbffbdcca3a5f46e62
+   fuse.h 4229b70752c770703b0e156e73fb053c1d8fd071
+   fuse_common.h c68fe4071a86d033866217892583780c5eeb148e
+   fuse_opt.h b4601325c978e393b38e54df2dd8f3cc4eefa5ba
+  fuseGen 7a8dc50ba2a47a6bc7c7fc6f3070b01a654e0f36
+  fuse_decode f8e4405f98d5cace93319c0c1c5db50467e2eed9
+  fusegen
+   __init__.py 5d551594885d4f37213a1a7047734e271c025c05
+  run_fusegen daf239b4135cca0b324f4a03dc0673e06cc6b203
+ styleit 63f7f185d6113097396059b4ea5d4e8cabd10982
+ test.all 870e1740b76bc4891276f97b07948c927286b5db
+ tests
+  test_fuse_func.py 0886242a701087f83261da0e29ba97e041525ea6
+  test_fuse_generation.py fb0b9684d5120739bb9d903dd095b4ec41b5c7b5
 # END CONTENT #
 
-Ngq3jP29Z1XCuY3o0j62Ybl0N1jz1tIV1OlPzae6v4u0SCQy8NRnTn+z1cHM6MFwvf4+w5CSzZDAeiE3USCc05a+AXrvo5O5ZzQ5Snocy2TnKUWC9GbpVZyl6EnsQuPIeom04P0+ZyXFSXesjv20TbEA9rxMlc8ijBvqqle6orvEr6jCrHLlFrC7NtGT6f7fgzp7Jc5toygKW+cQIY+nYQjVR/rbSN841UjFJ8UcOLcCrOsb5JYkNF/R7xxD83aXcrhUW/B7kd9UO+j7vBw3TU6YBxFZMclvZ7nlDU+v72fhiSGjFFuo2Lhg4k17kuht4eKpsxYSmt3TN4GxNDoiXw==
+BniDNKFK1V3/x93YFripwMxU7H0cAUNQFxxWisHDfGjxzw5iiPdZHJk50F16cG56Jn5eYOk6PVBswUDCp+viZJUn4e3TMH5fmdiw7nl3ViwdIiaMUmGfU0f3uaSglAybK78Cnyekno2tHMZAo3tlL8hI/pYbH27okxQjkcp+WXVGAt5vBp76pkbSLIpOV5k6TJ7GUKV+/KcuCeSTgguc6DoE7TrnIgUfNjhGRFeQeZCAC4cNWLZr+vla2VOxJoBVT5fxx4VPLtxmkofD0D5fkrVGQa0pW2ctGdvMBoD439BX2POvqwCjNwciidnPpaGsiRrr/nM6OaNWvsVzkhce6Q==

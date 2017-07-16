@@ -1,0 +1,96 @@
+#!/usr/bin/python3
+# ~/dev/py/fusegen/run_fusegen
+
+""" Run the fuse code generation module. """
+
+import os
+import sys
+import time
+from argparse import ArgumentParser
+from fusegen import (__version__, __version_date__,
+                     check_date, check_pkg_name, check_version, make_fuse_pkg)
+from optionz import dump_options
+
+
+def main():
+    """ Collect options for fuse code generation. """
+
+    # program defaults ----------------------------------------------
+    my_date = "%04d-%02d-%02d" % time.gmtime()[:3]
+
+    # parse the command line ----------------------------------------
+
+    desc = 'generate a minimal FUSE (file system in user space) package'
+    parser = ArgumentParser(description=desc)
+
+    parser.add_argument('-A', '--acPrereq', default='2.69',
+                        help='prerequisite autoconfig version number')
+
+    parser.add_argument('-D', '--myDate', default=my_date,
+                        help='date in YYYY-MM-DD format')
+
+    parser.add_argument('-d', '--devDir', default='/home/jdd/dev/c',
+                        help='development directory, where C projects live')
+
+    parser.add_argument('-E', '--emailAddr', default='jddixon at gmail dot com',
+                        help='contact email address')
+
+    parser.add_argument('-f', '--force', action='store_true',
+                        help='if utility already exists, overwrite it')
+
+    parser.add_argument('-I', '--instrumenting', action='store_true',
+                        help='generate instrumentation code')
+
+    parser.add_argument('-j', '--justShow', action='store_true',
+                        help='show options and exit')
+
+    parser.add_argument('-L', '--logging', action='store_true',
+                        help='generate logging code')
+
+    parser.add_argument('-P', '--pkgName',
+                        help='utility package name')
+
+    parser.add_argument('-T', '--testing', action='store_true',
+                        help='this is a test run')
+
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='be chatty')
+
+    parser.add_argument('-V', '--myVersion', default='0.0.0',
+                        help="version in X.Y.Z format")
+
+    args = parser.parse_args()
+
+    # sanity checks -------------------------------------------------
+    check_date(args.my_date)
+    check_pkg_name(args.pkg_name)
+    check_version(args.my_version)
+
+    # fixups --------------------------------------------------------
+    args.lc_name = args.pkg_name.lower()
+    args.uc_name = args.pkg_name.upper()
+
+    if args.testing:
+        args.path_to_pkg = os.path.join('tmp', args.pkg_name)
+    else:
+        args.path_to_pkg = os.path.join(args.dev_dir, args.pkg_name)
+
+    # complete setup ------------------------------------------------
+    app_name = 'run_fusegen %s' % __version__
+
+    # maybe show options and such -----------------------------------
+    if args.verbose or args.justShow:
+        print("%s %s" % (app_name, __version_date__))
+
+    if args.verbose or args.justShow:
+        print(dump_options(args))
+
+    if args.justShow:
+        sys.exit(0)
+
+    # do what's required --------------------------------------------
+    make_fuse_pkg(args)
+
+
+if __name__ == '__main__':
+    main()
