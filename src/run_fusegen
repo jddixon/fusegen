@@ -91,5 +91,6 @@ def main():
     # do what's required --------------------------------------------
     make_fuse_pkg(args)
 
+
 if __name__ == '__main__':
     main()

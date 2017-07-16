@@ -116,7 +116,7 @@ class TestFuseGeneration(unittest.TestCase):
             # END
             try:
                 invoke_shell(umount_cmd)
-            except:
+            except BaseException:
                 pass
 
             if chatter and chatter != '':
@@ -198,6 +198,7 @@ class TestFuseGeneration(unittest.TestCase):
         self.do_instruments_test()
         self.do_logging_test()
         self.do_test_logging_and_instrumented()
+
 
 if __name__ == '__main__':
     unittest.main()

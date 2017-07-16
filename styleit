@@ -4,11 +4,8 @@ if [ ! -z "${DEV_BASE// }" ]
 then
   cd $DEV_BASE/py/fusegen
   
-  autopep8 -ai -r src/fusegen 
-  autopep8 -ai src/fuse_decode src/run_fusegen *.py
-  echo "not styling bin/ subdir"
-  echo "not styling fragments/ subdir"
-  echo "not styling src/ subdir"
+  autopep8 -air src tests
+  autopep8 -ai  setup.py
   
 else
   echo "DEV_BASE is not defined"

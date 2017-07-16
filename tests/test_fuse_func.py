@@ -54,5 +54,6 @@ class TestFuseFunc (unittest.TestCase):
             # TODO: compare generated line with corresponding line
             # in the file PATH_TO_FIRST_LINES
 
+
 if __name__ == '__main__':
     unittest.main()

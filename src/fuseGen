@@ -99,5 +99,6 @@ def main():
     # do what's required --------------------------------------------
     makeFusePkg(args)
 
+
 if __name__ == '__main__':
     main()
