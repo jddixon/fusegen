@@ -2,12 +2,10 @@
 
 # testFuseFunc.py
 
-import os
-import sys
 import unittest
 
-#from rnglib        import SimpleRNG
-from fusegen import FuseFunc, OP_NAMES, PATH_TO_FIRST_LINES
+# from rnglib        import SimpleRNG
+from fusegen import FuseFunc
 
 
 class TestFuseFunc (unittest.TestCase):

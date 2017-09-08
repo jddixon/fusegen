@@ -2,8 +2,8 @@
 project:fusegen
 package:fusegen
 mainlang:py
-version:0.6.30
-versionDate:2017-06-10
+version:0.6.31
+versionDate:2017-07-16
 :?dirs?:
 dir:std:ghpDoc
 dir:std:dist
@@ -11,7 +11,6 @@ dir:std:src
 dir:std:tests
 dir:std:.dvcz
 dir:pkg:fusegen
-dir:local:.cache
 dir:local:bin
 dir:local:fragments
 dir:clr:build
@@ -31,6 +30,9 @@ code:std:pylintrc
 code:std:.coveragerc
 code:std:check.summary
 code:std:MANIFEST.in
+code:std:tox.ini
+code:std:requirements.txt
+code:std:test_requirements.txt
 code:local:fragments/prototypes
 txt:std:LICENSE-MIT.md
 txt:std:CHANGES
@@ -62,6 +64,7 @@ bash:local:checkScaffolding
 bash:local:checkScaffoldingI
 bash:local:makeGetExt
 bash:local:makeParamLists
+py:std:setup.cfg
 py:std:setup.py
 py:global:fuse_decode
 py:global:run_fusegen

@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.32
+    2017-09-08
+        * pep8 plus add tox.ini, *req*.txt                          SLOC 4524
 v0.6.31
     2017-07-16
         * rewrite setup.py, MANIFEST.in; edit cfg files             SLOC 4497
@@ -236,6 +239,7 @@ v0.1.0
 v0.0.0
     2015-01-17
         * first version                                             SLOC  237
+
 
 
 
