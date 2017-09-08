@@ -1,0 +1,2 @@
+# fusegen/requirements.txt
+

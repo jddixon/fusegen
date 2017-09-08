@@ -6,7 +6,7 @@ then
   
   rm -rf build/* 
   
-  pySloc -L py  -X cover -X htmlcov -X dist -X extern -v $@ fusegen src/fuse_decode src/run_fusegen tests/test_fuse_func.py tests/test_fuse_generation.py setup.py
+  pySloc -L py  -X cover -X htmlcov -X dist -X extern -v $@ src/fusegen src/fuse_decode src/run_fusegen tox.ini requirements.txt test_requirements.txt tests/test_fuse_func.py tests/test_fuse_generation.py setup.py
 else
   echo "DEV_BASE is not defined"
 fi

@@ -16,8 +16,8 @@ __all__ = ['__version__', '__version_date__',
            'op_names', ]
 
 # -- exported constants ---------------------------------------------
-__version__ = '0.6.31'
-__version_date__ = '2017-07-16'
+__version__ = '0.6.32'
+__version_date__ = '2017-09-08'
 
 BASH = '/bin/bash'
 SH = '/bin/sh'
@@ -43,9 +43,9 @@ OP_NAMES = [
     # AS THESE ARE IMPLEMENTED, update the consistency check in fuseGen
     # NOT YET IMPLEMENTED
     # fusion 2.8
-    #'ioctl',        'poll',
+    # 'ioctl',        'poll',
     # fusion 2.9
-    #'write_buf','read_buf',
+    # 'write_buf','read_buf',
 ]
 
 
@@ -259,7 +259,7 @@ class FuseFunc(object):
     def other_args(self):
         """ return comma-separated list of arguments other than the first """
 
-        p_count = len(self.params)
+        # p_count = len(self.params)
         str_ = ''
         for ndx, param in enumerate(self.params):
             p_name = param[1]
@@ -300,13 +300,13 @@ class FuseFunc(object):
         arg_list = rest[l_ndx + 1:r_ndx]
 
         # DEBUG
-        #print("type '%s', fName '%s', args '%s'" % (fType, fName, argList))
+        # print("type '%s', fName '%s', args '%s'" % (fType, fName, argList))
         # END
 
         parts = arg_list.split(',')
         for part in parts:
             # DEBUG
-            #print("  part: '%s'" % part)
+            # print("  part: '%s'" % part)
             # END
             if part == '':
                 continue
@@ -322,7 +322,7 @@ class FuseFunc(object):
                 art_name = art_name[1:]
                 arg_type += '*'
             # DEBUG
-            #print("    argType: '%s', argName '%s'" % (argType, argName))
+            # print("    argType: '%s', argName '%s'" % (argType, argName))
             # END
             params.append((arg_type, art_name))     # that's a 2-tuple
             p2t_map[art_name] = arg_type
@@ -461,16 +461,13 @@ def make_fuse_pkg(args):
     email_addr = args.email_addr
     instrumenting = args.instrumenting
     force = args.force
-    lc_name = args.lc_name
     logging = args.logging
     my_date = args.my_date
     my_version = args.my_version
     path_to_pkg = args.path_to_pkg    # target package directory
     pkg_name = args.pkg_name
     prefix = pkg_name + '_'     # XXX FORCES UNDERSCORE
-    testing = args.testing
     uc_name = args.uc_name
-    verbose = args.verbose
 
     # make sure opCode <-> opName maps are consistent ---------------
     func_map, op_code_map = FuseFunc.get_func_map(prefix)
@@ -1512,7 +1509,8 @@ int {0:s}WriteBucket()
 
         if logging:
             content3 += """\
-        {0:s}LogMsg("errno is %d (%s); failed to open %s\\n", myErr, strerror(myErr), p);
+        {0:s}LogMsg("errno %d (%s); failed to open %s\\n", " +\
+myErr, strerror(myErr), p);
 """.format(prefix)  # pkg_name, prefix, uc_name)     # GEEP
 
         content3 += """\
@@ -1602,7 +1600,7 @@ struct fuse_operations {0:s}OpTable = {{
         attrs = op_attrs[name]
         if (attrs & DEPRECATED) or (attrs & NOT_IMPLEMENTED):
             continue
-        if not name in func_map:   # names at end are not yet implemented
+        if name not in func_map:   # names at end are not yet implemented
             # DEBUG
             print("%s is NOT IN funcMap" % name)
             # END
@@ -1803,7 +1801,7 @@ struct fuse_operations {0:s}OpTable = {{
                 if logging:
                     content += """\
             {0:s}LogMsg("    ERROR {0:s}readdir filler:  buffer full");
-""".format(prefix)              # name, prefix)                         # BLIP
+""".format(prefix)              # name, prefix)
 
                 content += """\
             return -ENOMEM;
@@ -1813,13 +1811,13 @@ struct fuse_operations {0:s}OpTable = {{
                 strings.append(content)
 
             elif name == 'readlink':
-                strings.append("    status = readlink(fpath, link, size - 1);")
+                strings.append("    status=readlink(fpath, link, size - 1);")
             elif name == 'releasedir':
                 strings.append(
                     "    status = closedir((DIR *) (uintptr_t) fi->fh);")
             elif name == 'utimens':
                 strings.append(
-                    "    status = utimensat(0, fpath, tv, AT_SYMLINK_NOFOLLOW);")
+                    "    status=utimensat(0, fpath, tv, AT_SYMLINK_NOFOLLOW);")
             elif attrs & HAS_LINK_FILE:
                 strings.append("    status = %s(path, flink);" % sys_call)
             elif attrs & DOUBLE_FULL_PATH:
@@ -1835,20 +1833,20 @@ struct fuse_operations {0:s}OpTable = {{
                                 '    // FreeBSD special case; ATTRIBUTION')
                             strings.append('    if (!strcmp(path, "/")) {')
                             strings.append('        char fpath[PATH_MAX];')
-                            strings.append("        %sFullPath(fpath, path);" % (
-                                prefix))
-                            strings.append("        status = lstat(fpath%s);" % (
+                            strings.append("        " +
+                                           " %sFullPath(fpath, path);" % prefix)
+                            strings.append("        status=lstat(fpath%s);" % (
                                 f_map.other_args()))
                             strings.append('        if (status < 0)')
                             strings.append(
-                                "            status = %sError(\"%sfgetattr lstat\");" %
-                                (prefix, prefix))
+                                "            status = %sError(\"%sfgetattr lstat\");" % (prefix, prefix))
                             strings.append('    } else {')
                             strings.append("        status = %s(fi->fh%s);" % (
                                 sys_call, f_map.other_args()))
                             strings.append('        if (status < 0)')
                             strings.append(
-                                "            status = %sError(\"%sfgetattr fstat\");" %
+                                "            status = " +
+                                " %sError(\"%sfgetattr fstat\");" %
                                 (prefix, prefix))
                             strings.append('    }')
                         elif name == 'opendir':
@@ -1887,7 +1885,7 @@ struct fuse_operations {0:s}OpTable = {{
             strings.append(
                 start + 'returned attributes (length %d):\\n", status);')
             strings.append(
-                '    for (ptr = list; ptr < list + status; ptr += strlen(ptr)+1)')
+                '    for (ptr=list; ptr<list + status; ptr += strlen(ptr)+1)')
             start = '        %sLogMsg' % prefix
             strings.append(start + '("    \\"%s\\"\\n", ptr);')
 
