@@ -1,2 +1,3 @@
 # fusegen/requirements.txt
+setuptools
 
