@@ -16,8 +16,8 @@ __all__ = ['__version__', '__version_date__',
            'op_names', ]
 
 # -- exported constants ---------------------------------------------
-__version__ = '0.6.32'
-__version_date__ = '2017-09-08'
+__version__ = '0.6.33'
+__version_date__ = '2017-09-13'
 
 BASH = '/bin/bash'
 SH = '/bin/sh'
@@ -480,7 +480,7 @@ def make_fuse_pkg(args):
     inconsistent = False
     for ndx in range(len(OP_NAMES)):
         name = OP_NAMES[ndx]
-        if not name in op_code_map:
+        if name not in op_code_map:
             break
         ndx_from_name = op_code_map[name]
         if ndx != ndx_from_name:
@@ -578,7 +578,8 @@ AC_CONFIG_HEADERS([src/config.h])
 AC_PROG_CC
 
 # Header files.
-AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/statvfs.h unistd.h utime.h sys/xattr.h])
+AC_CHECK_HEADERS([fcntl.h limits.h stdlib.h string.h sys/statvfs.h\\
+    unistd.h utime.h sys/xattr.h])
 
 # FUSE development environment
 PKG_CHECK_MODULES(FUSE, fuse)
@@ -600,7 +601,8 @@ AC_FUNC_CHOWN
 AC_FUNC_LSTAT_FOLLOWS_SLASHED_SYMLINK
 AC_FUNC_MALLOC
 
-AC_CHECK_FUNCS([fdatasync ftruncate mkdir mkfifo realpath rmdir strerror utimensat])
+AC_CHECK_FUNCS([fdatasync ftruncate mkdir mkfifo realpath rmdir strerror \\
+    utimensat])
 AC_CHECK_FUNCS([posix_fallocate])
 
 AC_CONFIG_FILES([Makefile src/Makefile])
@@ -622,10 +624,10 @@ SUBDIRS = src
 # Make it impossible to install the fuse file system. It must never be run
 # as root, because that causes critical security risks.
 install install-data install-exec uninstall installdirs check installcheck:
-	echo This package must never be installed.
+\	echo This package must never be installed.
 
 install-dvi install-info install-ps install-pdf dvi pdf ps info :
-	echo This package must never be installed.
+\	echo This package must never be installed.
 """
     with open(make_am_file, 'w', 0o644) as file:
         file.write(content)
@@ -675,8 +677,8 @@ cd ~/dev/c/{0:s}
 bin/mount{1:s}
 cd workdir/mountPoint
 fio --name=global --bs=4k --size=$1m \
-	--rw=randrw --rwmixread=75 \
-	--name=job1 --name=job2 --name=job3 --name=job4
+\	--rw=randrw --rwmixread=75 \
+\	--name=job1 --name=job2 --name=job3 --name=job4
 cd ../..
 bin/umount{1:s}
 """.format(pkg_name, uc_name)
@@ -710,7 +712,8 @@ bin/umount{1:s}
     make_am_file = os.path.join(path_to_src, 'Makefile.am')
     content = """
 bin_PROGRAMS = {0:s}
-{1:s}SOURCES = {0:s}.c fuse.h fuse_version.h opcodes.h {0:s}.h util.c $(wildcard *.inc)
+{1:s}SOURCES = {0:s}.c fuse.h fuse_version.h opcodes.h {0:s}.h util.c\\
+    $(wildcard *.inc)
 AM_CFLAGS = @FUSE_CFLAGS@
 LDADD = @FUSE_LIBS@
 """.format(pkg_name, prefix)
@@ -828,7 +831,7 @@ int main(int argc, char *argv[])
     // passed on to fuse_main.
 
     static struct option longOptions[] = {{
-        {{"fgBlockSize", 1, NULL, 0}},    // default = 4, multiple of 1024 bytes
+        {{"fgBlockSize", 1, NULL, 0}},    // default = 4, times 1024 bytes
         {{"fgHelp",      0, NULL, 0}},
         {{"fgJobCount",  1, NULL, 0}},    // default = 4
         {{"fgMBPerJob",  1, NULL, 0}},
@@ -1034,7 +1037,7 @@ typedef struct o_ {{
     uint32_t    opNsec;             // may not exceed BILLION
     uint32_t    lateNsec;           // ns of latency; may not exceed BILLION
     unsigned    lateSec     :  7;   // sec of latency
-    unsigned    count       : 17;   // number of bytes read or written; 128K max
+    unsigned    count       : 17;   // number bytes read or written; 128K max
     unsigned    opCode      :  8;
 }} __attribute__((aligned(16), packed)) opData_t;
 
@@ -1169,12 +1172,12 @@ long slotsPerBucket;
 int {0:s}Error(char *msg)
 {{
     int errCode = -errno;
-""".format(prefix)      # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix)      # pkg_name, prefix, uc_name)
 
     if logging:
         content += """\
     {0:s}LogMsg("    ERROR %s: %s\\n", msg, strerror(errno));
-""".format(prefix)          # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix)          # pkg_name, prefix, uc_name)
 
     content += """\
     return errCode;
@@ -1186,13 +1189,14 @@ void {0:s}FullPath(char fpath[PATH_MAX], const char *path)
 {{
     strcpy(fpath, {1:s}_DATA->rootdir);
     strncat(fpath, path, PATH_MAX);
-""".format(prefix, uc_name)              # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix, uc_name)              # pkg_name, prefix, uc_name)
 
     if logging:
         content += """\
-    {0:s}LogMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\", fpath = \\"%s\\"\\n",
+    {0:s}LogMsg("  FullPath:  rootdir = \\"%s\\", path = \\"%s\\",\\
+        fpath = \\"%s\\"\\n",
            {1:s}_DATA->rootdir, path, fpath);
-""".format(prefix, uc_name)              # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix, uc_name)              # pkg_name, prefix, uc_name)
 
     content += """\
 }
@@ -1253,22 +1257,26 @@ static char *msgHeader(char *p, int *maxChar, char *name)
   p += n;
 
 #define ADD_INT_FIELD(s, field) \\
-  n = snprintf(p, bytesLeft, "  %-20s  = %d\\n", "  " #field "  ", (int) s->field); \\
+  n = snprintf(p, bytesLeft, "  %-20s  = %d\\n", "  " #field "  ", \\
+  (int) s->field); \\
   bytesLeft -= n;   \\
   p += n;
 
 #define ADD_ULONG_FIELD(s, field) \\
-  n = snprintf(p, bytesLeft, "  %-20s  = 0x%08lx\\n", "  " #field "  ", (uintptr_t) s->field); \\
+  n = snprintf(p, bytesLeft, "  %-20s  = 0x%08lx\\n", "  " #field "  ", \\
+  (uintptr_t) s->field); \\
   bytesLeft -= n;   \\
   p += n;
 
 #define ADD_LL_FIELD(s, field) \\
-  n = snprintf(p, bytesLeft, "  %-20s  = %lld\\n", "  " #field "  ", (long long) s->field); \\
+  n = snprintf(p, bytesLeft, "  %-20s  = %lld\\n", "  " #field "  ", \\
+  (long long) s->field); \\
   bytesLeft -= n;   \\
   p += n;
 
 #define ADD_ULL_FIELD(s, field) \\
-  n = snprintf(p, bytesLeft, "  %-20s  = 0x%016llx\\n", "  " #field "  ", (unsigned long long) s->field); \\
+  n = snprintf(p, bytesLeft, "  %-20s  = 0x%016llx\\n", "  " #field "  ", \\
+  (unsigned long long) s->field); \\
   bytesLeft -= n;   \\
   p += n;
 
@@ -1389,7 +1397,7 @@ void {1:s}LogStatVFS(struct statvfs *sv)
 
     {1:s}LogMsg(buffer);
 }}
-""".format(pkg_name, prefix, uc_name)     # GEEP
+""".format(pkg_name, prefix, uc_name)
         content += content2
 
     content3 = ''
@@ -1422,7 +1430,7 @@ opData_t *{0:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
     }}
     status = pthread_mutex_unlock(&myBucket->lock);
 
-""".format(prefix)      # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix)      # pkg_name, prefix, uc_name)
 
         if logging:
             content3 += """\
@@ -1432,7 +1440,7 @@ opData_t *{0:s}ClockMeIn(struct timespec *tEntry, unsigned opcode)
         {0:s}FlushLog();
     }}
     // END
-""".format(prefix)          # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix)          # pkg_name, prefix, uc_name)
 
         content3 += """\
     assert(status == 0);
@@ -1476,7 +1484,7 @@ int {0:s}WriteBucket()
         when->tm_year + 1900, when->tm_mon + 1, when->tm_mday,
         when->tm_hour, when->tm_min, when->tm_sec);
 
-""".format(prefix, uc_name)          # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix, uc_name)          # pkg_name, prefix, uc_name)
 
         if logging:
             content3 += """\
@@ -1484,7 +1492,7 @@ int {0:s}WriteBucket()
     {0:s}LogMsg("data file is %s\\n", fullPath);
     // END
 
-""".format(prefix)              # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix)              # pkg_name, prefix, uc_name)
 
         content3 += """\
     // any 'b' has no effect in Linux
@@ -1492,31 +1500,31 @@ int {0:s}WriteBucket()
     if (f != NULL) {{
         size_t written = fwrite(
                 buckets[0].ops, sizeof(opData_t), buckets[0].count, f);
-"""         # .format(pkg_name, prefix, uc_name)     # GEEP
+"""         # .format(pkg_name, prefix, uc_name)
 
         if logging:
             content3 += """\
         {0:s}LogMsg("wrote %lu bytes, %lu items, to %s\\n",
                 written, buckets[0].count, fullPath);
-""".format(prefix)  # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix)  # pkg_name, prefix, uc_name)
 
         content3 += """\
         fflush(f);
         fclose(f);
     }} else {{
         int myErr = errno;
-"""             # .format(pkg_name, prefix, uc_name)     # GEEP
+"""             # .format(pkg_name, prefix, uc_name)
 
         if logging:
             content3 += """\
         {0:s}LogMsg("errno %d (%s); failed to open %s\\n", " +\
 myErr, strerror(myErr), p);
-""".format(prefix)  # pkg_name, prefix, uc_name)     # GEEP
+""".format(prefix)  # pkg_name, prefix, uc_name)
 
         content3 += """\
     }}
 }}
-"""             # .format(pkg_name, prefix, uc_name)     # GEEP
+"""             # .format(pkg_name, prefix, uc_name)
     content += content3
 
     util_c_file = os.path.join(path_to_src, "util.c")
@@ -1834,12 +1842,15 @@ struct fuse_operations {0:s}OpTable = {{
                             strings.append('    if (!strcmp(path, "/")) {')
                             strings.append('        char fpath[PATH_MAX];')
                             strings.append("        " +
-                                           " %sFullPath(fpath, path);" % prefix)
+                                           " %sFullPath(fpath, path);" %
+                                           prefix)
                             strings.append("        status=lstat(fpath%s);" % (
                                 f_map.other_args()))
                             strings.append('        if (status < 0)')
                             strings.append(
-                                "            status = %sError(\"%sfgetattr lstat\");" % (prefix, prefix))
+                                "            status" +
+                                " = %sError(\"%sfgetattr lstat\");" % (
+                                    prefix, prefix))
                             strings.append('    } else {')
                             strings.append("        status = %s(fi->fh%s);" % (
                                 sys_call, f_map.other_args()))
