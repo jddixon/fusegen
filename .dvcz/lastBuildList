@@ -7,25 +7,22 @@ Giaje1YAJPNVBt3dlOA5lhBp4GpSYBskJ9UR2Zyt3lgAGK3dEwxYETLMh9VWEV8i
 k2lyCIE/V/CDb9eVDYQgYSJYrnQ/JAPST7NbcY8aI+/0l7QVBhLBpmOCvmS6ofvz
 /QIDAQAB
 -----END PUBLIC KEY-----
-fusegen v0.6.33
-2017-09-13 21:20:34
+fusegen v0.6.34
+2017-09-25 22:19:56
 # BEGIN CONTENT #
 fusegen
- .cache
-  v
-   cache
-    lastfailed bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f
  .dvcz
-  builds 1462c1e38e8cc03b7223b7d645f03c0d17695ebb
+  builds 32e0f36c7fe60508d2c768e7f99c217a9f3d5f3f
   copyright 304c14d702dff7c6c2c39729ff62aed7203b3427
-  lastBuildList 697c2cff1fef135a0c2b03e9e4267c5338954741
+  lastBuildList 43cc30721ed85f3a24fe965056af20c3e2be4ed6
   license 5977a55c75bb4612004451a56b0b4c22d9d3311d
   projCfg 45454f90cb20d8aa939f6807e27a64162f6a65d0
   projCfg.local b4f867714ef7e2b461226e384f16db1d5abe11a5
-  version 4297b21a443881806ed2e31452320fa387bde4f4
+  projConfig.toml 0b49428a96f5d92705d99bd9dca6d9cadee8b0af
+  version ddcadc02d9acc672f0e3290721c8fc593aa8cfc3
  .gitignore a0310d235888ea784ed39a35fca54d764e98f5e9
  .gitignore.local d3672ca44f2ca6d24a6c1a4bcf6d9ebeedf9dcf1
- CHANGES da4f4f6292ffe406e65918ce355d76cb7289eda7
+ CHANGES 0edd81de414cb85087e54a037cd4620f94492bcf
  LICENSE-MIT.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
  MANIFEST.in ee87ecf6928c0c4c69376734eba9cf532ce748b1
  PACKAGES 7d8a466f84d75a632861995fc24d254e081de1e2
@@ -81,7 +78,7 @@ fusegen
  myGetExtents.c e684409b106678b924705aa2f41559434c63e638
  pylintrc dd234fda24a547a9071f1e4608a3c1f3b7de9aa0
  requirements.txt b5d38f28e8f527c4234daf0585d362299a9a48cf
- setup.py 4cebb67b13232bada6a7d31a92e21e395c6a9d3e
+ setup.py df559f5f9ff28f568e4acce5d84af0851ec38678
  src
   c_src
    COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
@@ -98,7 +95,7 @@ fusegen
   fuseGen 7a8dc50ba2a47a6bc7c7fc6f3070b01a654e0f36
   fuse_decode f8e4405f98d5cace93319c0c1c5db50467e2eed9
   fusegen
-   __init__.py 88359a8e2d2abffe74e950aa9bcd943f2c5e7e11
+   __init__.py 45b3a887f0544f8e8e23d5a89364bd20e63a692e
   run_fusegen daf239b4135cca0b324f4a03dc0673e06cc6b203
  styleit 63f7f185d6113097396059b4ea5d4e8cabd10982
  test.all 870e1740b76bc4891276f97b07948c927286b5db
@@ -109,4 +106,4 @@ fusegen
  tox.ini e76d1865302330f32e96cb98c4e18b1d035fce94
 # END CONTENT #
 
-imHh66UwwrRosusp9YDAXxQ7h7CyJQFQDMeWp8NFUNgJbKAH/yeja4cAGjbrefhsdyAIZZc68URL10fRaQ82aup0vVmVIQ1TpVMJgt7fC38mAaiQjDv4eGh0DlFbqeep1Qz9KkyyGoeNOkQMpqh2PxOWHeGWyBYjTh6Lu5P6ldgixQY+voOdDkHUiF8tu63CezXk0FgdkC3FCEmdUwhQtxkMLm8KS/h+wPLF64U3QU8pdng6gnWw9Fw6LMTC8INXdYNgn1x14gLQdezwLU476xzyhK+HsGoKjwMSssbECa8IUz4Fb3FX7r+N/SZPDeY/OH7Na9kjcYt7ecqMbZIOCg==
+ZOGRtdb2zzpE3vLEnoJZEgMNKIZlEV52/BnPMaQu8MgmGpZIPnOrD63OCmp3FMlrK0cKndCNTbs/bf1tCQoIv1y5kFdIJMQEFUpkWVZeDaApIXwBanAxmfrbzeNhpgzrQbhb3xhBBCOksYF9ne9FYJRHq/W6bJ2O951/PCR4Bos6uZTA0ve7yTHHED3nkA/8RBUP8DD9qcC4UNBOm1t116wVhgen+gnLfyRS4em3kGFmFNj4BDTD+RPlwRGztdPwT6lEhR0Uv5xF06jR3Woo/QPejpdhOW7sTtDpM+IAk2J33sVqHi3zdy8nhvslcPsO0FJ+GpZMG5cZOHW/6yp8PQ==

@@ -12,7 +12,7 @@ if exists('README.md'):
         long_desc = file.read()
 
 setup(name='fusegen',
-      version='0.6.32',
+      version='0.6.34',
       author='Jim Dixon',
       author_email='jddixon@gmail.com',
       long_description=long_desc,
