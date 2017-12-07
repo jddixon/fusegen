@@ -1,37 +1,29 @@
-# projConfig.toml for fusegen
-
 [meta]
-    version= '0.1.0'
+version = "0.1.0"
 
 [project]
-    name = 'fusegen'             # external name = distribution name
-    package = 'fusegen'             # internal name
-    main_lang = 'py'
-    version = '0.6.34'
-    version_date = '2017-09-25'
-    author = 'Jim Dixon'
-    author_email = 'jdd@gmail.com'
-    description='generator for fusegen projects'
-    copyright = '2015-2017'
-    dev_status = 'beta'
-    license = 'mit'
-    relpath = 'py/fusegen'
-    state = 'shared'
-    url = 'https://jddixon.github.io/fusegen'
+name = "fusegen"
+package = "fusegen"
+main_lang = "py"
+version = "0.6.35"
+version_date = "2017-12-07"
+author = "Jim Dixon"
+author_email = "jdd@gmail.com"
+description = "generator for fusegen projects"
+copyright = "2015-2017"
+dev_status = "beta"
+license = "mit"
+relpath = "py/fusegen"
+state = "shared"
+url = "https://jddixon.github.io/fusegen"
 
 [py]
-    packages = ['fusegen']
-    package_dir = ['src']
-    test_dir = 'tests'
-    py_modules = []
-    scripts=['src/fuse_decode','src/run_fusegen']
-    ext_modules = []
-
-    # sdReq output
-    distshare = ['merkletree','optionz','rnglib']
-    requirements=['setuptools',]
-    test_requirements=[]
-
-    # trove stuff is TBD
-
-
+packages = [ "fusegen",]
+package_dir = [ "src",]
+test_dir = "tests"
+py_modules = []
+scripts = [ "src/fuse_decode", "src/run_fusegen",]
+ext_modules = []
+distshare = [ "merkletree", "optionz", "rnglib",]
+requirements = [ "setuptools",]
+test_requirements = []

@@ -67,7 +67,7 @@ class TestFuseGeneration(unittest.TestCase):
         # END
         tree2 = MerkleTree.create_from_file_system(path_via_root)
         self.assertTrue(tree2 is not None)
-        self.assertEqual(tree1.equal(tree2), True)
+        self.assertTrue(tree1 == tree2)
         # DEBUG
         print("directory trees are equal")
         sys.stdout.flush()

@@ -6,16 +6,16 @@
 from os.path import exists
 from setuptools import setup
 
-long_desc = None
+LONG_DESC = None
 if exists('README.md'):
     with open('README.md', 'r') as file:
-        long_desc = file.read()
+        LONG_DESC = file.read()
 
 setup(name='fusegen',
-      version='0.6.34',
+      version='0.6.35',
       author='Jim Dixon',
       author_email='jddixon@gmail.com',
-      long_description=long_desc,
+      long_description=LONG_DESC,
       packages=['fusegen'],
       package_dir={'': 'src'},
       py_modules=[],
