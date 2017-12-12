@@ -8,18 +8,22 @@ k2lyCIE/V/CDb9eVDYQgYSJYrnQ/JAPST7NbcY8aI+/0l7QVBhLBpmOCvmS6ofvz
 /QIDAQAB
 -----END PUBLIC KEY-----
 fusegen
-2017-12-07 20:42:28
+2017-12-12 21:33:54
 # BEGIN CONTENT #
 fusegen
+ .cache
+  v
+   cache
+    lastfailed bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f
  .dvcz
-  builds 45741463ea232dab53f282eac42f79711fd83b64
-  lastBuildList 090a62da4cad7480787cf6093fc680a2efe86bf4
+  builds d11489170d47ca6ecad911ea09a88c284b473653
+  lastBuildList ef2e6449760fd5be8053e656255c24449f89baa3
   projCfg 45454f90cb20d8aa939f6807e27a64162f6a65d0
   projCfg.local b4f867714ef7e2b461226e384f16db1d5abe11a5
-  projConfig.toml aad1c6de644facaa0f60009bda06564d83851646
+  projConfig.toml 4d7ca7ddaff8c2d625d4556bf019f4196ffddd7f
  .gitignore a0310d235888ea784ed39a35fca54d764e98f5e9
  .gitignore.local d3672ca44f2ca6d24a6c1a4bcf6d9ebeedf9dcf1
- CHANGES 6ab1c76b1db45b6ea41cb4ef0ac0df0fa6e884fa
+ CHANGES 857c31489a120ade7a8e80628e99fdb84342057b
  LICENSE-MIT.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
  MANIFEST.in ee87ecf6928c0c4c69376734eba9cf532ce748b1
  PACKAGES 7d8a466f84d75a632861995fc24d254e081de1e2
@@ -75,7 +79,7 @@ fusegen
  myGetExtents.c e684409b106678b924705aa2f41559434c63e638
  pylintrc dd234fda24a547a9071f1e4608a3c1f3b7de9aa0
  requirements.txt b5d38f28e8f527c4234daf0585d362299a9a48cf
- setup.py c123f1f30ffe5d83000f3033f5e54f673b7216e7
+ setup.py 4fdca9dc1d183cd38d1c9a2ec86ace604023f7bc
  src
   c_src
    COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
@@ -92,15 +96,15 @@ fusegen
   fuseGen 9ffa23adedfaf3d16e1eeecbac3e350d55daf42f
   fuse_decode c294d46a2043fcc1591851c7f4c32f3b03d1af37
   fusegen
-   __init__.py 52518209810d68e16fd6f52c67daed8926c222ef
+   __init__.py 1fc5e33864ff112ea7dc836beb1de55bcc1a29e8
   run_fusegen daf239b4135cca0b324f4a03dc0673e06cc6b203
  styleit 63f7f185d6113097396059b4ea5d4e8cabd10982
  test.all 870e1740b76bc4891276f97b07948c927286b5db
  test_requirements.txt 16997c690798732036cf3ce5f2431d0a7ec63e7b
  tests
   test_fuse_func.py 009bb8d98c9b63cb5b4d010aa392a588a7d63ba0
-  test_fuse_generation.py 2ad8e5472111357fc1537be80e278ef1a48d88a2
+  test_fuse_generation.py 0da270fb3954c96097a2735e5e38311cc2cc6edd
  tox.ini e76d1865302330f32e96cb98c4e18b1d035fce94
 # END CONTENT #
 
-ETTRWDQ9nFqxi+EkWsfENrD3CC0ZwlcqVK58Mkp1nWiNSQAQTFgKj4cEAraCGrESatbs/FeceC84Q4xFu650XmoKw4uwJGEJDnPp+npWo5fIcILl35LMqYRjmWwvpQMqzhEYy/WYVSoqq5RSOoBVG4V5MuEvvD+NzETdY9WcCHbhyrc/4WMgWJ4DDXeofQv8bRNZMwjknz/Qy3EaE5IAy90403CkxRoreuYIVdUu2IGkvyLl5OxKMiwbvgqbvHpNwkoMwaUIs+2pDQ1CBkIJu8wEM+UdKUZphM0TvBuiqaeBIoMvIYZjMij7cCodF6V/i1DZRrtHk1a5MJ/7YS03YA==
+iXcLbaqtG9skCCwDI/ISXsvue6ngIBCltcbDR6ftNjU1lLe63yl0cIbzPKRxf87xtDFpXXWu41zuB0ZT7NnW9bXGQFC6GwcMheInp29MOg1xFjlFq+rfe61Cu4+jvHO/wcY9nINlizy/qhwWYvLh8OLflvhXbDTGwTBQQUUhbFrZssPLGje3Ck6K+TzTdN5tnKdqbOUZDH/4hhXLHIwikDsNpCDoQCUQkSqkrlzdQnqGPxv3KJw7NICv9wO5fvlDBaydjd2jwvPbGDeF+apccrE0507KZYsxgqoYw7B1bVjAHQm4t/UCgMcIpWlTzsFu4XjXMxsjwXIC15L9aSv7Dg==

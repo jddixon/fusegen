@@ -1,5 +1,7 @@
 # fusegen/__init__.py
 
+""" Library of functions for Fuse file system generation. """
+
 import errno
 import os
 import re
@@ -16,8 +18,8 @@ __all__ = ['__version__', '__version_date__',
            'op_names', ]
 
 # -- exported constants ---------------------------------------------
-__version__ = '0.6.35'
-__version_date__ = '2017-12-07'
+__version__ = '0.6.36'
+__version_date__ = '2017-12-12'
 
 BASH = '/bin/bash'
 SH = '/bin/sh'
@@ -156,6 +158,8 @@ PKG_DATE_RE = re.compile(r'^[\d]{4}-\d\d-\d\d$')
 
 
 def check_date(str_):
+    """ Verify that that follows required pattern. """
+
     if not str_:
         print("date must not be empty")
         sys.exit(1)
@@ -171,6 +175,8 @@ PKG_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
 
 
 def check_pkg_name(str_):
+    """ Check name for the fuse package. """
+
     if not str_:
         print("you must provide a package name")
         sys.exit(1)
@@ -186,7 +192,8 @@ PGM_NAME_RE = re.compile(r'^[a-z_][a-z0-9_\-]*$', re.IGNORECASE)
 
 
 def check_pgm_names(strings):
-    if not strings or len(strings) == 0:
+    """ Check a list of program names. """
+    if not strings:
         print("you must supply at least one program name")
         sys.exit(1)
     else:
@@ -200,6 +207,7 @@ PKG_VERSION_RE = re.compile(r'^\d+\.\d+.\d+$')
 
 
 def check_version(str_):
+    """ Confirm version number matches expected pattern. """
     if not str_:
         print("version must not be empty")
         sys.exit(1)
@@ -212,6 +220,7 @@ def check_version(str_):
 
 
 def invoke_shell(cmd_list):
+    """ Execute a list of hell commands. """
     try:
         output = subprocess.check_output(cmd_list, stderr=subprocess.STDOUT)
         output = str(output, 'utf-8')
@@ -221,6 +230,7 @@ def invoke_shell(cmd_list):
 
 
 class FuseFunc(object):
+    """ Class for named fuse functions. """
 
     def __init__(self, f_name, f_type, params, p2t_map):
         self._name = f_name      # string, trimmed
@@ -230,18 +240,22 @@ class FuseFunc(object):
 
     @property
     def name(self):
+        """ Return function name. """
         return self._name
 
     @property
     def f_type(self):
+        """ Return function type. """
         return self._type
 
     @property
     def params(self):
+        """ Return parameters, a list of 2-tuples. """
         return self._params
 
     @property
     def p2t_map(self):
+        """ Return parameter-to-type map. """
         return self._p2p_map
 
     def first_line(self):
@@ -269,6 +283,7 @@ class FuseFunc(object):
 
     @classmethod
     def parse_proto(cls, line, prefix=''):
+        """ Parse prototype line. """
 
         line = line.strip()
         params = []     # of 2-tuples
@@ -331,6 +346,7 @@ class FuseFunc(object):
 
     @classmethod
     def get_func_map(cls, prefix=''):
+        """ Build a map from function name to index. """
 
         lines = []
         with open(PATH_TO_FIRST_LINES, 'r') as file:
@@ -445,18 +461,20 @@ def set_op_attrs():
     return op_attrs
 
 
-def makedir_p(path, mode):
-    # XXX SLOPPY: doesn't handle case where mode is wrong
-    # XXX MISLEADING: the name suggests it creates missing subdirs
-    try:
-        os.mkdir(path, mode)
-    except OSError as exc:
-        if exc.errno != errno.EEXIST:
-            raise exc
-        pass
-
+# def makedir_p(path, mode):
+#     """
+#     XXX SLOPPY: doesn't handle case where mode is wrong
+#     XXX MISLEADING: the name suggests it creates missing subdirs
+#     """
+#     try:
+#         os.mkdir(path, mode)
+#     except OSError as exc:
+#         if exc.errno != errno.EEXIST:
+#             raise exc
+#
 
 def make_fuse_pkg(args):
+    """ Create = serialize the fuse package. """
     ac_prereq = args.ac_prereq
     email_addr = args.email_addr
     instrumenting = args.instrumenting
@@ -478,8 +496,7 @@ def make_fuse_pkg(args):
         print("lock is NOT in the main map")
     # END
     inconsistent = False
-    for ndx in range(len(OP_NAMES)):
-        name = OP_NAMES[ndx]
+    for ndx, name in enumerate(OP_NAMES):
         if name not in op_code_map:
             break
         ndx_from_name = op_code_map[name]
@@ -488,7 +505,7 @@ def make_fuse_pkg(args):
                 name, ndx, ndx_from_name))
             inconsistent = True
     if inconsistent:
-        print("aborting")
+        print("inconsistent, aborting")
         sys.exit(1)
 
     # ===============================================================
@@ -504,7 +521,7 @@ def make_fuse_pkg(args):
         else:
             shutil.rmtree(path_to_pkg)
 
-    makedir_p(path_to_pkg, 0o755)
+    os.makedirs(path_to_pkg, 0o755)
 
     mount_point = os.path.join('workdir', 'mount_point')
     root_dir = os.path.join('workdir', 'rootdir')
@@ -519,9 +536,9 @@ def make_fuse_pkg(args):
     other_sub_dirs = ['bin', 'config', 'ghpDoc', 'm4', 'workdir',
                       mount_point, root_dir, 'tmp', ]
     sub_dir = make_file_sub_dirs + other_sub_dirs
-    for dir in sub_dir:
-        path_to_sub_dir = os.path.join(path_to_pkg, dir)
-        makedir_p(path_to_sub_dir, 0o755)
+    for dir_name in sub_dir:
+        path_to_sub_dir = os.path.join(path_to_pkg, dir_name)
+        os.makedirs(path_to_sub_dir, 0o755)
 
     # ===============================================================
     # TOP LEVEL FILES
@@ -1601,7 +1618,8 @@ struct fuse_operations {0:s}OpTable = {{
     # mkSrcDir(args, opAttrs)
 
     src_dir = os.path.join(path_to_pkg, 'src')
-    makedir_p(src_dir, 0o755)
+    # NOTE THIS SOMETIMES(?) EXISTS
+    os.makedirs(src_dir, 0o755, exist_ok=True)
 
     # XXX does not catch 'main'
     for name in OP_NAMES:
@@ -1902,7 +1920,7 @@ struct fuse_operations {0:s}OpTable = {{
 
         # -- logging stat -----------------------------
         if logging:
-            if (attrs & LOGGING_STAT):
+            if attrs & LOGGING_STAT:
                 strings.append(
                     "    %sLogStat(%s);\n" %
                     (prefix, f_map.params[1][1]))
