@@ -3,6 +3,7 @@
 # fusegen/testFuseGeneration.py
 
 import os
+import shutil
 import sys
 import time
 import unittest
@@ -67,7 +68,7 @@ class TestFuseGeneration(unittest.TestCase):
         # END
         tree2 = MerkleTree.create_from_file_system(path_via_root)
         self.assertTrue(tree2 is not None)
-        self.assertEqual(tree1.equal(tree2), True)
+        self.assertTrue(tree1 == tree2)
         # DEBUG
         print("directory trees are equal")
         sys.stdout.flush()
@@ -107,7 +108,7 @@ class TestFuseGeneration(unittest.TestCase):
             pass
 
         finally:
-            """ unmount the file system, ignoring any exceptions """
+            # unmount the file system, ignoring any exceptions
             # DEBUG
             print("enter finally block")
             sys.stdout.flush()
@@ -138,6 +139,12 @@ class TestFuseGeneration(unittest.TestCase):
         if logging:
             pkg_name += 'L'
         path_to_pkg = os.path.join(dev_dir, pkg_name)
+
+        if os.path.exists(path_to_pkg):
+            # WORKING HERE
+            print("directory exists: %s" % path_to_pkg)
+            # END HERE
+            shutil.rmtree(path_to_pkg)
 
         cmds = Namespace()
         setattr(cmds, 'ac_prereq', '2.6.9')

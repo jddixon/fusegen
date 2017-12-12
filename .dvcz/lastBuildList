@@ -7,22 +7,23 @@ Giaje1YAJPNVBt3dlOA5lhBp4GpSYBskJ9UR2Zyt3lgAGK3dEwxYETLMh9VWEV8i
 k2lyCIE/V/CDb9eVDYQgYSJYrnQ/JAPST7NbcY8aI+/0l7QVBhLBpmOCvmS6ofvz
 /QIDAQAB
 -----END PUBLIC KEY-----
-fusegen v0.6.34
-2017-09-25 22:19:56
+fusegen
+2017-12-12 21:33:54
 # BEGIN CONTENT #
 fusegen
+ .cache
+  v
+   cache
+    lastfailed bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f
  .dvcz
-  builds 32e0f36c7fe60508d2c768e7f99c217a9f3d5f3f
-  copyright 304c14d702dff7c6c2c39729ff62aed7203b3427
-  lastBuildList 43cc30721ed85f3a24fe965056af20c3e2be4ed6
-  license 5977a55c75bb4612004451a56b0b4c22d9d3311d
+  builds d11489170d47ca6ecad911ea09a88c284b473653
+  lastBuildList ef2e6449760fd5be8053e656255c24449f89baa3
   projCfg 45454f90cb20d8aa939f6807e27a64162f6a65d0
   projCfg.local b4f867714ef7e2b461226e384f16db1d5abe11a5
-  projConfig.toml 0b49428a96f5d92705d99bd9dca6d9cadee8b0af
-  version ddcadc02d9acc672f0e3290721c8fc593aa8cfc3
+  projConfig.toml 4d7ca7ddaff8c2d625d4556bf019f4196ffddd7f
  .gitignore a0310d235888ea784ed39a35fca54d764e98f5e9
  .gitignore.local d3672ca44f2ca6d24a6c1a4bcf6d9ebeedf9dcf1
- CHANGES 0edd81de414cb85087e54a037cd4620f94492bcf
+ CHANGES 857c31489a120ade7a8e80628e99fdb84342057b
  LICENSE-MIT.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
  MANIFEST.in ee87ecf6928c0c4c69376734eba9cf532ce748b1
  PACKAGES 7d8a466f84d75a632861995fc24d254e081de1e2
@@ -78,7 +79,7 @@ fusegen
  myGetExtents.c e684409b106678b924705aa2f41559434c63e638
  pylintrc dd234fda24a547a9071f1e4608a3c1f3b7de9aa0
  requirements.txt b5d38f28e8f527c4234daf0585d362299a9a48cf
- setup.py df559f5f9ff28f568e4acce5d84af0851ec38678
+ setup.py 4fdca9dc1d183cd38d1c9a2ec86ace604023f7bc
  src
   c_src
    COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
@@ -92,18 +93,18 @@ fusegen
    fuse.h 4229b70752c770703b0e156e73fb053c1d8fd071
    fuse_common.h c68fe4071a86d033866217892583780c5eeb148e
    fuse_opt.h b4601325c978e393b38e54df2dd8f3cc4eefa5ba
-  fuseGen 7a8dc50ba2a47a6bc7c7fc6f3070b01a654e0f36
-  fuse_decode f8e4405f98d5cace93319c0c1c5db50467e2eed9
+  fuseGen 9ffa23adedfaf3d16e1eeecbac3e350d55daf42f
+  fuse_decode c294d46a2043fcc1591851c7f4c32f3b03d1af37
   fusegen
-   __init__.py 45b3a887f0544f8e8e23d5a89364bd20e63a692e
+   __init__.py 1fc5e33864ff112ea7dc836beb1de55bcc1a29e8
   run_fusegen daf239b4135cca0b324f4a03dc0673e06cc6b203
  styleit 63f7f185d6113097396059b4ea5d4e8cabd10982
  test.all 870e1740b76bc4891276f97b07948c927286b5db
  test_requirements.txt 16997c690798732036cf3ce5f2431d0a7ec63e7b
  tests
-  test_fuse_func.py e39c62a265e6a3175c7e0cb363207a6d136e18f5
-  test_fuse_generation.py 21a9a8614cb6ece194425007720c03980fe685ba
+  test_fuse_func.py 009bb8d98c9b63cb5b4d010aa392a588a7d63ba0
+  test_fuse_generation.py 0da270fb3954c96097a2735e5e38311cc2cc6edd
  tox.ini e76d1865302330f32e96cb98c4e18b1d035fce94
 # END CONTENT #
 
-ZOGRtdb2zzpE3vLEnoJZEgMNKIZlEV52/BnPMaQu8MgmGpZIPnOrD63OCmp3FMlrK0cKndCNTbs/bf1tCQoIv1y5kFdIJMQEFUpkWVZeDaApIXwBanAxmfrbzeNhpgzrQbhb3xhBBCOksYF9ne9FYJRHq/W6bJ2O951/PCR4Bos6uZTA0ve7yTHHED3nkA/8RBUP8DD9qcC4UNBOm1t116wVhgen+gnLfyRS4em3kGFmFNj4BDTD+RPlwRGztdPwT6lEhR0Uv5xF06jR3Woo/QPejpdhOW7sTtDpM+IAk2J33sVqHi3zdy8nhvslcPsO0FJ+GpZMG5cZOHW/6yp8PQ==
+iXcLbaqtG9skCCwDI/ISXsvue6ngIBCltcbDR6ftNjU1lLe63yl0cIbzPKRxf87xtDFpXXWu41zuB0ZT7NnW9bXGQFC6GwcMheInp29MOg1xFjlFq+rfe61Cu4+jvHO/wcY9nINlizy/qhwWYvLh8OLflvhXbDTGwTBQQUUhbFrZssPLGje3Ck6K+TzTdN5tnKdqbOUZDH/4hhXLHIwikDsNpCDoQCUQkSqkrlzdQnqGPxv3KJw7NICv9wO5fvlDBaydjd2jwvPbGDeF+apccrE0507KZYsxgqoYw7B1bVjAHQm4t/UCgMcIpWlTzsFu4XjXMxsjwXIC15L9aSv7Dg==

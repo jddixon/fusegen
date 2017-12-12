@@ -2,13 +2,16 @@
 
 # testFuseFunc.py
 
+""" Test various fuse-related functions. """
+
 import unittest
 
 # from rnglib        import SimpleRNG
 from fusegen import FuseFunc
 
 
-class TestFuseFunc (unittest.TestCase):
+class TestFuseFunc(unittest.TestCase):
+    """ Test various fuse-related functions. """
 
     def setUp(self):
         pass
@@ -21,7 +24,10 @@ class TestFuseFunc (unittest.TestCase):
     # actual unit tests #############################################
 
     def test_name_to_func_map(self):
+        """ Verify map from function names to opcodes is correct. """
+
         match_, o_map = FuseFunc.get_func_map('xxx_')   # funcMap, opCodeMap
+        _ = o_map               # suppress warning
         # for testing, build a new p2tMap from the data in funcMap
         for name in match_:
             func = match_[name]
@@ -41,7 +47,11 @@ class TestFuseFunc (unittest.TestCase):
                 self.assertEqual(p_type_name, p_type)
 
     def test_first_line(self):
+        """ UNFINISHED: test handling of first line. """
+
         match_, o_map = FuseFunc.get_func_map('xxx_')  # funcMap, opCodeMap
+        _ = o_map               # suppress warning
+        _ = self                # suppress warning
         for name in match_:
             func = match_[name]
             line = func.first_line()

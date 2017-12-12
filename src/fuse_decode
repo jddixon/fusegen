@@ -10,100 +10,102 @@ from optionz import dump_options
 
 
 def decode(chunk):
-    sec, ns, lateNsec, b0, b1, b2, op_code = struct.unpack('IIIBBBB', chunk)
+    sec, nsec, late_n_sec, byte0, byte1, byte2, op_code = \
+        struct.unpack('IIIBBBB', chunk)
     # DEBUG
-    #print("%3d %3d %3d %3d" % (b0, b1, b2, opCode))
+    #print("%3d %3d %3d %3d" % (byte0, byte1, byte2, opCode))
     # END
-    lateSec = 0x3f & b0             # low-order 7 bits
-    lowBit = (b0 >> 7) & 1         # high-order bit from that byte
-    higherBits = (b1 + (b2 << 8)) << 1
-    byteCount = higherBits | lowBit
+    late_sec = 0x3f & byte0             # low-order 7 bits
+    low_bit = (byte0 >> 7) & 1         # high-order bit from that byte
+    higher_bits = (byte1 + (byte2 << 8)) << 1
+    byte_count = higher_bits | low_bit
 
-    return sec, ns, lateSec, lateNsec, byteCount, op_code
+    return sec, nsec, late_sec, late_n_sec, byte_count, op_code
 
 
-def doCounts(args):
+def do_counts(args):
     """ generate a table showing how often each opcode ws invoked """
-    howMany = args.howMany
+    how_many = args.how_many
     path = args.pathToData
     verbose = args.verbose
     zeroes = args.zeroes
 
     with open(path, 'rb') as file:
         data = file.read()
-    byteCount = len(data)
-    opCount = byteCount / 16
+    byte_count = len(data)
+    op_count = byte_count / 16
     if verbose:
-        print("%d bytes, %d ops" % (byteCount, opCount))
+        print("%d bytes, %d ops" % (byte_count, op_count))
 
-    junk, op_code_map = FuseFunc.get_func_map()
+    _, op_code_map = FuseFunc.get_func_map()
 
     # XXX WORKING HERE XXX
+    _ = op_code_map             # supress warnings
 
     table = [0] * len(OP_NAMES)
-    for n in range(howMany):
-        begin = n * 16
+    for ndx in range(how_many):
+        begin = ndx * 16
         end = begin + 16
         chunk = data[begin:end]
-        sec, ns, lateSec, lateNsec, byteCount, op_code = decode(chunk)
+        sec, nsec, late_sec, late_n_sec, byte_count, op_code = decode(chunk)
         table[op_code] += 1
 
-    myMap = {}
-    for n, name in enumerate(OP_NAMES):
-        myMap[name] = (n, table[n])
+    my_map = {}
+    for ndx, name in enumerate(OP_NAMES):
+        my_map[name] = (ndx, table[ndx])
 
     # header line
-    nonZ = 0    # index of opcodes with non-zero count
+    non_zeroes = 0    # index of opcodes with non-zero count
     print("ndx opCode name                count")
     for name in sorted(OP_NAMES):
-        n, count = myMap[name]
+        ndx, count = my_map[name]
         if (zeroes and count == 0) or ((not zeroes) and count > 0):
-            print("%3d  %4d  %-16s   %6d" % (nonZ, n, name, count))
-            nonZ += 1
+            print("%3d  %4d  %-16s   %6d" % (non_zeroes, ndx, name, count))
+            non_zeroes += 1
 
 
-def simpleDump(args):
+def simple_dump(args):
     # column headers
     print("==== op time === == latency == = byte = == opcode ==     = flags =")
     print("  sec   nanosec  sec  nanosec   count   op   name")
 
-    howMany = args.howMany
+    how_many = args.how_many
     path = args.pathToData
     verbose = args.verbose
 
     with open(path, 'rb') as file:
         data = file.read()
-    byteCount = len(data)
-    opCount = byteCount / 16
+    byte_count = len(data)
+    op_count = byte_count / 16
     if verbose:
-        print("%d bytes, %d ops" % (byteCount, opCount))
-    lastSec = 0
-    lastNsec = 0
-    lastLateSec = 0
-    lastLateNsec = 0
-    for n in range(howMany):
+        print("%d bytes, %d ops" % (byte_count, op_count))
+    last_sec = 0
+    last_n_sec = 0
+    last_late_sec = 0
+    last_late_n_sec = 0
+    for ndx in range(how_many):
         flag = ''                          # 'P' if concurrency detected
-        begin = n * 16
+        begin = ndx * 16
         end = begin + 16
         chunk = data[begin:end]
-        sec, ns, lateSec, lateNsec, byteCount, op_code = decode(chunk)
-        if sec == lastSec and ns < lastNsec + lastLateNsec:
+        sec, nsec, late_sec, late_n_sec, byte_count, op_code = decode(chunk)
+        if sec == last_sec and nsec < last_n_sec + last_late_n_sec:
             flag = 'P'
         print("%6d %9d %2d %9d %7d   %2d %-16s %s" % (
-            sec, ns, lateSec, lateNsec,
-            byteCount, op_code, OP_NAMES[op_code], flag))
-        lastSec = sec
-        lastNsec = ns
-        lastLateSec = lateSec
-        lastLateNsec = lateNsec
+            sec, nsec, late_sec, late_n_sec,
+            byte_count, op_code, OP_NAMES[op_code], flag))
+        last_sec = sec
+        last_n_sec = nsec
+        last_late_sec = late_sec
+        last_late_n_sec = late_n_sec
 
 
-def doRun(args):
+def do_run(args):
     counting = args.stats
     if counting:
-        doCounts(args)
+        do_counts(args)
     else:
-        simpleDump(args)
+        simple_dump(args)
 
 
 def main():
@@ -116,7 +118,7 @@ def main():
     parser.add_argument('-j', '--justShow', action='store_true',
                         help='show options and exit')
 
-    parser.add_argument('-n', '--howMany', type=int, default=0,
+    parser.add_argument('-n', '--how_many', type=int, default=0,
                         help='how many data points to decode')
 
     parser.add_argument('-S', '--stats', action='store_true',
@@ -136,16 +138,16 @@ def main():
         sys.exit(1)
 
     # fixups --------------------------------------------------------
-    fileSize = os.path.getsize(args.pathToData)
-    itemCount = int(fileSize / 16)
-    if itemCount * 16 != fileSize:
+    file_size = os.path.getsize(args.pathToData)
+    item_count = int(file_size / 16)
+    if item_count * 16 != file_size:
         print("warning: file size is not a multiple of 16")
-    if args.howMany > itemCount or args.howMany == 0:
-        args.howMany = itemCount
+    if args.how_many > item_count or args.how_many == 0:
+        args.how_many = item_count
 
     # sanity checks -------------------------------------------------
-    if args.howMany <= 0:
-        print("%d is not a positive integer" % args.howMany)
+    if args.how_many <= 0:
+        print("%d is not a positive integer" % args.how_many)
         sys.exit(1)
 
     # complete setup ------------------------------------------------
@@ -159,7 +161,7 @@ def main():
         print(dump_options(args))
 
     if not args.justShow:
-        doRun(args)
+        do_run(args)
 
 
 if __name__ == '__main__':
