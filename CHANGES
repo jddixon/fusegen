@@ -1,5 +1,8 @@
 ~/dev/py/fusegen/CHANGES
 
+v0.6.37
+    2018-03-05
+        * edit setup.py, tox config files                           SLOC 4581
 v0.6.36
     2017-12-12
         * more pylinting plus more bug fixes                        SLOC 4560
@@ -251,6 +254,7 @@ v0.1.0
 v0.0.0
     2015-01-17
         * first version                                             SLOC  237
+
 
 
 

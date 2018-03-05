@@ -8,22 +8,18 @@ k2lyCIE/V/CDb9eVDYQgYSJYrnQ/JAPST7NbcY8aI+/0l7QVBhLBpmOCvmS6ofvz
 /QIDAQAB
 -----END PUBLIC KEY-----
 fusegen
-2017-12-12 21:33:54
+2018-03-05 15:34:56
 # BEGIN CONTENT #
 fusegen
- .cache
-  v
-   cache
-    lastfailed bf21a9e8fbc5a3846fb05b4fa0859e0917b2202f
  .dvcz
-  builds d11489170d47ca6ecad911ea09a88c284b473653
-  lastBuildList ef2e6449760fd5be8053e656255c24449f89baa3
+  builds 3a02ce3250bb4d7c8c947a4ef479f2cb0bdb0ca7
+  lastBuildList 56b13faa01cad787c0ecfb17bc249d598a7dda16
   projCfg 45454f90cb20d8aa939f6807e27a64162f6a65d0
   projCfg.local b4f867714ef7e2b461226e384f16db1d5abe11a5
-  projConfig.toml 4d7ca7ddaff8c2d625d4556bf019f4196ffddd7f
+  projConfig.toml cf39a5881f92f74cb49424235f8420c15926e733
  .gitignore a0310d235888ea784ed39a35fca54d764e98f5e9
  .gitignore.local d3672ca44f2ca6d24a6c1a4bcf6d9ebeedf9dcf1
- CHANGES 857c31489a120ade7a8e80628e99fdb84342057b
+ CHANGES 74a38223e45f4c13f09df0063ab35f1615df5449
  LICENSE-MIT.md ef87ef0aafe2bb3dc3b3ab29651c52e8add097b4
  MANIFEST.in ee87ecf6928c0c4c69376734eba9cf532ce748b1
  PACKAGES 7d8a466f84d75a632861995fc24d254e081de1e2
@@ -78,8 +74,8 @@ fusegen
  makeParamLists 80705a2e2ac097df2bd377eaea1e8f1164fce6c0
  myGetExtents.c e684409b106678b924705aa2f41559434c63e638
  pylintrc dd234fda24a547a9071f1e4608a3c1f3b7de9aa0
- requirements.txt b5d38f28e8f527c4234daf0585d362299a9a48cf
- setup.py 4fdca9dc1d183cd38d1c9a2ec86ace604023f7bc
+ requirements.txt d30b202cc3994c774a7114d36a1877c9acb031ef
+ setup.py 4f299b3c25c4c872352baacaa3926ef6a6093f67
  src
   c_src
    COPYING 99b1a5c7351fd39a26db3b560ce91eec4a3aca3d
@@ -96,15 +92,15 @@ fusegen
   fuseGen 9ffa23adedfaf3d16e1eeecbac3e350d55daf42f
   fuse_decode c294d46a2043fcc1591851c7f4c32f3b03d1af37
   fusegen
-   __init__.py 1fc5e33864ff112ea7dc836beb1de55bcc1a29e8
+   __init__.py 78b386df7bfefc2fd218352a2b57340cd8778628
   run_fusegen daf239b4135cca0b324f4a03dc0673e06cc6b203
  styleit 63f7f185d6113097396059b4ea5d4e8cabd10982
  test.all 870e1740b76bc4891276f97b07948c927286b5db
- test_requirements.txt 16997c690798732036cf3ce5f2431d0a7ec63e7b
+ test_requirements.txt 81d389ffad5aba937fb880fa02f58b67133c495b
  tests
   test_fuse_func.py 009bb8d98c9b63cb5b4d010aa392a588a7d63ba0
   test_fuse_generation.py 0da270fb3954c96097a2735e5e38311cc2cc6edd
- tox.ini e76d1865302330f32e96cb98c4e18b1d035fce94
+ tox.ini 57b8e10584c9cbd0dd5bbe2f4daed3bd2d604aa3
 # END CONTENT #
 
-iXcLbaqtG9skCCwDI/ISXsvue6ngIBCltcbDR6ftNjU1lLe63yl0cIbzPKRxf87xtDFpXXWu41zuB0ZT7NnW9bXGQFC6GwcMheInp29MOg1xFjlFq+rfe61Cu4+jvHO/wcY9nINlizy/qhwWYvLh8OLflvhXbDTGwTBQQUUhbFrZssPLGje3Ck6K+TzTdN5tnKdqbOUZDH/4hhXLHIwikDsNpCDoQCUQkSqkrlzdQnqGPxv3KJw7NICv9wO5fvlDBaydjd2jwvPbGDeF+apccrE0507KZYsxgqoYw7B1bVjAHQm4t/UCgMcIpWlTzsFu4XjXMxsjwXIC15L9aSv7Dg==
+OtqPuCM5Lmu4O8v5r53F79yCO+2awiPV4gaIjJKDAugK2F7bboOHje9jQ1DA4/2lG6QDq3/VJc4QB+nsFqVeRdqh2wdUMmdksC+rPDHJUuUWqzwwX8jJmtkq4qgkiu/ZwxvXVo4drzs9AOIdiMTy44v29H7j2rHIU6d0izIXrPElesz9slgslEvRCwI6c8UWUDWGp/PEOMqfxH+ybkJrSRgLnPg0rnr8DT4vVJrHn2Rd+N3s0F8M4s6tXlzp0AFpvA4WrxQ10hgEHV9BHlmHxIuA9Dy5Czc10NjyBo0xihPQjov8j0zpwckxitPfd25DWmadEBn6E6LWPX3pUZ1/zg==
